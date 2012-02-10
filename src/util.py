@@ -4,6 +4,12 @@ NAN = float("nan")
 INFINITY = float("inf")
 EPSILON = 1e-10
 
+def SignOf(a):
+    if a < -EPSILON:
+        return -1
+    else
+        return 1
+
 def FloatEqual(a, b):
     """Returns if difference between a and b is below EPSILON"""
     return -EPSILON < a-b < EPSILON
@@ -35,82 +41,8 @@ def RayContainsPoint(r, dp, p):
 
 def SegmentContainsPoint(a, b, c):
     """Returns whether c is within the segment ab."""
-    return Collinear(a, b, c) and (Within(a.x, c.x, b.x) if not FloatEqual(a.x, b.x) else 
+    return Collinear(a, b, c) and (Within(a.x, c.x, b.x) if not FloatEqual(a.x, b.x) else
                Within(a.y, c.y, b.y))
-               
-class LineCollision:
-    __slots__ = ['intersection', 'path', 'time']
-
-    def __lt__(self, other):
-        return self.time < other.time
-    
-    def __le__(self, other):
-        return self.time <= other.time
-    
-    def __eq__(self, other):
-        return self.time == other.time
-    
-    def __ne__(self, other):
-        return self.time != other.time
-    
-    def __gt__(self, other):
-        return self.time > other.time
-    
-    def __ge__(self, other):
-        return self.time >= other.time
-        
-    def calculate(self):
-        p = self.pq.p
-        q = self.pq.q
-        r = self.rv.p
-        v = self.rv.q
-        pqxdiff = (p.x - q.x)
-        pqydiff = (p.y - q.y)
-        rvxdiff = (r.x - v.x)
-        rvydiff = (r.y - v.y)
-        denom = (pqxdiff*rvydiff - rvxdiff*pqydiff)
-        if FloatEqual(denom, 0):
-            self.intersection = None
-            self.path = None
-            self.time = None
-        else:
-            # Find Intersection intersection
-            a = p.cross(q)
-            b = r.cross(v)
-            self.intersection = Point((a * rxdiff - b * pqxdiff) / denom, (a * rydiff - b * pqydiff) / denom)
-                    
-            # Find Path path
-            self.path = Line(r, self.intersection)
-            pq_path = self.intersection - p
-            if isinstance(self.pq, Ray):
-                if isinstance(self.rv, Ray):
-                    # Use sign of dot product between path and velocity to know if time is negative or not.
-                    if self.path * self.rv.direction < EPSILON:
-                        self.time = -1 * path.length / self.rv.direction.length
-                    elif pq_path * pq.direction < EPSILON:
-                        self.time = -1 * pq_path.length / self.pq.direction.length
-                    else:
-                        # Rays are colliding
-                        self.time = path.length / self.rv.direction.length
-                else:
-                    # pq is the ray
-                    self.path = pq_path
-                    self.time = -1 * pq_path.length / self.pq.direction.length
-            else:
-                if isinstance(self.rv, Ray):
-                    # Use sign of dot product between path and velocity to know if time is negative or not.
-                    self.time = math.copysign(path.length / self.rv.direction.length, path * self.rv.direction)
-                else:
-                    self.time = INFINITY
-                    # path doesn't make sense for two lines.
-                    del self.path
-    
-    def __init__(self, pq, rv):
-        """Takes a line pq and a ray rv (r-v is the velocity).  self.I is set to intersection point
-        (None if parallel), self.time is set if there is a collision."""
-        self.pq, self.rv = pq, rv
-        self.calculate()
-        
 
 class Vector:
     """A Vector is a 2 dimensional [x, y] pair.
@@ -135,7 +67,7 @@ class Vector:
         
     def normalized(self):
         len = self.length
-        return Vector(self.x / len, self.y / len) 
+        return Vector(self.x / len, self.y / len)
         
     def cross(self, other):
         """Length of the perpendicular vector on the z-axis. 
@@ -167,7 +99,7 @@ class Vector:
     def __mul__(self, other):
         try:
             # try dot product
-            return self.x * other.x + self.y * other.y
+            return self.x * other[0] + self.y * other[1]
         except AttributeError:
             # try scalar product
             return Vector(self.x * other, self.y * other)
@@ -175,7 +107,7 @@ class Vector:
     def __rmul__(self, other):
         try:
             # try dot product
-            return self.x * other.x + self.y * other.y
+            return self.x * other[0] + self.y * other[1]
         except AttributeError:
             # try scalar product
             return Vector(self.x * other, self.y * other)
@@ -267,20 +199,6 @@ class Line:
     @property
     def slope(self):
         return ZeroDivide(self.q.y - self.p.y, self.q.x - self.p.x)
-    
-    def __and__(self, line):
-        """Using "line and [Ray|Line|Vector]" gives the intersection point between the two objects."""
-        if isinstance(line, Vector):
-            return line if Collinear(self.p, self.q, line) else None
-            
-        # TODO: Handle parallel cases
-        if isinstance(line, Ray):
-            c = LineCollision(self.p, self.q, *line)
-            if c.intersection and c.time > -EPSILON:
-                return c.intersection
-            return None
-        if isinstance(line, Line):
-            return LineCollision(self.p, self.q, *line).intersection
 
     def __repr__(self):
         return "[" + str(self.p) + " to " + str(self.q) + "]"
@@ -294,11 +212,10 @@ class Line:
             return SegmentContainsPoint(self.p, self.q, c)
         elif isinstance(c, Line):
             return SegmentContainsPoint(self.p, self.q, c.p) and SegmentContainsPoint(self.p, self.q, c.q)
-        raise NotImplementedError()
     
     def __init__(self, p, q = None):
         """All Lines (and subclasses) are guaranteed two points: p and q."""
-        if q == None:
+        if q is None:
             if isinstance(p, Line):
                 # defining with a line
                 self.p, self.q = p
@@ -329,79 +246,34 @@ class Ray(Line):
     def __getitem__(self, item):
         return [self.p, self.q][item]
     
-    def __and__(self, line):
-        """Using "ray and [Ray|Line|Vector]" gives the intersection point between the two objects."""
-        if isinstance(line, Vector):
-            return line if RayContainsPoint(self.p, self.q, line) else None
-            
-        # TODO: Handle parallel cases
-        if isinstance(line, Ray):
-            c = LineCollision(self.p, self.q, *line)
-            if c.intersection and c.time > -EPSILON:
-                return c.intersection
-            return None
-        if isinstance(line, Line):
-            c = LineCollision(line.p, line.q, *self).intersection
-            if c.intersection and c.time > -EPSILON:
-                return c.intersection
-            return None
-    
     def __init__(self, p, d = None):
-        if d == None:
+        if d is None:
             if isinstance(p, Line):
                 # defining with a line
                 self.p, self.direction = p.p, p.direction
             else:
                 # defining with a tuple of points
-                self.p, self.direction = Point(p[0]), Vector(p[1])
+                self.p, self.direction = (p[0] if isinstance(p[0], Vector) else Point(p[0])), (p[1] if isinstance(p[1], Vector) else Vector(p[1]))
         else:
             if isinstance(p, Vector) and isinstance(d, Vector):
                 # defining with two points
                 self.p, self.direction = p, d
             else:
                 # defining with two tuples
-                self.p, self.direction = Point(p), Vector(d)
+                self.p, self.direction = (p if isinstance(p, Vector) else Point(p)), (d if isinstance(d, Vector) else Vector(d))
         
-class OrdinateXLine(Line):
-    """Any line that will always be parallel to the X axis is an Ordinate X Line."""
+class Parabola:
+
+    def __getitem__(self, item):
+        return [self.pos, self.vel, self.acc][item]
+
     
-    __slots__ = ['min', 'max', 'Y']
-    
-    @property
-    def p(self):
-        return Point(self.min, self.Y)
-    
-    @property
-    def q(self):
-        return Point(self.max, self.Y)
-    
-    def __init__(self, min, max, Y):
-        """Two points' positions, (min, Y) and (max, Y)."""
-        
-        if min > max:
-            max,min = min,max
-        self.min = min
-        self.max = max
-        self.Y = Y
-        
-class OrdinateYLine(Line):
-    """Any line that will always be parallel to the Y axis is an Ordinate Y Line."""
-    
-    __slots__ = ['min', 'max', 'X']
-    
-    @property
-    def p(self):
-        return Point(self.X, self.min)
-    
-    @property
-    def q(self):
-        return Point(self.X, self.max)
-    
-    def __init__(self, min, max, X):
-        """Two points' positions, (X, min) and (X, max)."""
-        
-        if min > max:
-            max,min = min,max
-        self.min = min
-        self.max = max
-        self.X = X
+
+    def __init__(self, pos, vel = None, acc = None):
+        if vel is None and acc is None:
+            self.pos, self.vel, self.acc = *pos
+        if vel is None or acc is None:
+            self.pos = pos
+            self.vel, self.acc = (vel if acc is None else acc)
+        else:
+            self.pos, self.vel, self.acc = pos, vel, acc
