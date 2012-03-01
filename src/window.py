@@ -2,8 +2,6 @@
 The window module provides functionality for drawing to the screen, as well as functionality for
 repositioning the center of the window.
 
-TODO: Support a box centered around the player, as opposed to simply a point position.
-
 Classes:
     Window: A wrapper to the pygame display in order to draw and translate coordinate systems.
 """
@@ -17,20 +15,22 @@ class Window:
     coordinate system."""
     DEFAULT_WIDTH = 640
     DEFAULT_HEIGHT = 480
+    
+    def to_pygame_coords(self, coords):
+        """Converts coordinates into pygame coordinates, i.e.:
+            +x is right, +y is up, (0, 0) is bottom left of screen into:
+            +x is right, +y is down, (0, 0) is top left of screen"""
+        v = Vector(coords)
+        v.y = self.size.y - v.y
+        return v
 
     def to_pygame(self, blitable):
         """Converts object coordinates into pygame coordinates, given lower left coordinates of an
         object and the object's height."""
-        # Get top left corner, then flip y-axis
+        # Get top left corner, and convert to pygame coordinates
         rect = Rect(blitable.image.get_rect())
         rect.offset(blitable.position)
-        rect.top = self.size.y - rect.bottom
-        return rect.top_left
-    
-    def to_pygame_coords(self, coords):
-        v = Vector(coords)
-        v.y = self.size.y - v.y
-        return v
+        return self.to_pygame_coords(rect.top_left)
 
     def draw_line(self, color, start_pos, end_pos, width=1):
         start = self.to_pygame_coords(start_pos)

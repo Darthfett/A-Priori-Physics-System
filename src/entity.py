@@ -158,15 +158,14 @@ class LineRenderable:
         for line in self.render_lines:
             surface.draw_aaline(self.color, line.p, line.q)
 
-    def __init__(self, render_lines, **kwargs):
+    def __init__(self, render_lines, color = None, **kwargs):
         """Instanciate a line renderable with a list of lines."""
-        self.render_lines = render_lines
+        self.render_lines, self.color = render_lines, color
+        
         if render_lines is None:
             self.render_lines = []
-        
-        # TODO: Make sense of the source of the 'color' attribute:
-        #       Should color be required for a LineRenderable?  An attribute of each render lines?
-        if not hasattr(self, "color") or self.color is None:
+            
+        if color is None:
             self.color = (255, 255, 255)
             
         LineRenderables.append(self)

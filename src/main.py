@@ -6,16 +6,15 @@ import argparse
 import debug
 
 # Create Argument parser
-parser = argparse.ArgumentParser(
-    description='Runs the game Jetpack-Man',
-    usage='python src/%(prog)s [options]')
-parser.add_argument('-d', '--debug', dest='debug', help='turn debug mode on', default=False,
-                    action='store_true')
-parser.add_argument('-g', '--draw_outlines', dest='draw_outlines',
-                    help='draw outlines of images instead of the actual images',
-                    default=False, action='store_true')
+parser = argparse.ArgumentParser(description='Runs the game Jetpack-Man',
+                                 usage='python src/%(prog)s [options]')
+parser.add_argument('-d', '--debug', help='turn debug mode on',
+                    dest='debug', default=False, action='store_true')
+parser.add_argument('-g', '--draw_outlines', help='draw outlines of images instead of the actual images',
+                    dest='draw_outlines', default=False, action='store_true')
 
-parser.add_argument('--fps', dest='FPS', help='Change max drawing FPS to the specified value', default=game.FPS, type=float)
+parser.add_argument('--fps', help='Change max drawing FPS to the specified value',
+                    dest='FPS', default=game.FPS, type=float)
 
 if __name__ == "__main__":
     # Game being run as standalone script
