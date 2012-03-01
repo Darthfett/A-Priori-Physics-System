@@ -1,6 +1,5 @@
 """
-The main module should be run as __main__ in order to set up and start the game.  E.g.:
-    python main.py
+The main module should be run as __main__ in order to set up and start the game.
 """
 import sys, os, game, pygame
 
