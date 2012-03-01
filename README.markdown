@@ -14,11 +14,13 @@
       -h, --help           show this help message and exit
       -d, --debug          turn debug mode on
       -g, --draw_outlines  draw outlines of images instead of the actual images
+      --fps FPS            Change max drawing FPS to the specified value
 
 ## Controls ##
 Most of the control scheme and game is not yet implemented.
 
-You can currently press 'r' to randomly regenerate the ground terrain.
+    q or Escape: Quit the game
+    r:           While held, randomly re-generate the ground terrain every frame.
 
 ## About ##
 Jetpack-Man is a game created as a learning exercise.  The intent of this learning exercise is to create an efficient physics engine.

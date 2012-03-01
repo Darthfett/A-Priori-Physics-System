@@ -55,10 +55,32 @@ class Rect:
     
     @property
     def shape(self):
+        """Returns a rectangle composed of four lines."""
         return [Line(self.bottom_left, self.bottom_right),
                 Line(self.bottom_right, self.top_right),
                 Line(self.top_right, self.top_left),
                 Line(self.top_left, self.bottom_left)]
+             
+    @shape.setter
+    def shape(self, shape):
+        min_line_x = lambda l: min(l.p.x, l.q.x)
+        min_line_y = lambda l: min(l.p.y, l.q.y)
+        max_line_x = lambda l: max(l.p.x, l.q.x)
+        max_line_y = lambda l: max(l.p.y, l.q.y)
+        
+        left = min_line_x(shape[0])
+        right = max_line_x(shape[0])
+        bottom = min_line_y(shape[0])
+        top = max_line_y(shape[0])
+        
+        for line in shape:
+            left = min(min_line_x(line), left)
+            right = max(max_line_x(line), right)
+            bottom = min(min_line_y(line), bottom)
+            top = max(max_line_y(line), top)
+        
+        self._bottom_left = Point(left, bottom)
+        self._size = Vector(right-left, top-bottom)
              
     @property
     def top(self):
@@ -194,25 +216,34 @@ class Rect:
         self.bottom_left = Point(c) - self._size * .5
 
     def __init__(self, rect = None, **k):
-        """Instanciate a rect by copying another, or with a bottom_left and size."""
+        """Instanciate a rect by copying another, or with a bottom_left and size, or with a shape."""
         
         if rect is not None:
-            # Copy a rect
+            # Rect is a copy
             if isinstance(rect, pygame.Rect):
                 self._bottom_left = Point(rect.bottomleft)
             else:
                 self._bottom_left = Point(rect.bottom_left)
             self._size = Vector(rect.size)
         else:
+            # New rect
             size = k.get("size")
             bottom_left = k.get("bottom_left")
-            # New rect
-            if bottom_left is None:
-                self._bottom_left = Point(0, 0)
+            
+            shape = k.get("shape")
+            
+            if size is None and bottom_left is None and shape is not None:
+                # Rect is Bound box for Shape
+                self.shape = shape
+                
             else:
-                self._bottom_left = Point(bottom_left)
+                # Rect is bottom_left and size
+                if bottom_left is None:
+                    self._bottom_left = Point(0, 0)
+                else:
+                    self._bottom_left = Point(bottom_left)
 
-            if size is None:
-                self._size = Vector(0, 0)
-            else:
-                self._size = Vector(size)
+                if size is None:
+                    self._size = Vector(0, 0)
+                else:
+                    self._size = Vector(size)

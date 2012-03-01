@@ -5,6 +5,12 @@ components together in a logical fashion.
 Globals:
     Screen (window.Window):
         The Window object.
+    FPS (number):
+        The number of frames to draw every second.
+    Speed (number):
+        The speed multiplier, which changes how fast the game runs.
+    CurrentLevel (level.Level):
+        The current Level.
 
 Functions:
     run: Start the event loop.
@@ -17,16 +23,17 @@ import math
 
 from util import *
 from entity import *
-from event import *
+from event import handle_events, PlayerQuit, GameOver
 from window import Window
 from player import Player
-from ground import Ground
-import physics
-import random
+from level import Level
+from physics import calc_next_frame
 
 # Window object (Screen.screen is the actual window)
 Screen = None
 FPS = 60
+Speed = 1
+CurrentLevel = None
 
 
 def run():
@@ -41,7 +48,7 @@ def run():
             handle_events()
 
             # calculate the next frame
-            physics.calc_next_frame(dt)
+            calc_next_frame(dt)
 
             # draw the next frame
             Screen.draw_next_frame()
@@ -70,17 +77,10 @@ def init():
     image = pygame.image.load(os.path.join(resources_path, "guy.png"))
     player = Player(image = image, shape = Rect(image.get_rect()).shape, position=Vector(0, 100))
     Entities.append(player)
-    
-    vertices = [(i, random.randrange(1, 64)) for i in range(0, 641, 64)]
-    
-    lines = []
-    for i, vertex in enumerate(vertices):
-        if vertex is vertices[-1]:
-            break
-        lines.append(Line(vertex, vertices[i+1]))
-        
-    ground = Ground(shape = lines, render_lines = lines)
-    Entities.append(ground)
 
     # Center the screen on the player
-    # Screen.center.clamp(player.image.get_rect())
+    Screen.center_on(player)
+    
+    # Load First Level
+    global CurrentLevel
+    CurrentLevel = Level("level_1.todo")

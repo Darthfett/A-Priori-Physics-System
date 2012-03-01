@@ -10,8 +10,7 @@ Classes:
 """
 
 import pygame
-from entity import *
-import random
+import game
 
 class PlayerQuit(BaseException):
     """An Exception class that is raised when the player quits."""
@@ -29,10 +28,4 @@ def handle_events():
         raise PlayerQuit
     
     if key_state[pygame.K_r]:
-        vertices = [(i, random.randrange(1, 64)) for i in range(0, 641, 64)]
-        lines = []
-        for i, vertex in enumerate(vertices):
-            if vertex is vertices[-1]:
-                break
-            lines.append(Line(vertex, vertices[i+1]))
-        LineRenderables[0].render_lines = lines
+        game.CurrentLevel.regenerate_ground()
