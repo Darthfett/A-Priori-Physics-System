@@ -59,12 +59,15 @@ def run():
 
 def init():
     """Initialize the game components -- The window, level, physics engine, entities, etc."""
+    # Resources path
+    resources_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")
+    
     # Init Window
     global Screen
     Screen = Window() # Accept default size and title
 
     # Init Entities
-    image = pygame.image.load(os.path.join("resources", "guy.png"))
+    image = pygame.image.load(os.path.join(resources_path, "guy.png"))
     player = Player(image = image, shape = Rect(image.get_rect()).shape, position=Vector(0, 100))
     Entities.append(player)
     

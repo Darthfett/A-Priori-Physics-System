@@ -6,7 +6,7 @@
 
 ## How to run ##
 
-    usage: python main.py [options]
+    usage: python src/main.py [options]
 
     Runs the game Jetpack-Man
 
