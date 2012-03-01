@@ -79,7 +79,7 @@ def init():
             break
         lines.append(Line(vertex, vertices[i+1]))
         
-    ground = Ground(shape =  lines, render_lines = lines)
+    ground = Ground(shape = lines, render_lines = lines)
     Entities.append(ground)
 
     # Center the screen on the player

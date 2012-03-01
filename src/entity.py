@@ -40,7 +40,7 @@ import pygame
 import game
 
 # Gravity acceleration is the default acceleration used for an entity.
-Gravity = Vector(0, -.0981)
+Gravity = Vector(0, -200)
 
 # A listing of all entities of each type (for enumeration)
 Entities = []
@@ -67,11 +67,11 @@ class Shape:
 
     def on_position_update(self, position):
         # TODO: Have this method called when position is manually changed.
-        if not hasattr(self, position):
+        if not hasattr(self, "position"):
             delta = position
         else:
             delta = position - self.position
-        for line in shape:
+        for line in self.shape:
             line.p += delta
             line.q += delta
 
@@ -135,12 +135,8 @@ class Blitable:
     def draw(self, surface):
         """Blits the blitable to the specified surface."""
         if Debug.DrawOutlines and hasattr(self, "shape"):
-            if hasattr(self, "position"):
-                for line in self.shape:
-                    surface.draw_aaline((255, 255, 255), line.p + self.position, line.q + self.position)
-            else:
-                for line in self.shape:
-                    surface.draw_aaline((255, 255, 255), line.p, line.q)
+            for line in self.shape:
+                surface.draw_aaline((255, 255, 255), line.p, line.q)
         else:
             surface.blit(self)
 

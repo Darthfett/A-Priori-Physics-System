@@ -30,6 +30,7 @@ Classes:
 """
 
 from util import *
+import entity
 import math
 
 ####################################################################################################
@@ -196,8 +197,20 @@ def _handle_collisions(time_frame):
                 pass
         # TODO: Handle collisions at time > 0
 
-def _update_positions(time_frame):
-    pass
+def _update_positions(time_frame_ms):
+    ms_to_s = lambda t: t / 1000
+    time_frame = ms_to_s(time_frame_ms)
+    
+    for ent in entity.Movables:
+        ent.velocity += time_frame * ent.acceleration
+        
+        # Quickly hack the shape to also get updated with the image
+        # TODO: Have Shape.on_position_update called when position is manually changed.
+        if isinstance(ent, entity.Shape):
+            entity.Shape.on_position_update(ent, ent.position + time_frame * ent.velocity)
+            
+        ent.position += time_frame * ent.velocity
+    
 
 def _update_intersections():
     """For any entity marked invalid, mark all intersections invalid, and recalculate."""

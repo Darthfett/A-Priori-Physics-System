@@ -13,7 +13,7 @@
     optional arguments:
       -h, --help           show this help message and exit
       -d, --debug          turn debug mode on
-      -g, --draw_outlines  draw outlines of images instead of the actual images.
+      -g, --draw_outlines  draw outlines of images instead of the actual images
 
 ## Controls ##
 Most of the control scheme and game is not yet implemented.
