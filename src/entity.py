@@ -16,18 +16,28 @@ Globals:
         The list of all Collidable Entities.
     Movables (List(Movable)):
         The list of all Mobile Entities.
-    Drawables (List(Drawable)):
-        The list of all Drawable Entities.
+    Projectiles (List(Projectile)):
+        The list of all Projectile Entities.
+    Blitables (List):
+        The list of all Blitable Entities.
+    LineRenderables (List(LineRenderable)):
+        The list of all LineRenderables.
 
 Classes:
-    Entity(object): Mixin class that has position.
-    Collidable(Entity): Mixin class that has mass.
-    Movable(Entity): Mixin class that has position, velocity, and acceleration.
-    Drawable(Entity): Mixin class that has position and an image.
+    Entity(object):         Entity objects have position.
+    Shape(object):          Shape objects have a 'shape' attribute -- a list of line-segments.
+    Collidable(Entity):     Collidable objects have mass and can be invalidated through
+                                manual changes of position/velocity/acceleration.
+    Movable(Entity):        Movable objects have velocity and acceleration.
+    Blitable(Entity):       Blitable objects have an image that can be blit to the screen.
+    LineRenderable(object): LineRenderable objects have a 'render_lines' attribute -- a list of
+                                lines intended to be drawn to the screen.
 """
 
 from util import *
+from debug import Debug
 import pygame
+import game
 
 # Gravity acceleration is the default acceleration used for an entity.
 Gravity = Vector(0, -.0981)
@@ -36,54 +46,132 @@ Gravity = Vector(0, -.0981)
 Entities = []
 Collidables = []
 Movables = []
-Drawables = []
+Projectiles = []
+Blitables = []
+LineRenderables = []
 
 class Entity:
-    """The Entity mixin class gives subclasses a position attribute."""
-    
+    """Entity objects are things that have a position in the world."""
+
     def __init__(self, position = None, **kwargs):
         """Instanciate an entity with position (defaults to (0, 0))."""
         self.position = position
         if position is None:
             self.position = Point(0, 0)
+
         Entities.append(self)
         super().__init__(**kwargs)
-    
-class Collidable:
-    """The Collidable mixin class gives subclasses a mass attribute."""
-    
+
+class Shape:
+    """Shape objects are things that occupy space."""
+
+    def on_position_update(self, position):
+        # TODO: Have this method called when position is manually changed.
+        if not hasattr(self, position):
+            delta = position
+        else:
+            delta = position - self.position
+        for line in shape:
+            line.p += delta
+            line.q += delta
+
+    def __init__(self, shape, **kwargs):
+        self.shape = shape
+        super().__init__(**kwargs)
+
+class Collidable(Entity):
+    """Collidable objects are objects that can be collided with."""
+
+    def on_position_update(self, position):
+        # TODO: Have this method called when position is manually changed.
+        self.invalidated = True
+        
+    def on_velocity_update(self, velocity):
+        # TODO: Have this method called when velocity is manually changed.
+        self.invalidated = True
+        
+    def on_acceleration_update(self, acceleration):
+        # TODO: Have this method called when acceleration is manually changed.
+        self.invalidated = True
+
     def __init__(self, mass = None, **kwargs):
         """Instanciate a collidable with mass (defaults to INFINITY)."""
+        self.invalidated = True
+        self.intersections = []
         self.mass = mass
         if mass is None:
             self.mass = INFINITY
-        self.invalidated = True # A collidable is invalidated if it needs to recalculate collisions.
+
         Collidables.append(self)
         super().__init__(**kwargs)
 
 class Movable(Entity):
-    """The Movable mixin class gives subclasses a position, velocity, and acceleration attribute."""
-        
+    """Movable objects are objects with velocity and acceleration."""
+
     def __init__(self, velocity = None, acceleration = None, **kwargs):
         """Instanciate a movable with velocity and acceleration (and then indirectly with position).
         velocity defaults to (0, 0), and acceleration to Gravity."""
         self.velocity, self.acceleration = velocity, acceleration
         if velocity is None:
             self.velocity = Vector(0, 0)
+
         if acceleration is None:
-            self.acceleration = Vector(Gravity) # Copy
+            # Copy Gravity vector
+            self.acceleration = Vector(Gravity)
+
         Movables.append(self)
         super().__init__(**kwargs)
 
-class Drawable(Entity):
-    """The Drawable mixin class gives subclasses a position and image attribute."""
-    
+class Projectile(Collidable, Movable, Shape):
+    """Projectile objects occupy space, can collide with objects, and move around."""
+
+    def __init__(self, **kwargs):
+        Projectiles.append(self)
+        super().__init__(**kwargs)
+
+class Blitable:
+    """Blitables are objects with an image."""
+
+    def draw(self, surface):
+        """Blits the blitable to the specified surface."""
+        if Debug.DrawOutlines and hasattr(self, "shape"):
+            if hasattr(self, "position"):
+                for line in self.shape:
+                    surface.draw_aaline((255, 255, 255), line.p + self.position, line.q + self.position)
+            else:
+                for line in self.shape:
+                    surface.draw_aaline((255, 255, 255), line.p, line.q)
+        else:
+            surface.blit(self)
+
     def __init__(self, image, **kwargs):
-        """Instanciate a drawable with an image (required, can be str or pygame Surface)."""
+        """Instanciate a blitable with an image (required, can be str or pygame Surface)."""
         if isinstance(image, pygame.Surface):
             self.image = image
         else:
             self.image = pygame.image.load(image)
-        Drawables.append(self)
+
+        Blitables.append(self)
         super().__init__(**kwargs)
+
+class LineRenderable:
+    """LineRenderables are objects that are drawn as a simple collection of lines."""
+
+    def draw(self, surface):
+        """Draws the individual lines of the line renderable to the specified surface."""
+        for line in self.render_lines:
+            surface.draw_aaline(self.color, line.p, line.q)
+
+    def __init__(self, render_lines, **kwargs):
+        """Instanciate a line renderable with a list of lines."""
+        self.render_lines = render_lines
+        if render_lines is None:
+            self.render_lines = []
         
+        # TODO: Make sense of the source of the 'color' attribute:
+        #       Should color be required for a LineRenderable?  An attribute of each render lines?
+        if not hasattr(self, "color") or self.color is None:
+            self.color = (255, 255, 255)
+            
+        LineRenderables.append(self)
+        super().__init__(**kwargs)
