@@ -1,6 +1,6 @@
-= TODO =
+# TO DO #
 
-== Working Demo 1 ==
+## Working Demo 1 ##
  * Evented/Observer API for entities and their mixin classes
     - Intersection invalidation
     - Player movement
@@ -13,6 +13,6 @@
  * Collision resolution
  * Make pygame events work for any FPS
  
- == Future ==
+## Future ##
  * Game pausing
  * Time slowing/speeding up
