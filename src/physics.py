@@ -74,32 +74,15 @@ def ParabolaLineCollision(rva, pq):
         i1 = .5 * acc * sqr_t1 + vel * t1 + pos
         i2 = .5 * acc * sqr_t2 + vel * t2 + pos
         return [Intersection(t1, i1), Intersection(t2, i2)]
+        
+def _find_intersections(line, other, other_stuff):
+    """Find the intersection times between two line segments."""
+    pass
 
-def LineRayCollision(pq, rv):
-    """Takes a line pq and a ray rv, and returns the intersection between them
-    as an Intersection."""
-    p = pq.p
-    q = pq.q
-    r = rv.p
-    v = rv.q
-    pqxdiff = (p.x - q.x)
-    pqydiff = (p.y - q.y)
-    rvxdiff = rv.direction.x
-    rvydiff = rv.direction.y
-    denom = (pqxdiff*rvydiff - rvxdiff*pqydiff)
-    if FloatEqual(denom, 0):
-        return Intersection()
-    else:
-        # Find Intersection intersection
-        a = p.cross(q)
-        b = r.cross(v)
-        intersection = Point((a * rvxdiff - b * pqxdiff) / denom, (a * rvydiff - b * pqydiff) / denom)
-
-        # Find Path path
-        path = Line(r, intersection)
-        # Use sign of dot product between path and velocity to know if time is negative or not.
-        time = (path.length / rv.direction.length) * SignOf(path * rv.direction)
-        return Intersection(time, intersection)
+def find_intersections(ent, other):
+    """Find the intersection times between entities ent and other."""
+    pass
+    
 
 class Intersection:
     """Represents the time and position of an intersection between two objects."""
@@ -217,6 +200,8 @@ def _update_intersections():
     pass
 
 def calc_next_frame(time_frame):
+    if time_frame == 0:
+        return
     _update_intersections()
     #_handle_collisions(time_frame)
     _update_positions(time_frame)

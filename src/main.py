@@ -13,8 +13,11 @@ parser.add_argument('-d', '--debug', help='turn debug mode on',
 parser.add_argument('-g', '--draw_outlines', help='draw outlines of images instead of the actual images',
                     dest='draw_outlines', default=False, action='store_true')
 
-parser.add_argument('--fps', help='Change max drawing FPS to the specified value',
+parser.add_argument('--fps', help='Change max drawing FPS',
                     dest='FPS', default=game.FPS, type=float)
+
+parser.add_argument('--speed', help='Change the speed multiplier',
+                    dest='Speed', default=game.Speed, type=float)
 
 if __name__ == "__main__":
     # Game being run as standalone script
@@ -24,6 +27,7 @@ if __name__ == "__main__":
     debug._DebugMode = args.debug
     debug.Debug.DrawOutlines = args.draw_outlines
     game.FPS = args.FPS
+    game.Speed = args.Speed
     
     # Set up an SDL environment video parameter, required for pygame.
     os.environ['SDL_VIDEO_CENTERED'] = '1'

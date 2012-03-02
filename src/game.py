@@ -23,7 +23,7 @@ import math
 
 from util import *
 from entity import *
-from event import handle_events, PlayerQuit, GameOver
+import event
 from window import Window
 from player import Player
 from level import Level
@@ -38,27 +38,38 @@ CurrentLevel = None
 
 def run():
     """Start the main event loop."""
-    clock = pygame.time.Clock()
-    # Main loop.
+    
+    # Main loop    
+    last_frame_time = 0
+    delta_frame_time = 1000 / FPS
     try:
         while(True):
-            dt = clock.tick(FPS)
+            current_time = pygame.time.get_ticks()
 
             # Handle mouse and keyboard events
-            handle_events()
+            event.update()
+            
+            delta_time = (current_time - last_frame_time)            
+            if delta_time >= delta_frame_time:
+                # Time to update!
+                # Handle all events
+                event.handle_events()
+                
+                # calculate the next frame
+                calc_next_frame(delta_time * Speed)
 
-            # calculate the next frame
-            calc_next_frame(dt)
+                # draw the next frame
+                Screen.draw_next_frame()
 
-            # draw the next frame
-            Screen.draw_next_frame()
-
-            # Update the Display
-            pygame.display.flip()
-    except GameOver:
+                # Update the Display
+                pygame.display.flip()
+                last_frame_time = current_time
+            pygame.time.delay(1)
+                
+    except event.GameOver:
         # Game over!  Just quit for now.
         print("Game over, man!  GAME OVER!")
-    except PlayerQuit:
+    except event.PlayerQuit:
         # Player has commanded the game to quit.
         print("Game over, man!  GAME OVER!")
     finally:
