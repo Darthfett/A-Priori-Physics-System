@@ -26,8 +26,6 @@ import game
 
 CurrentState = []
 
-_Speed = 0
-
 class Event:
     """Base class for any event.  For time-based events, use GameTimeEvent or RealTimeEvent."""
     pass
@@ -53,17 +51,16 @@ class KeyPressEvent(RealTimeEvent):
     generated when CurrentState does not match the next key state."""
     def handle(self):
         """Handle key press."""
+        _game = game.Game()
         # TODO: Move implicit predefined keys into config file
         if self.key == pygame.K_ESCAPE or self.key == pygame.K_q:
             raise PlayerQuit
         
         if self.key == pygame.K_r:
-            game.CurrentLevel.regenerate_ground()
+            game.Game.CurrentLevel.regenerate_ground()
         
         if self.key == pygame.K_p:
-            global _Speed
-            _Speed = game.Speed
-            game.Speed = 0
+            _game.pause()
 
     def __init__(self, key, time):
         self.key = key
@@ -74,9 +71,7 @@ class KeyReleaseEvent(RealTimeEvent):
     generated when CurrentState does not match the next key state."""
     def handle(self):
         """Handle key release."""
-        # TODO: Move implicit predefined keys into config file
-        if self.key == pygame.K_p:
-            game.Speed = _Speed
+        pass
 
     def __init__(self, key, time):
         self.key = key
@@ -86,14 +81,13 @@ def update(current_time):
     """Run through all pygame events and add them to the event queue."""
     pygame.event.pump()
     
-    
     # Handle key press/release events
     global CurrentState    
     next_state = pygame.key.get_pressed()
     for key, was_pressed in enumerate(CurrentState):
         if next_state[key] and not was_pressed:
-            game.RealEvents.append(KeyPressEvent(key, current_time))
+            game.Game.RealEvents.append(KeyPressEvent(key, current_time))
             
         if was_pressed and not next_state[key]:
-            game.RealEvents.append(KeyReleaseEvent(key, current_time))
+            game.Game.RealEvents.append(KeyReleaseEvent(key, current_time))
     CurrentState = next_state

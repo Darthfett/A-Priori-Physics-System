@@ -37,7 +37,6 @@ Classes:
 from util import *
 from debug import Debug
 import pygame
-import game
 
 # Gravity acceleration is the default acceleration used for an entity.
 Gravity = Vector(0, -200)
