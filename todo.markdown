@@ -11,8 +11,7 @@
     - Scroll the screen center with the player
  * Collision detection
  * Collision resolution
- * Make pygame events work for any FPS
  
 ## Future ##
- * Game pausing
- * Time slowing/speeding up
+ * Enemies
+ * Health
