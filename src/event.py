@@ -1,67 +1,99 @@
 """
 The event module is intended to contain any handling of pygame events.
 
+Globals:
+    CurrentState (List):
+        A list of boolean values, mapping pygame keys to their currently pressed state.
+
 Functions:
-    handle_events: Runs through all events currently in the pygame event queue, and handles them.
+    update: Runs through all events currently in the pygame event queue, and puts them
+            into the proper game event queue, to be handled in-order in the next frame.
 
 Classes:
+    Event: Used to represent events.
+    GameTimeEvent: An Event type with a 'handle' method and game 'time' property.
+    RealTimeEvent: An Event type with a 'handle' method and real 'time' property.
     PlayerQuit: An Exception class that is raised when the player quits.
     GameOver: An Exception class that is raised when the player loses.
+    KeyPressEvent: A class used to simulate the event that a player presses a key.
+    KeyReleaseEvent: A class used to simulate the event that a player releases a key.
 """
 
 import pygame
+
+from util import *
 import game
-from collections import defaultdict
 
-CurrentState = None
-
-class PlayerQuit(BaseException):
-    """An Exception class that is raised when the player quits."""
-    pass
-
-class GameOver(BaseException):
-    """An Exception class that is raised when the player loses."""
-    pass
+CurrentState = []
 
 _Speed = 0
 
-def handle_events():
-    global _Speed
-    if CurrentState[pygame.K_p]:
-        if game.Speed != 0:
-            _Speed = game.Speed
-        game.Speed = 0
-    else:
-        # This should be done on key release, to avoid always adjusting game speed
-        if _Speed != 0:
-            game.Speed = _Speed
-            _Speed = 0
+class Event:
+    """Base class for any event.  For time-based events, use GameTimeEvent or RealTimeEvent."""
+    pass
     
-    # Get a list of things that handle keypress/release events
-    Controllables = []
-    for key in CurrentState:
-        # TODO: Make key presses and releases get registered by time
-        pressed = defaultdict(lambda: False)
-        released = defaultdict(lambda: False)
-        
-        for controllable in Controllables:
-            if pressed:
-                controllable.key_press(key)
-            elif released:
-                controllable.key_release(key)
+class GameTimeEvent(Event):
+    """Game Time Events have a 'handle' method and a 'time' property >= GameTime."""
+    pass
 
-def update():
-    """Run through all pygame events and call the proper module that should be modified."""
+class RealTimeEvent(Event):
+    """Real Time Events have a 'handle' method and a 'time' property >= CurrentTime"""
+    pass
+
+class PlayerQuit(Exception):
+    """An Exception that is raised when the player quits."""
+    pass
+
+class GameOver(Exception):
+    """An Exception that is raised when the player loses."""
+    pass
+
+class KeyPressEvent(RealTimeEvent):
+    """Event used to indicate a key was pressed.  Key Press/Release events are automatically
+    generated when CurrentState does not match the next key state."""
+    def handle(self):
+        """Handle key press."""
+        # TODO: Move implicit predefined keys into config file
+        if self.key == pygame.K_ESCAPE or self.key == pygame.K_q:
+            raise PlayerQuit
+        
+        if self.key == pygame.K_r:
+            game.CurrentLevel.regenerate_ground()
+        
+        if self.key == pygame.K_p:
+            global _Speed
+            _Speed = game.Speed
+            game.Speed = 0
+
+    def __init__(self, key, time):
+        self.key = key
+        self.time = time
+
+class KeyReleaseEvent(RealTimeEvent):
+    """Event used to indicate a key was released.  Key Press/Release events are automatically
+    generated when CurrentState does not match the next key state."""
+    def handle(self):
+        """Handle key release."""
+        # TODO: Move implicit predefined keys into config file
+        if self.key == pygame.K_p:
+            game.Speed = _Speed
+
+    def __init__(self, key, time):
+        self.key = key
+        self.time = time    
+
+def update(current_time):
+    """Run through all pygame events and add them to the event queue."""
     pygame.event.pump()
     
-    global CurrentState
-    CurrentState = pygame.key.get_pressed()
     
-    # TODO: Create something that handles quitting for escape and Q keypresses
-    # For now, a temporary to quit the game when Escape or Q are pressed.    
-    if CurrentState[pygame.K_ESCAPE] or CurrentState[pygame.K_q]:
-        raise PlayerQuit
-    
-    # Temporarily re-generate the ground when R is pressed.
-    if CurrentState[pygame.K_r]:
-        game.CurrentLevel.regenerate_ground()    
+    # Handle key press/release events
+    global CurrentState    
+    next_state = pygame.key.get_pressed()
+    for key, was_pressed in enumerate(CurrentState):
+        if next_state[key] and not was_pressed:
+            game.RealEvents.append(KeyPressEvent(key, current_time))
+            
+        if was_pressed and not next_state[key]:
+            game.RealEvents.append(KeyReleaseEvent(key, current_time))
+    CurrentState = next_state

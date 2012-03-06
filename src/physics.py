@@ -22,15 +22,12 @@ Globals:
 Functions:
     ParabolaLineCollision(rva, pq): Returns a List of Intersection objects representing the
                                     the collisions between the parabola rva and line pq.
-    LineRayCollision(pq, rv): Returns an Intersection object representing the collision between the
-                              line pq and the line rv.
 
 Classes:
     Intersection: Represents the time and position of an intersection between two objects.
 """
 
 from util import *
-import entity
 import math
 
 ####################################################################################################
@@ -75,14 +72,13 @@ def ParabolaLineCollision(rva, pq):
         i2 = .5 * acc * sqr_t2 + vel * t2 + pos
         return [Intersection(t1, i1), Intersection(t2, i2)]
         
-def _find_intersections(line, other, other_stuff):
+def _find_intersections(line, other, *other_stuff):
     """Find the intersection times between two line segments."""
     pass
 
 def find_intersections(ent, other):
     """Find the intersection times between entities ent and other."""
     pass
-    
 
 class Intersection:
     """Represents the time and position of an intersection between two objects."""
@@ -115,7 +111,6 @@ class Intersection:
         validity.  See the physics module documentation on the global Intersections for when this
         occurs."""
         self.time, self.pos, self.invalid = time, pos, invalid
-
 
 def _update_intersections(ent):
     """Remove any invalid intersections for a specific entity, and recalculate if needed."""
@@ -178,30 +173,8 @@ def _handle_collisions(time_frame):
             else:
                 # Unequal acceleration and velocity
                 pass
-        # TODO: Handle collisions at time > 0
-
-def _update_positions(time_frame_ms):
-    ms_to_s = lambda t: t / 1000
-    time_frame = ms_to_s(time_frame_ms)
-    
-    for ent in entity.Movables:
-        ent.velocity += time_frame * ent.acceleration
-        
-        # Quickly hack the shape to also get updated with the image
-        # TODO: Have Shape.on_position_update called when position is manually changed.
-        if isinstance(ent, entity.Shape):
-            entity.Shape.on_position_update(ent, ent.position + time_frame * ent.velocity)
-            
-        ent.position += time_frame * ent.velocity
-    
+        # TODO: Handle collisions at time > 0    
 
 def _update_intersections():
     """For any entity marked invalid, mark all intersections invalid, and recalculate."""
     pass
-
-def calc_next_frame(time_frame):
-    if time_frame == 0:
-        return
-    _update_intersections()
-    #_handle_collisions(time_frame)
-    _update_positions(time_frame)
