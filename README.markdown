@@ -21,8 +21,8 @@
 Most of the control scheme and game is not yet implemented.
 
     q or Escape: Quit the game
-    r:           While held, randomly re-generate the ground terrain every frame.
-    p:           While held, the game will stay paused.
+    r:           Press to randomly re-generate the ground terrain.
+    p:           Press to pause/unpause the game.
 
 ## About ##
 Jetpack-Man is a game created as a learning exercise.  The intent of this learning exercise is to create an efficient physics engine.
