@@ -2,7 +2,7 @@
 
 ## Requirements ##
  - Python 3.2
- - Pygame (1.9.2a0 or higher)
+ - Pygame (1.9.2a0 or higher.  Only compatible with x86 versions of python, not x86-64 versions)
 
 ## How to run ##
 
