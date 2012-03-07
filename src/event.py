@@ -29,7 +29,7 @@ CurrentState = []
 class Event:
     """Base class for any event.  For time-based events, use GameTimeEvent or RealTimeEvent."""
     pass
-    
+
 class GameTimeEvent(Event):
     """Game Time Events have a 'handle' method and a 'time' property >= GameTime."""
     pass
@@ -55,11 +55,12 @@ class KeyPressEvent(RealTimeEvent):
         # TODO: Move implicit predefined keys into config file
         if self.key == pygame.K_ESCAPE or self.key == pygame.K_q:
             raise PlayerQuit
-        
+
         if self.key == pygame.K_r:
             game.Game.CurrentLevel.regenerate_ground()
-        
+
         if self.key == pygame.K_p:
+            # Toggle pausing
             _game.pause()
 
     def __init__(self, key, time):
@@ -75,19 +76,19 @@ class KeyReleaseEvent(RealTimeEvent):
 
     def __init__(self, key, time):
         self.key = key
-        self.time = time    
+        self.time = time
 
 def update(current_time):
     """Run through all pygame events and add them to the event queue."""
     pygame.event.pump()
-    
+
     # Handle key press/release events
-    global CurrentState    
+    global CurrentState
     next_state = pygame.key.get_pressed()
     for key, was_pressed in enumerate(CurrentState):
         if next_state[key] and not was_pressed:
             game.Game.RealEvents.append(KeyPressEvent(key, current_time))
-            
+
         if was_pressed and not next_state[key]:
             game.Game.RealEvents.append(KeyReleaseEvent(key, current_time))
     CurrentState = next_state

@@ -29,10 +29,10 @@ if __name__ == "__main__":
     debug._DebugMode = args.debug
     debug.Debug.DrawOutlines = args.draw_outlines
     game.Game.FPS = args.FPS
-    
+
     # Set up an SDL environment video parameter, required for pygame.
     os.environ['SDL_VIDEO_CENTERED'] = '1'
-    
+
     # Initialize and run the game!
     pygame.init()
     game.init()

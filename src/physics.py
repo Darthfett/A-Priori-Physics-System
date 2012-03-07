@@ -71,7 +71,7 @@ def ParabolaLineCollision(rva, pq):
         i1 = .5 * acc * sqr_t1 + vel * t1 + pos
         i2 = .5 * acc * sqr_t2 + vel * t2 + pos
         return [Intersection(t1, i1), Intersection(t2, i2)]
-        
+
 def _find_intersections(line, other, *other_stuff):
     """Find the intersection times between two line segments."""
     pass
@@ -173,7 +173,7 @@ def _handle_collisions(time_frame):
             else:
                 # Unequal acceleration and velocity
                 pass
-        # TODO: Handle collisions at time > 0    
+        # TODO: Handle collisions at time > 0
 
 def _update_intersections():
     """For any entity marked invalid, mark all intersections invalid, and recalculate."""

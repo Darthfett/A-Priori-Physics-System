@@ -17,9 +17,9 @@ Globals:
         A sorted list of game events, in the order they occur.  All GameEvents should have a
         'time' property and a 'handle' method, with 'time' being the GameTime at which it should occur.
     RealEvents(List(Event)):
-        A sorted list of real events, in the order they occur.  All RealEvents should have a 
+        A sorted list of real events, in the order they occur.  All RealEvents should have a
         'time' property and a 'handle' method, with 'time' being the RealTime at which it should occur.
-    
+
 
 Functions:
     run: Start the event loop.
@@ -48,27 +48,31 @@ class Game:
     GameTime = 0
     GameEvents = []
     RealEvents = []
-    
+
     @property
     def speed(self):
+        """The current game speed (ignoring paused state)."""
         if not self.paused:
             return self._speed
         else:
             return self._real_speed
-    
+
     @speed.setter
     def speed(self, speed):
+        """Set the current game speed."""
         if not self.paused:
             self._speed = speed
         else:
             self._real_speed = speed
-            
+
     @property
     def paused(self):
+        """Whether the game is paused."""
         return self._real_speed is not None
-    
+
     @paused.setter
     def paused(self, pause):
+        """pause/unpause (True/False) the game."""
         pause = bool(pause)
         if self.paused is pause:
             # already in the right state
@@ -79,24 +83,13 @@ class Game:
         else:
             self._speed = self._real_speed
             self._real_speed = None
-        
+
     def pause(self, paused=None):
+        """Pause, unpause, or flip paused state (default)."""
         if paused is None:
             self.paused = not self.paused
         else:
             self.paused = bool(paused)
-
-    def _update_positions(self, time_frame):
-        """Temporary hack (ignores collisions) to update all Movables' positions."""
-        for ent in Movables:
-            ent.velocity += time_frame * ent.acceleration
-            
-            # Quickly hack the shape to also get updated with the image
-            # TODO: Have Shape.on_position_update called when position is manually changed.
-            if isinstance(ent, Shape):
-                Shape.on_position_update(ent, ent.position + time_frame * ent.velocity)
-                
-            ent.position += time_frame * ent.velocity
 
     def _next_event(self, frame_delta):
         """Get the next event in GameEvents or RealEvents that happens within the next frame_delta ms."""
@@ -111,19 +104,19 @@ class Game:
         except IndexError:
             real_event = event.Event()
             real_event.time = INFINITY
-            
+
         # Get time-to-event
         game_delta_time = game_event.time - Game.GameTime
         real_delta_time = real_event.time - Game.CurrentTime
-        
+
         if game_event.time < Game.GameTime:
             raise Exception("Event %s must occur at a future time." % game_event)
         elif real_event.time < Game.CurrentTime:
             raise Exception("Event %s must occur at a future time." % real_event)
-        
+
         # Normalize game time-to-event to be comparable with real time-to-events
         game_delta_time = ZeroDivide(game_delta_time, self._speed)
-        
+
         if game_delta_time > frame_delta:
             # Game time events are some time after this frame.
             if real_delta_time > frame_delta:
@@ -149,22 +142,22 @@ class Game:
             if len(Game.GameEvents) > 0 and ev is Game.GameEvents[0]:
                 # Game time event
                 delta_time = (ev.time - Game.GameTime) / self._speed
-                
+
                 # Put current time at the event time
                 Game.GameTime += delta_time * self._speed
                 Game.CurrentTime += delta_time
-                
+
                 # Handle event
                 ev.handle()
                 Game.GameEvents.pop(0)
             elif len(Game.RealEvents) > 0 and ev is Game.RealEvents[0]:
                 # Real time event
                 delta_time = ev.time - Game.CurrentTime
-                
+
                 # Put current time at the event time
                 Game.GameTime += delta_time * self._speed
                 Game.CurrentTime += delta_time
-                
+
                 # Handle event
                 ev.handle()
                 Game.RealEvents.pop(0)
@@ -176,8 +169,8 @@ class Game:
 
     def run(self):
         """Start the main event loop."""
-        
-        # Main loop    
+
+        # Main loop
         delta_frame_time = 1000 / Game.FPS
         try:
             while True:
@@ -185,19 +178,12 @@ class Game:
 
                 # Handle mouse and keyboard events
                 event.update(Game._NextFrameTime)
-                
+
                 delta_time = (Game._NextFrameTime - Game.CurrentTime)
                 current_game_time = Game.GameTime
                 if delta_time >= delta_frame_time:
                     # calculate the next frame
                     self._calc_next_frame()
-                    
-                    # TODO: Refactor Entity positions be calculated according to last position time.
-                    # Currently, collisions are never expected, and positions will be wrong if this
-                    # is not refactored.
-                    # For now, calculate new positions
-                    delta_game_time = Game.GameTime - current_game_time
-                    self._update_positions(delta_game_time / 1000)
 
                     # draw the next frame
                     Game.Screen.draw_next_frame()
@@ -205,7 +191,7 @@ class Game:
                     # Update the Display
                     pygame.display.flip()
                 pygame.time.delay(1)
-                
+
         except event.GameOver:
             # Game over!  Just quit for now.
             print("Game over, man!  GAME OVER!")
@@ -214,7 +200,7 @@ class Game:
             print("Game over, man!  GAME OVER!")
         finally:
             pygame.quit()
-            
+
     def __init__(self, speed=1):
         self.__dict__ = self.__shared_state
         if not hasattr(self, "_speed"):
@@ -224,7 +210,7 @@ class Game:
 def init():
     # Resources path
     resources_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")
-    
+
     # Init Window
     Game.Screen
     Game.Screen = Window() # Accept default size and title
@@ -236,7 +222,6 @@ def init():
 
     # Center the screen on the player
     Game.Screen.center_on(player)
-    
+
     # Load First Level
     Game.CurrentLevel = Level("level_1.todo")
-    

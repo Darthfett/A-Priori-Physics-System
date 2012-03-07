@@ -37,6 +37,7 @@ Classes:
 from util import *
 from debug import Debug
 import pygame
+import game
 
 # Gravity acceleration is the default acceleration used for an entity.
 Gravity = Vector(0, -200)
@@ -84,11 +85,11 @@ class Collidable(Entity):
     def on_position_update(self, position):
         # TODO: Have this method called when position is manually changed.
         self.invalidated = True
-        
+
     def on_velocity_update(self, velocity):
         # TODO: Have this method called when velocity is manually changed.
         self.invalidated = True
-        
+
     def on_acceleration_update(self, acceleration):
         # TODO: Have this method called when acceleration is manually changed.
         self.invalidated = True
@@ -106,6 +107,16 @@ class Collidable(Entity):
 
 class Movable(Entity):
     """Movable objects are objects with velocity and acceleration."""
+    
+    @property
+    def position(self):
+        del_time_seconds = (game.Game.GameTime - self._position_valid_time) / 1000
+        return self._position + self.velocity * del_time_seconds + .5 * self.acceleration * (del_time_seconds ** 2)
+    
+    @position.setter
+    def position(self, position):
+        self._position = position
+        self._position_valid_time = game.Game.GameTime
 
     def __init__(self, velocity = None, acceleration = None, **kwargs):
         """Instanciate a movable with velocity and acceleration (and then indirectly with position).
@@ -160,12 +171,12 @@ class LineRenderable:
     def __init__(self, render_lines, color = None, **kwargs):
         """Instanciate a line renderable with a list of lines."""
         self.render_lines, self.color = render_lines, color
-        
+
         if render_lines is None:
             self.render_lines = []
-            
+
         if color is None:
             self.color = (255, 255, 255)
-            
+
         LineRenderables.append(self)
         super().__init__(**kwargs)
