@@ -30,7 +30,9 @@ class Window:
         # Get top left corner, and convert to pygame coordinates
         rect = Rect(blitable.image.get_rect())
         rect.offset(blitable.position)
-        return self.to_pygame_coords(rect.top_left)
+        new_position = self.to_pygame_coords(rect.bottom_left)
+        new_position.y -= blitable.image.get_height()
+        return new_position
 
     def draw_line(self, color, start_pos, end_pos, width=1):
         start = self.to_pygame_coords(start_pos)

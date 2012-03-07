@@ -65,16 +65,6 @@ class Entity:
 class Shape:
     """Shape objects are things that occupy space."""
 
-    def on_position_update(self, position):
-        # TODO: Have this method called when position is manually changed.
-        if not hasattr(self, "position"):
-            delta = position
-        else:
-            delta = position - self.position
-        for line in self.shape:
-            line.p += delta
-            line.q += delta
-
     def __init__(self, shape, **kwargs):
         self.shape = shape
         super().__init__(**kwargs)
@@ -138,7 +128,7 @@ class Projectile(Collidable, Movable, Shape):
     def __init__(self, **kwargs):
         Projectiles.append(self)
         super().__init__(**kwargs)
-
+_tmp = 0
 class Blitable:
     """Blitables are objects with an image."""
 
@@ -146,7 +136,10 @@ class Blitable:
         """Blits the blitable to the specified surface."""
         if Debug.DrawOutlines and hasattr(self, "shape"):
             for line in self.shape:
-                surface.draw_aaline((255, 255, 255), line.p, line.q)
+                try:
+                    surface.draw_aaline((255, 255, 255), line.p + self.position, line.q + self.position)
+                except AttributeError:
+                    surface.draw_aaline((255, 255, 255), line.p, line.q)
         else:
             surface.blit(self)
 

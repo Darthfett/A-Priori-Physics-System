@@ -217,7 +217,7 @@ def init():
 
     # Init Entities
     image = pygame.image.load(os.path.join(resources_path, "guy.png"))
-    player = Player(image = image, shape = Rect(image.get_rect()).shape, position=Vector(0, -50), velocity=Vector(130, 200))
+    player = Player(image = image, shape = Rect(image.get_rect()).shape, position=Vector(0, 0), velocity=Vector(130, 200))
     Entities.append(player)
 
     # Center the screen on the player

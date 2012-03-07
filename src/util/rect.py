@@ -221,7 +221,7 @@ class Rect:
         if rect is not None:
             # Rect is a copy
             if isinstance(rect, pygame.Rect):
-                self._bottom_left = Point(rect.bottomleft)
+                self._bottom_left = Point(rect.topleft)
             else:
                 self._bottom_left = Point(rect.bottom_left)
             self._size = Vector(rect.size)
