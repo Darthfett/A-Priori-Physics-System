@@ -4,6 +4,7 @@ from entity import Entities, LineRenderables
 from ground import Ground
 
 import random
+import physics
 
 class Level:
 
@@ -37,4 +38,4 @@ class Level:
 
         self.ground = Ground(shape = [], render_lines = [])
         self.regenerate_ground()
-        Entities.append(self.ground)
+        physics.update_intersections(self.ground)

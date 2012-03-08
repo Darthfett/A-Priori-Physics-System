@@ -1,5 +1,6 @@
 from util.vector import Vector
 from util.point import Point
+import util
 
 class Line:
     """A Line is defined with two Points, p and q.  This class supports many typical operations
@@ -7,11 +8,11 @@ class Line:
     can be done by using the 'in' operator to determine if a specific point is on the line and
     between the two points that define the segment."""
 
-    __slots__ = ['p', 'q']
+    __slots__ = ['p', 'q', 'color']
 
     def collinear(self, r):
         """Returns whether a Point r is collinear with the line."""
-        return FloatEqual((self.q - self.p).cross(r - self.p), 0)
+        return util.FloatEqual((self.q - self.p).cross(r - self.p), 0)
 
     @property
     def direction(self):
@@ -27,7 +28,7 @@ class Line:
     def y_intercept(self):
         """The y-intercept (i.e. b in y = mx + b) of the line.  If the line is vertical,
         then this will be the x-value of both p and q."""
-        if FloatEqual(p.x, q.x):
+        if util.FloatEqual(p.x, q.x):
             return p.x
         return self.p.y - (self.slope * self.p.x)
 
@@ -47,9 +48,9 @@ class Line:
     def __contains__(self, c):
         """Returns whether this segment contains a point c"""
         if isinstance(c, Vector):
-            return SegmentContainsPoint(self.p, self.q, c)
+            return util.SegmentContainsPoint(self.p, self.q, c)
         elif isinstance(c, Line):
-            return SegmentContainsPoint(self.p, self.q, c.p) and SegmentContainsPoint(self.p, self.q, c.q)
+            return util.SegmentContainsPoint(self.p, self.q, c.p) and util.SegmentContainsPoint(self.p, self.q, c.q)
 
     def __init__(self, p, q = None):
         """Can be defined with a tuple of points, another Line, or two points."""

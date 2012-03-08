@@ -38,6 +38,7 @@ from util import *
 from debug import Debug
 import pygame
 import game
+import physics
 
 # Gravity acceleration is the default acceleration used for an entity.
 Gravity = Vector(0, -200)
@@ -69,8 +70,15 @@ class Shape:
         self.shape = shape
         super().__init__(**kwargs)
 
-class Collidable(Entity):
+class Collidable(Shape, Entity):
     """Collidable objects are objects that can be collided with."""
+    
+    def __getattr__(self, name):
+        if name == "velocity":
+            return Vector(0, 0)
+        if name == "acceleration":
+            return Vector(0, 0)
+        raise AttributeError("%r object has no attribute %r" % (type(self).__name__, name))
 
     def on_position_update(self, position):
         # TODO: Have this method called when position is manually changed.
@@ -91,9 +99,9 @@ class Collidable(Entity):
         self.mass = mass
         if mass is None:
             self.mass = INFINITY
-
         Collidables.append(self)
         super().__init__(**kwargs)
+        physics.update_intersections(self)
 
 class Movable(Entity):
     """Movable objects are objects with velocity and acceleration."""
@@ -128,7 +136,7 @@ class Projectile(Collidable, Movable, Shape):
     def __init__(self, **kwargs):
         Projectiles.append(self)
         super().__init__(**kwargs)
-_tmp = 0
+
 class Blitable:
     """Blitables are objects with an image."""
 
@@ -159,7 +167,10 @@ class LineRenderable:
     def draw(self, surface):
         """Draws the individual lines of the line renderable to the specified surface."""
         for line in self.render_lines:
-            surface.draw_aaline(self.color, line.p, line.q)
+            if hasattr(line, "color"):
+                surface.draw_aaline(line.color, line.p, line.q)
+            else:
+                surface.draw_aaline(self.color, line.p, line.q)
 
     def __init__(self, render_lines, color = None, **kwargs):
         """Instanciate a line renderable with a list of lines."""

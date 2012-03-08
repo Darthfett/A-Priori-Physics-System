@@ -7,9 +7,9 @@ Classes:
 """
 
 from util import *
-from entity import *
+import entity
 
-class Player(Blitable, Projectile):
+class Player(entity.Blitable, entity.Projectile):
     """The Player class, which is controlled by the physical player through keyboard/mouse events."""
     def __init__(self, **kwargs):
         """Instanciate the Player class.  Required keyword arguments:

@@ -30,10 +30,9 @@ import os
 import math
 
 from util import *
-from entity import *
 import event
 from window import Window
-from player import Player
+import player
 from level import Level
 
 class Game:
@@ -117,7 +116,7 @@ class Game:
         # Normalize game time-to-event to be comparable with real time-to-events
         game_delta_time = ZeroDivide(game_delta_time, self._speed)
 
-        if game_delta_time > frame_delta:
+        if game_delta_time > frame_delta or math.isnan(game_delta_time):
             # Game time events are some time after this frame.
             if real_delta_time > frame_delta:
                 return None
@@ -149,7 +148,7 @@ class Game:
 
                 # Handle event
                 ev.handle()
-                Game.GameEvents.pop(0)
+                Game.GameEvents.remove(ev)
             elif len(Game.RealEvents) > 0 and ev is Game.RealEvents[0]:
                 # Real time event
                 delta_time = ev.time - Game.CurrentTime
@@ -160,7 +159,7 @@ class Game:
 
                 # Handle event
                 ev.handle()
-                Game.RealEvents.pop(0)
+                Game.RealEvents.remove(ev)
             elif ev is None:
                 Game.GameTime += (Game._NextFrameTime - Game.CurrentTime) * self._speed
                 Game.CurrentTime = Game._NextFrameTime
@@ -212,16 +211,14 @@ def init():
     resources_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")
 
     # Init Window
-    Game.Screen
     Game.Screen = Window() # Accept default size and title
 
     # Init Entities
     image = pygame.image.load(os.path.join(resources_path, "guy.png"))
-    player = Player(image = image, shape = Rect(image.get_rect()).shape, position=Vector(0, 0), velocity=Vector(130, 200))
-    Entities.append(player)
+    p = player.Player(image = image, shape = Rect(image.get_rect()).shape, position=Vector(0, 100), velocity=Vector(130, 200))
 
     # Center the screen on the player
-    Game.Screen.center_on(player)
+    Game.Screen.center_on(p)
 
     # Load First Level
     Game.CurrentLevel = Level("level_1.todo")
