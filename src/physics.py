@@ -31,6 +31,7 @@ from util import *
 import math
 from heapq import merge, heappush
 from itertools import chain
+import functools
 import entity
 import game
 
@@ -53,12 +54,10 @@ class Intersection:
             raise Exception("Intersection %s occurs between nonexistent things" % self)
         for i in chain(self.e1.intersections, self.e2.intersections):
             i.invalid = True
-        print("%s intersected with %s" % (self.e1, self.e2))
         self.e1.intersections = []
         self.e2.intersections = []
+        
         game.Game().pause()
-        #update_intersections(self.e1)
-        #update_intersections(self.e2)
 
     def __lt__(self, other):
         return self.time < other.time
@@ -81,18 +80,16 @@ class Intersection:
     def __repr__(self):
         return "Intersection(%s, %s, %s)" % (self.time, self.pos, self.invalid)
 
-    def __init__(self, time = INFINITY, pos = None, invalid = True):
-        """Instanciate an intersection (with INFINITE time, None pos, and True invalid attributes).
+    def __init__(self, time = INFINITY, pos = None, invalid = False):
+        """Instanciate an intersection (with INFINITE 'time', None 'pos', and False 'invalid' default attributes).
         An intersection is considered invalid if some outside factors change its time or position
         validity.  See the physics module documentation on the global Intersections for when this
         occurs."""
         self.time, self.pos, self.invalid, self.e1, self.e2 = time, pos, invalid, None, None
 
-def RayLineCollision(point_pos, point_vel, pq):
+def RayLineCollision(pos, vel, p, q):
     pos = point_pos
     vel = point_vel
-    p = pq.p
-    q = pq.q
     
     denom = vel.cross(p) - vel.cross(q)
     
@@ -105,142 +102,115 @@ def RayLineCollision(point_pos, point_vel, pq):
     if time < 0:
         return None
     return Intersection(time, pos + time * vel, False)
+    
+def find_roots(a, b, c):
+    """Find the roots to a quadratic equation."""
+    
+    if FloatEqual(a, 0):
+        if FloatEqual(b, 0):
+            if FloatEqual(c, 0):
+                raise Exception("Cannot find roots for equation identity.")
+            else:
+                raise Exception("Cannot find roots for a non-equation.")
+        return [-c / b]
+    
+    # discriminant reveals information about how many solutions there are
+    discriminant = b ** 2 - 4*a*c
+    
+    if discriminant < 0:
+        # No real solution
+        return []
+    if discriminant < EPSILON:
+        # One real solution
+        return [-b / (2 * a)]
+    # Two real solutions
+    return [(-b + math.sqrt(discriminant)) / (2*a), (-b - math.sqrt(discriminant)) / (2*a)]
 
-def ParabolaLineCollision(point_pos, point_vel, point_acc, pq):
-    """Takes a parabola point_pos, point_vel, point_acc, and a line pq, and returns the intersections between them as a list of
-    Intersections."""
-    if point_acc.x == point_acc.y == 0:
-        # Not a parabola
-        intersection = RayLineCollision(point_pos, point_vel, pq)
-        if intersection is not None:
-            return [intersection]
-        else:
-            return []
-    pos = point_pos
-    vel = point_vel
-    acc = point_acc
-    p = pq.p
-    q = pq.q
+def ParabolaLineCollision(pos, vel, acc, p, q):
+    """Takes a parabola pos, vel, acc, and a line p q, and returns the intersections between them as a list of
+    Intersections.
+    Intersections are not necessarily in the line segment pq."""
 
+    # time of intersection is defined by the equation
+    # a*time^2 + b*time + c = 0
     a = .5 * (acc.cross(q) - acc.cross(p))
     b = (vel.cross(q) - vel.cross(p))
     c = (pos.cross(q) - pos.cross(p) - p.cross(q))
-
-    discriminant = b ** 2 - 4*a*c
-
-    if discriminant < -EPSILON:
-        # dicriminant is negative.  No real intersections.
+    
+    roots = find_roots(a, b, c)
+    if len(roots) == 0:
         return []
-    elif discriminant < EPSILON:
-        # discriminant is 0.  one intersection.
-        if FloatEqual(a, 0):
-            # No intersection
-            return []
-        time = (-b / (2*a)) / 1000
-        sqr_time = time ** 2
-        intersection = .5 * acc * sqr_time + vel * time + pos
-        if intersection in pq:
-            return [Intersection(time, intersection, False)]
-        else:
-            return []
-    else:
-        # discriminant is positive.  two intersections.
-        t1 = ((-b + math.sqrt(discriminant)) / 2*a) / 1000
-        t2 = ((-b - math.sqrt(discriminant)) / 2*a) / 1000
-        sqr_t1 = t1 ** 2
-        sqr_t2 = t2 ** 2
-        i1 = .5 * acc * sqr_t1 + vel * t1 + pos
-        i2 = .5 * acc * sqr_t2 + vel * t2 + pos
-        if i1 in pq:
-            if i2 in pq:
-                return [Intersection(t1, i1, False), Intersection(t2, i2, False)]
-            else:
-                return [Intersection(t1, i1, False)]
-        else:
-            if i2 in pq:
-                return [Intersection(t2, i2, False)]
-            else:
-                return []
+    if len(roots) == 1:
+        # Intersection time in seconds
+        time = roots[0]
+        
+        # Intersection position relative to p
+        relative_position = (.5 * acc * (time ** 2) + vel * time + pos) - p
+        return [Intersection(time * 1000, relative_position)]
+        
+    # Intersection times in seconds
+    seconds = [time for time in roots]
+    # Intersection positions relative to p
+    relative_positions = [(.5 * acc * (sec ** 2) + vel * sec + pos) - p for sec in seconds]
+        
+    return [Intersection(time * 1000, position) for time, position in zip(roots, relative_positions)]
+
+
         
 def find_intersections(line1, v1, a1, line2, v2, a2):
     """Returns an unsorted list of intersections between line1 and line2."""
+    
+    # Find collisions with relative velocity/acceleration
     vel_line1_rel_line2 = v1 - v2
     acc_line1_rel_line2 = a1 - a2
     vel_line2_rel_line1 = v2 - v1
     acc_line2_rel_line1 = a2 - a1
-    i1 = ParabolaLineCollision(line1.p, vel_line1_rel_line2, acc_line1_rel_line2, line2)
-    i2 = ParabolaLineCollision(line1.q, vel_line1_rel_line2, acc_line1_rel_line2, line2)
-    i3 = ParabolaLineCollision(line2.p, vel_line2_rel_line1, acc_line1_rel_line2, line1)
-    i4 = ParabolaLineCollision(line2.q, vel_line2_rel_line1, acc_line1_rel_line2, line1)
-    intersections = i1 + i2 + i3 + i4
-    intersections = list(filter(lambda i: i.time >= 0, intersections))
-    if len(intersections):
-        line1.color = (255, 0, 0)
-        line2.color = (255, 0, 0)
+    i1 = ParabolaLineCollision(line1.p, vel_line1_rel_line2, acc_line1_rel_line2, *line2)
+    i2 = ParabolaLineCollision(line1.q, vel_line1_rel_line2, acc_line1_rel_line2, *line2)
+    i3 = ParabolaLineCollision(line2.p, vel_line2_rel_line1, acc_line1_rel_line2, *line1)
+    i4 = ParabolaLineCollision(line2.q, vel_line2_rel_line1, acc_line1_rel_line2, *line1)
+    
+    # Filter function to remove any collisions not in the segment, and with negative time.
+    def intersection_filter(line, intersection):
+        if intersection.time < 0:
+            return False
+        if not SegmentContainsPoint(line.p, line.q, line.p + intersection.pos):
+            return False
+        return True
+    
+    # filter with filter function for the specified line
+    valid_int_1 = list(filter(functools.partial(intersection_filter, line2), chain(i1, i2)))
+    valid_int_2 = list(filter(functools.partial(intersection_filter, line1), chain(i3, i4)))
+
+    # combine into one list
+    intersections = valid_int_1 + valid_int_2
+    
+    # intersections were calculated from current time, change to absolute time
+    for i in intersections:
+        i.time += game.Game.GameTime
+    
     return intersections
     
 def update_intersections(ent):
+    """Calculate all intersections between the given entity, and add them to the event list."""
     for collidable in entity.Collidables:
         if ent is collidable:
+            # don't collide with self
             continue
         intersections = []
-        pairs = [(line1, line2) for line1 in ent.shape for line2 in collidable.shape]
+        # Get all pairs of line segments between the two entities' shapes
+        pairs = [(line1 + ent.position, line2 + collidable.position) for line1, line2 in zip(ent.shape, collidable.shape)]
         for line1, line2 in pairs:
+            # Find all the intersections and add to the intersections list
             for intersection in find_intersections(line1, ent.velocity, ent.acceleration, line2, collidable.velocity, collidable.acceleration):
                 intersection.e1 = ent
                 intersection.e2 = collidable
                 heappush(intersections, intersection)
-                print(intersection)
                 
+        # Sort all the intersections, and add to gave event list
         intersections.sort()
+        game.Game.GameEvents = list(merge(game.Game.GameEvents, intersections))
+        
+        # Entities keep track of their intersections so they can mark them invalid.
         ent.intersections = list(merge(ent.intersections, intersections))
         collidable.intersections = list(merge(collidable.intersections, intersections))
-        game.Game.GameEvents = list(merge(game.Game.GameEvents, intersections))
-
-def _handle_collisions(time_frame):
-    """Update entities' positions and handle any collisions for time_frame ms."""
-    # Update all intersections
-    for ent in Entities:
-        if ent.invalidated:
-            _update_intersections(ent)
-
-    # Get all entities with valid intersections
-    # valid = filter(Entities, lambda ent: len(ent.intersections) > 0)
-
-    # Sort entities by first intersection time
-    # valid.sort(key = lambda ent: ent.intersections[0].time)
-
-    I = Intersections[0]
-    while I.intersection.time <= time_frame:
-        intersection, ent, other = I
-        time, position, invalid = intersection
-        if time > time_frame:
-            break
-
-        if intersection.invalid:
-            Intersections.pop(0)
-            intersection = Intersections[0]
-            continue
-
-        # Handle intersection
-        if -EPSILON <= intersection.time < EPSILON:
-            # Handle collisions at time 0
-            if FloatEqual(ent.velocity, other.velocity) and FloatEqual(ent.acceleration, other.acceleration):
-                # Not going to collide, ignore this collision
-                Intersections.pop(0)
-                intersection = Intersections[0]
-                continue
-            elif FloatEqual(ent.velocity, other.velocity):
-                # Equal acceleration
-                pass
-            elif FloatEqual(ent.acceleration, other.acceleration):
-                # Equal acceleration
-                pass
-            else:
-                # Unequal acceleration and velocity
-                pass
-        # TODO: Handle collisions at time > 0
-
-def _update_intersections():
-    """For any entity marked invalid, mark all intersections invalid, and recalculate."""
-    pass

@@ -108,8 +108,8 @@ class Game:
         game_delta_time = game_event.time - Game.GameTime
         real_delta_time = real_event.time - Game.CurrentTime
 
-        if game_event.time < Game.GameTime:
-            raise Exception("Event %s must occur at a future time." % game_event)
+        if game_event.time < Game.GameTime - EPSILON:
+            raise Exception("Event must occur at a future time (%s > %s)" % (game_event.time, Game.GameTime))
         elif real_event.time < Game.CurrentTime:
             raise Exception("Event %s must occur at a future time." % real_event)
 

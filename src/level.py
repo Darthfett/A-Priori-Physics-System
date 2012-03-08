@@ -17,7 +17,7 @@ class Level:
         get_height = lambda min, max: random.randrange(min, max)
 
         # generate vertices
-        vertices = [(i, get_height(min_height, max_height)) for i in range(0, self.boundary.width, interval)]
+        vertices = [(i, get_height(min_height, max_height)) for i in range(0, self.boundary.width+1, interval)]
 
         # generate lines connecting vertices
         lines = []
@@ -33,7 +33,7 @@ class Level:
     def __init__(self, path):
         """Take a file at path, and extract level details."""
         # TODO: Load this in as a file
-        width, height = 5000, 5000
+        width, height = 640, 480
         self.boundary = Rect(size=(width, height))
 
         self.ground = Ground(shape = [], render_lines = [])
