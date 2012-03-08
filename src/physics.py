@@ -86,22 +86,6 @@ class Intersection:
         validity.  See the physics module documentation on the global Intersections for when this
         occurs."""
         self.time, self.pos, self.invalid, self.e1, self.e2 = time, pos, invalid, None, None
-
-def RayLineCollision(pos, vel, p, q):
-    pos = point_pos
-    vel = point_vel
-    
-    denom = vel.cross(p) - vel.cross(q)
-    
-    if FloatEqual(denom, 0):
-        return None
-        
-    numerator = pos.cross(q) - pos.cross(p) + q.cross(p)
-    
-    time = numerator / denom
-    if time < 0:
-        return None
-    return Intersection(time, pos + time * vel, False)
     
 def find_roots(a, b, c):
     """Find the roots to a quadratic equation."""
@@ -148,14 +132,10 @@ def ParabolaLineCollision(pos, vel, acc, p, q):
         relative_position = (.5 * acc * (time ** 2) + vel * time + pos) - p
         return [Intersection(time * 1000, relative_position)]
         
-    # Intersection times in seconds
-    seconds = [time for time in roots]
     # Intersection positions relative to p
-    relative_positions = [(.5 * acc * (sec ** 2) + vel * sec + pos) - p for sec in seconds]
-        
+    relative_positions = [(.5 * acc * (time ** 2) + vel * time + pos) - p for time in roots]
+    
     return [Intersection(time * 1000, position) for time, position in zip(roots, relative_positions)]
-
-
         
 def find_intersections(line1, v1, a1, line2, v2, a2):
     """Returns an unsorted list of intersections between line1 and line2."""
@@ -167,13 +147,14 @@ def find_intersections(line1, v1, a1, line2, v2, a2):
     acc_line2_rel_line1 = a2 - a1
     i1 = ParabolaLineCollision(line1.p, vel_line1_rel_line2, acc_line1_rel_line2, *line2)
     i2 = ParabolaLineCollision(line1.q, vel_line1_rel_line2, acc_line1_rel_line2, *line2)
-    i3 = ParabolaLineCollision(line2.p, vel_line2_rel_line1, acc_line1_rel_line2, *line1)
-    i4 = ParabolaLineCollision(line2.q, vel_line2_rel_line1, acc_line1_rel_line2, *line1)
+    i3 = ParabolaLineCollision(line2.p, vel_line2_rel_line1, acc_line2_rel_line1, *line1)
+    i4 = ParabolaLineCollision(line2.q, vel_line2_rel_line1, acc_line2_rel_line1, *line1)
     
     # Filter function to remove any collisions not in the segment, and with negative time.
     def intersection_filter(line, intersection):
         if intersection.time < 0:
             return False
+        print(intersection)
         if not SegmentContainsPoint(line.p, line.q, line.p + intersection.pos):
             return False
         return True
@@ -202,7 +183,8 @@ def update_intersections(ent):
         pairs = [(line1 + ent.position, line2 + collidable.position) for line1, line2 in zip(ent.shape, collidable.shape)]
         for line1, line2 in pairs:
             # Find all the intersections and add to the intersections list
-            for intersection in find_intersections(line1, ent.velocity, ent.acceleration, line2, collidable.velocity, collidable.acceleration):
+            pair_intersections = find_intersections(line1, ent.velocity, ent.acceleration, line2, collidable.velocity, collidable.acceleration) 
+            for intersection in pair_intersections:
                 intersection.e1 = ent
                 intersection.e2 = collidable
                 heappush(intersections, intersection)
