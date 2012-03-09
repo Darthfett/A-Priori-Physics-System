@@ -123,7 +123,7 @@ class Vector:
         return 2
 
     def __repr__(self):
-        return "(" + str(self.x) + ", " + str(self.y) + ")"
+        return "(%s, %s)"% (format(self.x, '.2f'), format(self.y, '.2f'))
 
     def __getitem__(self, item):
         """Supports getting coordinate by index, like an x, y tuple."""
