@@ -52,11 +52,8 @@ class Intersection:
             return
         if not hasattr(self, "e1") or not hasattr(self, "e2"):
             raise Exception("Intersection %s occurs between nonexistent things" % self)
-        for i in chain(self.e1.intersections, self.e2.intersections):
-            i.invalid = True
-        self.e1.intersections = []
-        self.e2.intersections = []
-        
+        self.e1.recalculate_intersections()
+        self.e2.recalculate_intersections()        
         game.Game().pause()
 
     def __lt__(self, other):
