@@ -48,13 +48,16 @@ class Window:
         """Draws an object to the screen."""
         # blit blitable to screen
         self.screen.blit(blitable.image, self.to_pygame(blitable))
+    
+    def clear(self):
+        """Clear the screen."""
+        self.screen.fill((0, 0, 0))
+        
 
     def draw_next_frame(self):
         """Draws all objects."""
-        
+        self.clear()
         # TODO: center the screen at self.center_box.center
-        
-        self.screen.fill((0, 0, 0))
         self._center()
         ents = set(Blitables)
         ents = ents.union(LineRenderables)

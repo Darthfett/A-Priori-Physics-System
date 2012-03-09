@@ -44,6 +44,7 @@ class Game:
     FPS = 60
     CurrentLevel = None
     _NextFrameTime = 0
+    _DelayTime = 0
     CurrentTime = 0
     GameTime = 0
     GameEvents = []
@@ -172,9 +173,17 @@ class Game:
 
         # Main loop
         delta_frame_time = 1000 / Game.FPS
+        
+        # Give the black screen to avoid starting-up flicker
+        Game.Screen.clear()
+        pygame.display.flip()
+        
+        # Ignore any initialization time
+        Game._DelayTime = pygame.time.get_ticks()
         try:
             while True:
-                Game._NextFrameTime = pygame.time.get_ticks()
+                # The real real time, offset by the Delay from init
+                Game._NextFrameTime = pygame.time.get_ticks() - Game._DelayTime
 
                 # Handle mouse and keyboard events
                 event.update(Game._NextFrameTime)
