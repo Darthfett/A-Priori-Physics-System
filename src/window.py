@@ -58,7 +58,7 @@ class Window:
         """Draws all objects."""
         self.clear()
         # TODO: center the screen at self.center_box.center
-        self._center()
+        # self._center()
         ents = set(Blitables)
         ents = ents.union(LineRenderables)
         for ent in ents:

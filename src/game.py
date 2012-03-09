@@ -223,12 +223,5 @@ def init():
     # Init Window
     Game.Screen = Window() # Accept default size and title
 
-    # Init Entities
-    image = pygame.image.load(os.path.join(resources_path, "guy.png"))
-    p = player.Player(image = image, shape = Rect(image.get_rect()).shape, position=Vector(0, 350), velocity=Vector(130, -100))
-
-    # Center the screen on the player
-    Game.Screen.center_on(p)
-
     # Load First Level
-    Game.CurrentLevel = Level("level_1.todo")
+    Game.CurrentLevel = Level("level_1.todo", resources_path)

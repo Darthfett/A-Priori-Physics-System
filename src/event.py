@@ -62,6 +62,9 @@ class KeyPressEvent(RealTimeEvent):
         if self.key == pygame.K_p:
             # Toggle pausing
             _game.pause()
+            
+        if self.key == pygame.K_SPACE:
+            game.Game.CurrentLevel.reset_player()
 
     def __init__(self, key, time):
         self.key = key
