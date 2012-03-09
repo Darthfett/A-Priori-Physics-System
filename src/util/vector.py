@@ -1,4 +1,5 @@
 import math
+import util
 
 class Vector:
     """A Vector is a 2 dimensional [x, y] pair.
@@ -35,7 +36,7 @@ class Vector:
 
     def collinear(self, q, r):
         """Returns whether q, and r are collinear with the point."""
-        return FloatEqual((q - self).cross(r - self), 0)
+        return util.FloatEqual((q - self).cross(r - self), 0)
 
     def projected_onto(self, line):
         """Returns the closest point on the line."""
@@ -49,6 +50,9 @@ class Vector:
         self.x, self.y = self.projected_onto(line)
 
 #Operators:
+
+    def __eq__(self, vec):
+        return util.FloatEqual(self.x, vec.x) and util.FloatEqual(self.y, vec.y)
 
     def __add__(self, vec):
         return Vector(self.x + vec[0], self.y + vec[1])

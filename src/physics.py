@@ -101,7 +101,6 @@ def find_roots(a, b, c):
                 raise Exception("Cannot find roots for equation identity.")
             else:
                 raise Exception("Cannot find roots for a non-equation.")
-        # TODO: Investigate for situations with 0 acceleration
         return []
     
     # discriminant reveals information about how many solutions there are
@@ -127,7 +126,10 @@ def ParabolaLineCollision(pos, vel, acc, p, q):
     b = (vel.cross(q) - vel.cross(p))
     c = (pos.cross(q) - pos.cross(p) - p.cross(q))
     
-    roots = find_roots(a, b, c)
+    if not acc == Vector(0, 0):
+        roots = find_roots(a, b, c)
+    else:
+        roots = [-c / b]
     if len(roots) == 0:
         return []
     if len(roots) == 1:
