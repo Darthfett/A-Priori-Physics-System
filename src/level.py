@@ -5,6 +5,7 @@ from ground import Ground
 
 import random
 import physics
+import game
 
 class Level:
 
@@ -13,7 +14,7 @@ class Level:
 
         # random height between 1 and 64, every 64 pixels
         interval = 64
-        min_height, max_height = 1, 64
+        min_height, max_height = 1, 128
         get_height = lambda min, max: random.randrange(min, max)
 
         # generate vertices
@@ -29,6 +30,8 @@ class Level:
         # set as the shape and render_lines for the ground
         self.ground.render_lines = lines
         self.ground.shape = lines
+        game.Game().pause(False)
+        self.ground.recalculate_intersections()
 
     def __init__(self, path):
         """Take a file at path, and extract level details."""

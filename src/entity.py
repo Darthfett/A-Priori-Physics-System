@@ -79,22 +79,15 @@ class Collidable(Shape, Entity):
         if name == "acceleration":
             return Vector(0, 0)
         raise AttributeError("%r object has no attribute %r" % (type(self).__name__, name))
-
-    def on_position_update(self, position):
-        # TODO: Have this method called when position is manually changed.
-        self.invalidated = True
-
-    def on_velocity_update(self, velocity):
-        # TODO: Have this method called when velocity is manually changed.
-        self.invalidated = True
-
-    def on_acceleration_update(self, acceleration):
-        # TODO: Have this method called when acceleration is manually changed.
-        self.invalidated = True
+        
+    def recalculate_intersections(self):
+        for intersection in self.intersections:
+            intersection.invalid = True
+        self.intersections = []
+        physics.update_intersections(self)
 
     def __init__(self, mass = None, **kwargs):
         """Instanciate a collidable with mass (defaults to INFINITY)."""
-        self.invalidated = True
         self.intersections = []
         self.mass = mass
         if mass is None:
@@ -108,20 +101,32 @@ class Movable(Entity):
     
     @property
     def position(self):
-        del_time_seconds = (game.Game.GameTime - self._position_valid_time) / 1000
-        return self._position + self.velocity * del_time_seconds + .5 * self.acceleration * (del_time_seconds ** 2)
+        del_time_seconds = (game.Game.GameTime - self._valid_time) / 1000
+        return self._position + self._velocity * del_time_seconds + .5 * self.acceleration * (del_time_seconds ** 2)
     
     @position.setter
     def position(self, position):
+        """Updating position inherently invalidates all collisions, but does not take care of doing this."""
         self._position = position
-        self._position_valid_time = game.Game.GameTime
+        self._valid_time = game.Game.GameTime
+        
+    @property
+    def velocity(self):
+        del_time_seconds = (game.Game.GameTime - self._valid_time) / 1000
+        return self._velocity + del_time_seconds * self.acceleration
+    
+    @velocity.setter
+    def velocity(self, velocity):
+        """Updating velocity inherently invalidates all collisions, but does not take care of doing this."""
+        self._position = self.position
+        self._velocity = velocity
 
     def __init__(self, velocity = None, acceleration = None, **kwargs):
         """Instanciate a movable with velocity and acceleration (and then indirectly with position).
         velocity defaults to (0, 0), and acceleration to Gravity."""
-        self.velocity, self.acceleration = velocity, acceleration
+        self._velocity, self.acceleration = velocity, acceleration
         if velocity is None:
-            self.velocity = Vector(0, 0)
+            self._velocity = Vector(0, 0)
 
         if acceleration is None:
             # Copy Gravity vector
