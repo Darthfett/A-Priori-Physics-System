@@ -6,7 +6,7 @@ import argparse
 import debug
 
 import game
-import cProfile
+#import cProfile
 
 # Create Argument parser
 parser = argparse.ArgumentParser(description='Runs the game Jetpack-Man',

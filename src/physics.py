@@ -118,17 +118,19 @@ def ParabolaLineCollision(pos, vel, acc, p, q):
 
     # time of intersection is defined by the equation
     # a*time^2 + b*time + c = 0
-    a = .5 * (acc.cross(q) - acc.cross(p))
-    b = (vel.cross(q) - vel.cross(p))
-    c = (pos.cross(q) - pos.cross(p) - p.cross(q))
     
-    if not acc == Vector(0, 0):
-        roots = find_roots(a, b, c)
-    else:
-        if not vel == Vector(0, 0):
-            roots = [-c / b]
-        else:
+    if acc == Vector(0, 0):
+        if vel == Vector(0, 0):
             return []
+        else:
+            roots = [-c / b]
+    else:
+        a = .5 * (acc.cross(q) - acc.cross(p))
+        b = (vel.cross(q) - vel.cross(p))
+        c = (pos.cross(q) - pos.cross(p) - p.cross(q))
+        
+        roots = find_roots(a, b, c)
+
     if len(roots) == 0:
         return []
     if len(roots) == 1:
@@ -144,7 +146,7 @@ def ParabolaLineCollision(pos, vel, acc, p, q):
     
     return [Intersection(time * 1000, position) for time, position in zip(roots, relative_positions)]
     
-def find_intersections(line1, v1, a1, line2, v2, a2):
+def find_intersections(line1, v1, a1, line2, v2, a2, current_time):
     """Returns an unsorted list of intersections between line1 and line2."""
     
     # Find collisions with relative velocity/acceleration
@@ -162,16 +164,19 @@ def find_intersections(line1, v1, a1, line2, v2, a2):
     for int in chain(i1, i2, i3, i4):
         if int.time < -EPSILON:
             continue
+        # A position is invalid if it is not inside one of the two line --segments--
         if (Position(line1.p, v_line1_line2, a_line1_line2, int.time / 1000) in line2 or
                 Position(line1.q, v_line1_line2, a_line1_line2, int.time / 1000) in line2 or
                 Position(line2.p, v_line2_line1, a_line2_line1, int.time / 1000) in line1 or
                 Position(line2.q, v_line2_line1, a_line2_line1, int.time / 1000) in line1):
+            # position valid
             intersections.append(int)
-            int.time += game.Game.GameTime
+            int.time += current_time
     return intersections
     
 def update_intersections(ent):
     """Calculate all intersections between the given entity, and add them to the event list."""
+    current_time = game.Game.GameTime
     for collidable in entity.Collidables:
         if ent is collidable:
             # don't collide with self
@@ -180,7 +185,7 @@ def update_intersections(ent):
         # Get all pairs of line segments between the two entities' shapes
         for line1, line2 in product(ent.shape, collidable.shape):
             # Find all the intersections and add to the intersections list
-            pair_intersections = find_intersections(line1 + ent.position, ent.velocity, ent.acceleration, line2 + collidable.position, collidable.velocity, collidable.acceleration)
+            pair_intersections = find_intersections(line1 + ent.position, ent.velocity, ent.acceleration, line2 + collidable.position, collidable.velocity, collidable.acceleration, current_time)
 
             for intersection in pair_intersections:
                 intersection.e1 = ent
