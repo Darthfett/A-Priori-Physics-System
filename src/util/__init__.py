@@ -41,6 +41,16 @@ NAN = float("nan")
 INFINITY = float("inf")
 EPSILON = 1e-10
 
+def Position(position, velocity, acceleration, delta_time):
+    """Get a new position given velocity/acceleration and some time in ms."""
+    return position + velocity * delta_time + .5 * acceleration * (delta_time ** 2)
+    
+def ms_to_s(ms):
+    return ms / 1000
+
+def s_to_ms(s):
+    return s * 1000
+
 def SignOf(a):
     """Get the sign of a number (positive: 1, negative: -1).
     VERY small negative numbers are positive."""

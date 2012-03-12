@@ -6,6 +6,7 @@ import argparse
 import debug
 
 import game
+import cProfile
 
 # Create Argument parser
 parser = argparse.ArgumentParser(description='Runs the game Jetpack-Man',
@@ -34,10 +35,13 @@ if __name__ == "__main__":
     os.environ['SDL_VIDEO_CENTERED'] = '1'
 
     # Initialize and run the game!
-    pygame.init()
-    game.init()
-    _game = game.Game(speed = args.speed)
-    _game.run()
+    def go():
+        pygame.init()
+        game.init()
+        _game = game.Game(speed = args.speed)
+        _game.run()
+    # cProfile.run('go()', 'profile')
+    go()
 else:
     # The game is being imported as a module;
     # We don't handle this scenario.

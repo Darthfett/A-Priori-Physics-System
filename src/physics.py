@@ -52,8 +52,8 @@ class Intersection:
             return
         if not hasattr(self, "e1") or not hasattr(self, "e2"):
             raise Exception("Intersection %s occurs between nonexistent things" % self)
-        self.e1.recalculate_intersections()
-        self.e2.recalculate_intersections()        
+        #self.e1.recalculate_intersections()
+        #self.e2.recalculate_intersections()        
         game.Game().pause()
 
     def __lt__(self, other):
@@ -77,9 +77,8 @@ class Intersection:
     def __str__(self):
         return "I(%s, %s, %s) between %s(%s) and %s(%s)" % (format(self.time, '.2f'), self.pos, self.invalid, self.line1, self.e1, self.line2, self.e2)
         
-
     def __repr__(self):
-        return "I(%s, %s, %s)" % (format(self.time, '.2f'), self.pos, self.invalid)
+        return "I(%s, %s, %s)" % (format(self.time, '.2f'), self.pos, 'T' if self.invalid else 'F')
 
     def __init__(self, time = INFINITY, pos = None, invalid = False):
         """Instanciate an intersection (with INFINITE 'time', None 'pos', and False 'invalid' default attributes).
@@ -126,54 +125,49 @@ def ParabolaLineCollision(pos, vel, acc, p, q):
     if not acc == Vector(0, 0):
         roots = find_roots(a, b, c)
     else:
-        roots = [-c / b]
+        if not vel == Vector(0, 0):
+            roots = [-c / b]
+        else:
+            return []
     if len(roots) == 0:
         return []
     if len(roots) == 1:
         # Intersection time in seconds
         time = roots[0]
         
-        # Intersection position relative to p
-        relative_position = (.5 * acc * (time ** 2) + vel * time + pos) - p
+        # Intersection position
+        relative_position = Position(pos, vel, acc, time)
         return [Intersection(time * 1000, relative_position)]
         
-    # Intersection positions relative to p
-    relative_positions = [(.5 * acc * (time ** 2) + vel * time + pos) - p for time in roots]
+    # Intersection positions
+    relative_positions = [Position(pos, vel, acc, time) for time in roots]
     
     return [Intersection(time * 1000, position) for time, position in zip(roots, relative_positions)]
-        
+    
 def find_intersections(line1, v1, a1, line2, v2, a2):
     """Returns an unsorted list of intersections between line1 and line2."""
     
     # Find collisions with relative velocity/acceleration
-    vel_line1_rel_line2 = v1 - v2
-    acc_line1_rel_line2 = a1 - a2
-    vel_line2_rel_line1 = v2 - v1
-    acc_line2_rel_line1 = a2 - a1
-    i1 = ParabolaLineCollision(line1.p, vel_line1_rel_line2, acc_line1_rel_line2, *line2)
-    i2 = ParabolaLineCollision(line1.q, vel_line1_rel_line2, acc_line1_rel_line2, *line2)
-    i3 = ParabolaLineCollision(line2.p, vel_line2_rel_line1, acc_line2_rel_line1, *line1)
-    i4 = ParabolaLineCollision(line2.q, vel_line2_rel_line1, acc_line2_rel_line1, *line1)
+    v_line1_line2 = v1 - v2
+    a_line1_line2 = a1 - a2
+    v_line2_line1 = v2 - v1
+    a_line2_line1 = a2 - a1
+    i1 = ParabolaLineCollision(line1.p, v_line1_line2, a_line1_line2, *line2)
+    i2 = ParabolaLineCollision(line1.q, v_line1_line2, a_line1_line2, *line2)
+    # TODO: Investigate possibility of eliminating redundant intersection calculation
+    i3 = ParabolaLineCollision(line2.p, v_line2_line1, a_line2_line1, *line1)
+    i4 = ParabolaLineCollision(line2.q, v_line2_line1, a_line2_line1, *line1)
     
-    # Filter function to remove any collisions not in the segment, and with negative time.
-    def intersection_filter(line, intersection):
-        if intersection.time < -EPSILON:
-            return False
-        if not (line.p + intersection.pos) in line:
-            return False
-        return True
-    
-    # filter with filter function for the specified line
-    valid_int_1 = list(filter(functools.partial(intersection_filter, line2), chain(i1, i2)))
-    valid_int_2 = list(filter(functools.partial(intersection_filter, line1), chain(i3, i4)))
-
-    # combine into one list
-    intersections = valid_int_1 + valid_int_2
-    
-    # intersections were calculated from current time, change to absolute time
-    for i in intersections:
-        i.time += game.Game.GameTime
-    
+    intersections = []
+    for int in chain(i1, i2, i3, i4):
+        if int.time < -EPSILON:
+            continue
+        if (Position(line1.p, v_line1_line2, a_line1_line2, int.time / 1000) in line2 or
+                Position(line1.q, v_line1_line2, a_line1_line2, int.time / 1000) in line2 or
+                Position(line2.p, v_line2_line1, a_line2_line1, int.time / 1000) in line1 or
+                Position(line2.q, v_line2_line1, a_line2_line1, int.time / 1000) in line1):
+            intersections.append(int)
+            int.time += game.Game.GameTime
     return intersections
     
 def update_intersections(ent):
@@ -187,6 +181,7 @@ def update_intersections(ent):
         for line1, line2 in product(ent.shape, collidable.shape):
             # Find all the intersections and add to the intersections list
             pair_intersections = find_intersections(line1 + ent.position, ent.velocity, ent.acceleration, line2 + collidable.position, collidable.velocity, collidable.acceleration)
+
             for intersection in pair_intersections:
                 intersection.e1 = ent
                 intersection.e2 = collidable

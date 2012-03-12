@@ -131,7 +131,11 @@ class Vector:
 
     def __getitem__(self, item):
         """Supports getting coordinate by index, like an x, y tuple."""
-        return [self.x, self.y][item]
+        if item == 0:
+            return self.x
+        elif item == 1 or item == -1:
+            return self.y
+        raise IndexError
 
     def __init__(self, x, y = None):
         """Initialize an x, y Vector.  Can take a tuple or individual arguments."""

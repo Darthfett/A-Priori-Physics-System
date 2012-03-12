@@ -102,7 +102,7 @@ class Movable(Entity):
     @property
     def position(self):
         del_time_seconds = (game.Game.GameTime - self._valid_time) / 1000
-        return self._position + self._velocity * del_time_seconds + .5 * self.acceleration * (del_time_seconds ** 2)
+        return Position(self._position, self._velocity, self.acceleration, del_time_seconds)
     
     @position.setter
     def position(self, position):
