@@ -43,6 +43,51 @@ Intersections = []
 
 ####################################################################################################
 
+def handle_collision(I):
+    if not hasattr(I.e1, '_cur_colliding'):
+        I.e1._cur_colliding = []
+        I.e1._cur_colliding_time = game.Game.GameTime
+    if not hasattr(I.e2, '_cur_colliding'):
+        I.e2._cur_colliding = []
+        I.e2._cur_colliding_time = game.Game.GameTime
+        
+    if abs(I.e1._cur_colliding_time - game.Game.GameTime) < EPSILON:
+        if I.e2 in I.e1._cur_colliding:
+            # Collision already handled
+            I.e1._cur_colliding_time = game.Game.GameTime
+            return
+        else:
+            I.e1._cur_colliding.append(I.e2)
+            I.e1._cur_colliding_time = game.Game.GameTime
+    else:
+        I.e1._cur_colliding = [I.e2]
+        I.e1._cur_colliding_time = game.Game.GameTime
+        
+    if abs(I.e2._cur_colliding_time - game.Game.GameTime) < EPSILON:
+        if I.e1 in I.e2._cur_colliding:
+            # Collision already handled
+            I.e2._cur_colliding_time = game.Game.GameTime
+            return
+        else:
+            I.e2._cur_colliding.append(I.e1)
+            I.e2._cur_colliding_time = game.Game.GameTime
+    else:
+        I.e2._cur_colliding = [I.e1]
+        I.e2._cur_colliding_time = game.Game.GameTime
+    
+    try:
+        I.e1.velocity = I.e1.velocity.reflected(~I.line2.direction.normalized()) * .9
+    except AttributeError:
+        pass
+    
+    try:
+        I.e2.velocity = I.e2.velocity.reflected(~I.line1.direction.normalized()) * .9
+    except AttributeError:
+        pass
+    I.e1.recalculate_intersections()
+    I.e2.recalculate_intersections()
+        
+
 class Intersection:
     """Represents the time and position of an intersection between two objects."""
     __slots__ = ['time', 'pos', 'invalid', 'e1', 'e2', 'line1', 'line2']
@@ -52,9 +97,11 @@ class Intersection:
             return
         if not hasattr(self, "e1") or not hasattr(self, "e2"):
             raise Exception("Intersection %s occurs between nonexistent things" % self)
+        
         #self.e1.recalculate_intersections()
-        #self.e2.recalculate_intersections()        
-        game.Game().pause()
+        #self.e2.recalculate_intersections()   
+        handle_collision(self)     
+        # game.Game().pause()
 
     def __lt__(self, other):
         return self.time < other.time
