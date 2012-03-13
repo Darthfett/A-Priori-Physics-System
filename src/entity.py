@@ -118,7 +118,7 @@ class Movable(Entity):
     @velocity.setter
     def velocity(self, velocity):
         """Updating velocity inherently invalidates all collisions, but does not take care of doing this."""
-        self._position = self.position
+        self.position = self.position
         self._velocity = velocity
 
     def __init__(self, velocity = None, acceleration = None, **kwargs):

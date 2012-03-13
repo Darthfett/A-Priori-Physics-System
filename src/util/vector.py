@@ -18,7 +18,7 @@ class Vector:
         """The mathematical squared length of the vector."""
         return self.x * self.x + self.y * self.y
         
-    def reflect(self, across_norm):
+    def reflected(self, across_norm):
         return self - (2 * across_norm * self) * across_norm
 
     def normalize(self):
