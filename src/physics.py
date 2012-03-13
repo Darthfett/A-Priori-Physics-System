@@ -29,9 +29,8 @@ Classes:
 
 from util import *
 import math
-from heapq import merge, heappush
+from heapq import merge
 from itertools import chain, product
-import functools
 import entity
 import game
 
@@ -76,17 +75,16 @@ def handle_collision(I):
         I.e2._cur_colliding_time = game.Game.GameTime
     
     try:
-        I.e1.velocity = I.e1.velocity.reflected(~I.line2.direction.normalized()) * .9
+        I.e1.velocity = I.e1.velocity.reflected(~I.line2.direction.normalized()) * .3
     except AttributeError:
         pass
     
     try:
-        I.e2.velocity = I.e2.velocity.reflected(~I.line1.direction.normalized()) * .9
+        I.e2.velocity = I.e2.velocity.reflected(~I.line1.direction.normalized()) * .3
     except AttributeError:
         pass
     I.e1.recalculate_intersections()
     I.e2.recalculate_intersections()
-        
 
 class Intersection:
     """Represents the time and position of an intersection between two objects."""
@@ -141,9 +139,11 @@ def find_roots(a, b, c):
     if FloatEqual(a, 0):
         if FloatEqual(b, 0):
             if FloatEqual(c, 0):
-                raise Exception("Cannot find roots for equation identity.")
+                return []
+                # raise Exception("Cannot find roots for equation identity.")
             else:
-                raise Exception("Cannot find roots for a non-equation.")
+                # raise Exception("Cannot find roots for a non-equation.")
+                return []
         return []
     
     # discriminant reveals information about how many solutions there are

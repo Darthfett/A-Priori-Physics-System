@@ -44,7 +44,7 @@ class Level:
             if vertex is vertices[-1]:
                 break
             lines.append(Line(vertex, vertices[i+1]))
-
+        
         # set as the shape and render_lines for the ground
         self.ground.render_lines = lines
         self.ground.shape = lines
@@ -64,8 +64,8 @@ class Level:
         self.boundary = Rect(size=(width, height))
         
         image = pygame.image.load(os.path.join(resources_path, "guy.png"))
-        #self.player = player.Player(image = image, shape = Rect(image.get_rect()).shape, position=Level._PlayerPosition, velocity=Level._PlayerVelocity)
-        self.player = player.Player(image = image, shape = generate_circle(6, 54), position=Level._PlayerPosition, velocity=Level._PlayerVelocity)
+        # self.player = player.Player(image = image, shape = Rect(image.get_rect()).shape, position=Level._PlayerPosition, velocity=Level._PlayerVelocity)
+        self.player = player.Player(image = image, shape = generate_circle(6, 50), position=Level._PlayerPosition, velocity=Level._PlayerVelocity)
         
         self.ground = Ground(shape = [], render_lines = [])
         self.regenerate_ground()

@@ -24,13 +24,16 @@ Globals:
 Functions:
     run: Start the event loop.
     init: Initialize game modules.
+    
+Classes:
+    Game: Represents the game's state.
 """
 import pygame
 import os
 import math
-import physics
 
 from util import *
+import physics
 import event
 from window import Window
 import player
@@ -43,10 +46,12 @@ class Game:
     Screen = None
     FPS = 60
     CurrentLevel = None
+    
     _NextFrameTime = 0
     _DelayTime = 0
     CurrentTime = 0
     GameTime = 0
+    
     GameEvents = []
     RealEvents = []
 
