@@ -37,8 +37,8 @@ if __name__ == "__main__":
     # Initialize and run the game!
     def go():
         pygame.init()
-        game.init()
         _game = game.Game(speed = args.speed)
+        game.init()
         _game.run()
     # cProfile.run('go()', 'profile')
     go()
