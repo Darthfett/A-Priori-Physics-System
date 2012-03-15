@@ -88,6 +88,8 @@ def update(current_time):
     # Handle key press/release events
     global CurrentState
     next_state = pygame.key.get_pressed()
+    if next_state[pygame.K_ESCAPE] or next_state[pygame.K_q]:
+        raise PlayerQuit
     for key, was_pressed in enumerate(CurrentState):
         if next_state[key] and not was_pressed:
             game.Game.RealEvents.append(KeyPressEvent(key, current_time))
