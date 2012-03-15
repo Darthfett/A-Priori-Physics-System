@@ -223,7 +223,7 @@ class Game:
 
 def init():
     # Resources path
-    resources_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")
+    resources_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "../resources")
 
     # Init Window
     Game.Screen = Window() # Accept default size and title
