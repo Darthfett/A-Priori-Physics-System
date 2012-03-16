@@ -90,7 +90,7 @@ class Intersection:
     """Represents the time and position of an intersection between two objects."""
     __slots__ = ['time', 'pos', 'invalid', 'e1', 'e2', 'line1', 'line2']
     
-    def handle(self):
+    def __call__(self):
         if self.invalid:
             return
         if not hasattr(self, "e1") or not hasattr(self, "e2"):

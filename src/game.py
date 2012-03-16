@@ -35,6 +35,7 @@ import math
 from util import *
 import physics
 import event
+import controls
 from window import Window
 import player
 from level import Level
@@ -154,7 +155,7 @@ class Game:
                 Game.CurrentTime += delta_time
 
                 # Handle event
-                ev.handle()
+                ev()
                 Game.GameEvents.remove(ev)
             elif len(Game.RealEvents) > 0 and ev is Game.RealEvents[0]:
                 # Real time event
@@ -165,7 +166,7 @@ class Game:
                 Game.CurrentTime += delta_time
 
                 # Handle event
-                ev.handle()
+                ev()
                 Game.RealEvents.remove(ev)
             elif ev is None:
                 Game.GameTime += (Game._NextFrameTime - Game.CurrentTime) * self._speed
@@ -206,10 +207,7 @@ class Game:
                     pygame.display.flip()
                 pygame.time.delay(1)
 
-        except event.GameOver:
-            # Game over!  Just quit for now.
-            print("Game over, man!  GAME OVER!")
-        except event.PlayerQuit:
+        except controls.Quit:
             # Player has commanded the game to quit.
             print("Game over, man!  GAME OVER!")
         finally:

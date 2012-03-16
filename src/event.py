@@ -11,8 +11,6 @@ Functions:
 
 Classes:
     Event: Used to represent events.
-    GameTimeEvent: An Event type with a 'handle' method and game 'time' property.
-    RealTimeEvent: An Event type with a 'handle' method and real 'time' property.
     PlayerQuit: An Exception class that is raised when the player quits.
     GameOver: An Exception class that is raised when the player loses.
     KeyPressEvent: A class used to simulate the event that a player presses a key.
@@ -27,55 +25,52 @@ import game
 CurrentState = []
 
 class Event:
-    """Base class for any event.  For time-based events, use GameTimeEvent or RealTimeEvent."""
-    pass
+    def __iadd__(self, handler):
+        if not callable(handler):
+            raise ValueError("Cannot register non-callable %r object %r" % (type(handler).__name__, handler))
+        self.__handlers.append(handler)
+        return self
 
-class GameTimeEvent(Event):
-    """Game Time Events have a 'handle' method and a 'time' property >= GameTime."""
-    pass
+    def __isub__(self, handler):
+        self.__handlers.remove(handler)
+        return self
 
-class RealTimeEvent(Event):
-    """Real Time Events have a 'handle' method and a 'time' property >= CurrentTime"""
-    pass
+    def __call__(self, *args, **kwargs):
+        for handler in self.__handlers:
+            handler(*args, **kwargs)
+        
+    register = __iadd__
+    removeHandler = __isub__
+    fire = __call__
 
-class PlayerQuit(Exception):
-    """An Exception that is raised when the player quits."""
-    pass
+    def clearObjectHandlers(self, inObject):
+        for theHandler in self.__handlers:
+            if theHandler.im_self == inObject:
+                self -= theHandler
 
-class GameOver(Exception):
-    """An Exception that is raised when the player loses."""
-    pass
+    def __init__(self):
+        self.__handlers = []
 
-class KeyPressEvent(RealTimeEvent):
+KeyPressEvent = Event()
+KeyReleaseEvent = Event()
+
+class KeyPress:
     """Event used to indicate a key was pressed.  Key Press/Release events are automatically
     generated when CurrentState does not match the next key state."""
-    def handle(self):
+    def __call__(self):
         """Handle key press."""
-        _game = game.Game()
-        # TODO: Move implicit predefined keys into config file
-        if self.key == pygame.K_ESCAPE or self.key == pygame.K_q:
-            raise PlayerQuit
-
-        if self.key == pygame.K_r:
-            game.Game.CurrentLevel.regenerate_ground()
-
-        if self.key == pygame.K_p:
-            # Toggle pausing
-            _game.pause()
-            
-        if self.key == pygame.K_SPACE:
-            game.Game.CurrentLevel.reset_player()
+        KeyPressEvent(self.key)
 
     def __init__(self, key, time):
         self.key = key
         self.time = time
 
-class KeyReleaseEvent(RealTimeEvent):
+class KeyRelease:
     """Event used to indicate a key was released.  Key Press/Release events are automatically
     generated when CurrentState does not match the next key state."""
-    def handle(self):
+    def __call__(self):
         """Handle key release."""
-        pass
+        KeyReleaseEvent(self.key)
 
     def __init__(self, key, time):
         self.key = key
@@ -92,8 +87,8 @@ def update(current_time):
         raise PlayerQuit
     for key, was_pressed in enumerate(CurrentState):
         if next_state[key] and not was_pressed:
-            game.Game.RealEvents.append(KeyPressEvent(key, current_time))
+            game.Game.RealEvents.append(KeyPress(key, current_time))
 
         if was_pressed and not next_state[key]:
-            game.Game.RealEvents.append(KeyReleaseEvent(key, current_time))
+            game.Game.RealEvents.append(KeyRelease(key, current_time))
     CurrentState = next_state
