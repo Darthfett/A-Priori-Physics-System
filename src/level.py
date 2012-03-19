@@ -24,7 +24,7 @@ def generate_circle(n, radius):
 
 class Level:
 
-    _PlayerPosition = Vector(0, 350)
+    _PlayerPosition = Vector(30, 350)
     _PlayerVelocity = Vector(0, 0)
 
     def regenerate_ground(self):
@@ -44,6 +44,13 @@ class Level:
             if vertex is vertices[-1]:
                 break
             lines.append(Line(vertex, vertices[i+1]))
+        
+        # Rectangle:
+        # lines = []
+        # lines.append(Line((10, 10), (self.width - 10, 10)))
+        # lines.append(Line((self.width - 10, 10), (self.width - 10, self.height - 10)))
+        # lines.append(Line((self.width - 10, self.height - 10), (10, self.height - 10)))
+        # lines.append(Line((10, self.height - 10), (10, 10)))
         
         # set as the shape and render_lines for the ground
         self.ground.render_lines = lines
@@ -67,7 +74,7 @@ class Level:
         # shape = Rect(image.get_rect()).shape
         shape = generate_circle(12, 50)
         self.player = player.Player(image = image, shape = shape, position=Level._PlayerPosition, velocity=Level._PlayerVelocity)
-        
+        self.width, self.height = width, height
         self.ground = Ground(shape = [], render_lines = [])
         self.regenerate_ground()
         

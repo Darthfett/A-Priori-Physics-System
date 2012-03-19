@@ -15,19 +15,23 @@ class Player(entity.Blitable, entity.Projectile):
     """The Player class, which is controlled by the physical player through keyboard/mouse events."""
     
     def a_pressed(self):
-        self.velocity += Vector(-200, 0)
+        self.velocity = self.velocity
+        self.acceleration += Vector(-200, 0)
         self.recalculate_intersections()
         
     def a_released(self):
-        self.velocity -= Vector(-200, 0)
+        self.velocity = self.velocity
+        self.acceleration -= Vector(-200, 0)
         self.recalculate_intersections()
     
     def d_pressed(self):
-        self.velocity += Vector(200, 0)
+        self.velocity = self.velocity
+        self.acceleration += Vector(200, 0)
         self.recalculate_intersections()
         
     def d_released(self):
-        self.velocity -= Vector(200, 0)
+        self.velocity = self.velocity
+        self.acceleration -= Vector(200, 0)
         self.recalculate_intersections()
     
     def __init__(self, **kwargs):

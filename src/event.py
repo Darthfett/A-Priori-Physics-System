@@ -104,6 +104,7 @@ class _KeyPress:
     def __init__(self, key, time):
         self.key = key
         self.time = time
+        self.invalid = False
 
 class _KeyRelease:
     """Event used to indicate a key was released.  Key Press/Release events are automatically
@@ -121,6 +122,7 @@ class _KeyRelease:
     def __init__(self, key, time):
         self.key = key
         self.time = time
+        self.invalid = False
 
 # Current Key State is not synced with the game's time.
 # If you wish to know the current key state, you should

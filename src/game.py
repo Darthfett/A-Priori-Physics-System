@@ -173,6 +173,8 @@ class Game:
                 Game.CurrentTime = Game._NextFrameTime
             else:
                 raise Exception("Invalid event %s from next_event, does not match next GameEvent %s or next RealEvent %s." % (ev, Game.GameEvents[0], Game.RealEvents[0]))
+        Game.GameEvents = [ev for ev in Game.GameEvents if not ev.invalid]
+        Game.RealEvents = [ev for ev in Game.RealEvents if not ev.invalid]
 
     def run(self):
         """Start the main event loop."""
