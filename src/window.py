@@ -20,9 +20,15 @@ class Window:
         """Converts coordinates into pygame coordinates, i.e.:
             +x is right, +y is up, (0, 0) is bottom left of screen into:
             +x is right, +y is down, (0, 0) is top left of screen"""
-        v = Vector(coords)
-        v.y = self.size.y - v.y
-        return v
+        coords = Vector(coords)
+        # offset coords by screen center
+        coords += (self.size * .5)
+        # offset coords by centered_obj
+        center_point = game.Game.CurrentLevel.player.position + Vector(game.Game.CurrentLevel.player.image.get_size()) * .5
+        coords -= center_point
+        
+        coords.y = self.size.y - coords.y
+        return coords
 
     def to_pygame(self, blitable):
         """Converts object coordinates into pygame coordinates, given lower left coordinates of an
@@ -57,40 +63,14 @@ class Window:
     def draw_next_frame(self):
         """Draws all objects."""
         self.clear()
-        # TODO: center the screen at self.center_box.center
-        # self._center()
         ents = set(Blitables)
         ents = ents.union(LineRenderables)
         for ent in ents:
             ent.draw(self)
-        
-    def _center(self):
-        bound_box = Rect(shape=self.center_obj.shape)
-        self.center_box.width = max(self.center_box.width, bound_box.width)
-        self.center_box.height = max(self.center_box.height, bound_box.height)
-        
-        if self.center_box.left < bound_box.left:
-            self.left = bound_box.left
-        
-        if self.center_box.right > bound_box.right:
-            self.center_box.right = bound_box.right
-        
-        if self.center_box.top > bound_box.top:
-            self.center_box.top = bound_box.top
-        
-        if self.center_box.bottom < bound_box.bottom:
-            self.center_box.bottom = bound_box.bottom
     
-    def center_on(self, obj):
-        self.center_obj = obj
-        self._center()
-        
-
     def __init__(self, title = "Jetpack Man", size = (DEFAULT_WIDTH, DEFAULT_HEIGHT)):
         """Initialize the screen, window size, and title."""
         self.title = title
-        self.center_box = Rect(size = (1, 1))
-        self.center_obj = None
         self.screen = pygame.display.set_mode(size) # Accept default flags:
             
         # Flags (second argument, multiple separated by | ):

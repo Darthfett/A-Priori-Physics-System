@@ -135,7 +135,7 @@ class Movable(Entity):
         Movables.append(self)
         super().__init__(**kwargs)
 
-class Projectile(Collidable, Movable, Shape):
+class Projectile(Movable, Collidable, Shape):
     """Projectile objects occupy space, can collide with objects, and move around."""
 
     def __init__(self, **kwargs):
