@@ -14,6 +14,10 @@ Globals:
     KeyReleaseEvent:
         An interface for registering events upon key releases.
         This works identically to KeyPressEvent.
+    KeyToggleEvent:
+        An interface for registering events upon key toggling.
+        This works identically to KeyPressEvent and KeyReleaseEvent, but it also always passes a boolean
+        to indicate whether the key was 'pressed' or not.
 
 Functions:
     update: Runs through all events currently in the pygame event queue, and puts them
@@ -82,6 +86,7 @@ class _KeyEvent(Event):
 # Information about these two in the module docstring.
 KeyPressEvent = _KeyEvent()
 KeyReleaseEvent = _KeyEvent()
+KeyToggleEvent = _KeyEvent()
 
 class _KeyPress:
     """Event used to indicate a key was pressed.  Key Press/Release events are automatically
@@ -90,9 +95,11 @@ class _KeyPress:
         """Run all relevant events."""
         # Run key-specific events
         KeyPressEvent[self.key]()
+        KeyToggleEvent[self.key](True)
         
         # Run non-key-specific events
         KeyPressEvent(self.key)
+        KeyToggleEvent(True)
 
     def __init__(self, key, time):
         self.key = key
@@ -105,9 +112,11 @@ class _KeyRelease:
         """Run all relevant events."""
         # Run key-specific events
         KeyReleaseEvent[self.key]()
+        KeyToggleEvent[self.key](False)
         
         # Run non-key-specific events
         KeyReleaseEvent(self.key)
+        KeyToggleEvent(False)
 
     def __init__(self, key, time):
         self.key = key

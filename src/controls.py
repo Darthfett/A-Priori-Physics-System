@@ -4,6 +4,7 @@ import event
 
 class Quit(Exception):
     """An Exception that is raised when the player quits."""
+    pass
     
 def quit():
     raise Quit

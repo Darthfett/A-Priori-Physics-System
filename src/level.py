@@ -25,7 +25,7 @@ def generate_circle(n, radius):
 class Level:
 
     _PlayerPosition = Vector(0, 350)
-    _PlayerVelocity = Vector(130, 0)
+    _PlayerVelocity = Vector(0, 0)
 
     def regenerate_ground(self):
         """Randomly generate something that looks like a rough ground terrain."""
