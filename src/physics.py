@@ -40,7 +40,7 @@ import game
 
 ####################################################################################################
 
-# A Min-Heap of tuples: (Entity, Entity, Intersection), sorted by intersection time.
+# A List of Intersections, sorted by intersection time.
 # Note: Some intersections may be flagged 'invalid'.
 Intersections = []
 
@@ -54,7 +54,7 @@ def handle_collision(I):
         I.e2._cur_colliding = []
         I.e2._cur_colliding_time = game.Game.GameTime
         
-    if abs(I.e1._cur_colliding_time - game.Game.GameTime) < EPSILON:
+    if FloatEqual(I.e1._cur_colliding_time, game.Game.GameTime):
         if I.e2 in I.e1._cur_colliding:
             # Collision already handled
             I.e1._cur_colliding_time = game.Game.GameTime
@@ -66,7 +66,7 @@ def handle_collision(I):
         I.e1._cur_colliding = [I.e2]
         I.e1._cur_colliding_time = game.Game.GameTime
         
-    if abs(I.e2._cur_colliding_time - game.Game.GameTime) < EPSILON:
+    if FloatEqual(I.e2._cur_colliding_time, game.Game.GameTime):
         if I.e1 in I.e2._cur_colliding:
             # Collision already handled
             I.e2._cur_colliding_time = game.Game.GameTime
@@ -100,10 +100,7 @@ class Intersection:
         if not hasattr(self, "e1") or not hasattr(self, "e2"):
             raise Exception("Intersection %s occurs between nonexistent things" % self)
         
-        #self.e1.recalculate_intersections()
-        #self.e2.recalculate_intersections()   
-        handle_collision(self)     
-        # game.Game().pause()
+        handle_collision(self)
 
     def __lt__(self, other):
         return self.time < other.time
@@ -136,46 +133,6 @@ class Intersection:
         occurs."""
         self.time, self.pos, self.invalid = time, pos, invalid
         self.e1, self.e2, self.line1, self.line2 = [None] * 4
-
-class InequalityError(ValueError):
-    """An InequalityError occurs when 'find_roots' is called with an inequality, e.g. 1 = 0."""
-    pass
-    
-def find_roots(a, b, c):
-    """Find the roots to a quadratic equation, i.e. find x | ax^2 + bx + c = 0."""
-    
-    if FloatEqual(a, 0):
-        if FloatEqual(b, 0):
-            if FloatEqual(c, 0):
-            
-                # 0x^2 + 0x + 0 = 0
-                #             0 = 0
-                raise ValueError("Cannot find roots for equation 0 = 0")
-                return []
-            else:
-            
-                # 0x^2 + 0x + c = 0, c != 0
-                #             c = 0, c != 0
-                # Undefined root
-                raise InequalityError("Cannot find roots for equation {0} = 0.".format(c))
-                return []
-                
-        # 0x^2 + bx + c = 0
-        #        bx     = -c
-        #         x     = -c / b
-        return [-c / b]
-    
-    # discriminant reveals information about how many solutions there are
-    discriminant = b ** 2 - 4*a*c
-    
-    if discriminant < 0:
-        # No real solution
-        return []
-    if discriminant < EPSILON:
-        # One real solution
-        return [-b / (2 * a)]
-    # Two real solutions
-    return [(-b + math.sqrt(discriminant)) / (2*a), (-b - math.sqrt(discriminant)) / (2*a)]
 
 def ParabolaLineCollision(pos, vel, acc, p, q):
     """Takes a parabola pos, vel, acc, and a line p q, and returns the intersections between them as a list of
@@ -224,9 +181,9 @@ def find_intersections(line1, v1, a1, line2, v2, a2):
     a_line1_line2 = a1 - a2
     v_line2_line1 = v2 - v1
     a_line2_line1 = a2 - a1
+    
     i1 = ParabolaLineCollision(line1.p, v_line1_line2, a_line1_line2, *line2)
     i2 = ParabolaLineCollision(line1.q, v_line1_line2, a_line1_line2, *line2)
-    # TODO: Investigate possibility of eliminating redundant intersection calculation
     i3 = ParabolaLineCollision(line2.p, v_line2_line1, a_line2_line1, *line1)
     i4 = ParabolaLineCollision(line2.q, v_line2_line1, a_line2_line1, *line1)
     

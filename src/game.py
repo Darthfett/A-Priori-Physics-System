@@ -122,7 +122,7 @@ class Game:
             raise Exception("Event %s must occur at a future time." % real_event)
 
         # Normalize game time-to-event to be comparable with real time-to-events
-        game_delta_time = ZeroDivide(game_delta_time, self._speed)
+        game_delta_time = ZeroDivide(abs(game_delta_time), self._speed)
 
         if game_delta_time > frame_delta or math.isnan(game_delta_time):
             # Game time events are some time after this frame.

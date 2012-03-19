@@ -91,3 +91,43 @@ def SegmentContainsPoint(a, b, c):
     """Returns whether c is within the segment ab."""
     return Collinear(a, b, c) and (Within(a.x, c.x, b.x) if not FloatEqual(a.x, b.x) else
                Within(a.y, c.y, b.y))
+
+class InequalityError(ValueError):
+    """An InequalityError occurs when 'find_roots' is called with an inequality, e.g. 1 = 0."""
+    pass
+    
+def find_roots(a, b, c):
+    """Find the roots to a quadratic equation, i.e. find x | ax^2 + bx + c = 0."""
+    
+    if FloatEqual(a, 0):
+        if FloatEqual(b, 0):
+            if FloatEqual(c, 0):
+            
+                # 0x^2 + 0x + 0 = 0
+                #             0 = 0
+                raise ValueError("Cannot find roots for equation 0 = 0")
+                return []
+            else:
+            
+                # 0x^2 + 0x + c = 0, c != 0
+                #             c = 0, c != 0
+                # Undefined root
+                raise InequalityError("Cannot find roots for equation {0} = 0.".format(c))
+                return []
+                
+        # 0x^2 + bx + c = 0
+        #        bx     = -c
+        #         x     = -c / b
+        return [-c / b]
+    
+    # discriminant reveals information about how many solutions there are
+    discriminant = b ** 2 - 4*a*c
+    
+    if discriminant < 0:
+        # No real solution
+        return []
+    if discriminant < EPSILON:
+        # One real solution
+        return [-b / (2 * a)]
+    # Two real solutions
+    return [(-b + math.sqrt(discriminant)) / (2*a), (-b - math.sqrt(discriminant)) / (2*a)]
