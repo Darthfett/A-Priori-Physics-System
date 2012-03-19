@@ -152,7 +152,7 @@ def find_roots(a, b, c):
             else:
                 raise InequalityError("Cannot find roots for equation {0} = 0.".format(c))
                 return []
-        return []
+        return [-c / b]
     
     # discriminant reveals information about how many solutions there are
     discriminant = b ** 2 - 4*a*c
@@ -205,7 +205,7 @@ def ParabolaLineCollision(pos, vel, acc, p, q):
     
     return [Intersection(time * 1000, position) for time, position in zip(roots, relative_positions)]
     
-def find_intersections(line1, v1, a1, line2, v2, a2, current_time):
+def find_intersections(line1, v1, a1, line2, v2, a2):
     """Returns an unsorted list of intersections between line1 and line2."""
     
     # Find collisions with relative velocity/acceleration
@@ -230,8 +230,40 @@ def find_intersections(line1, v1, a1, line2, v2, a2, current_time):
                 Position(line2.q, v_line2_line1, a_line2_line1, int.time / 1000) in line1):
             # position valid
             intersections.append(int)
-            int.time += current_time
     return intersections
+
+def entity_intersections(ent, collidable):
+    """Find all intersections between two entities."""
+    intersections = []
+    
+    # Get all pairs of line segments between the two entities' shapes
+    for line1, line2 in product(ent.shape, collidable.shape):
+    
+        # Find all the intersections and add to the intersections list
+        pair_intersections = find_intersections(line1 + ent.position, ent.velocity, ent.acceleration, line2 + collidable.position, collidable.velocity, collidable.acceleration)
+
+        for intersection in pair_intersections:
+            intersection.e1 = ent
+            intersection.e2 = collidable
+            intersection.line1 = line1
+            intersection.line2 = line2
+            intersections.append(intersection)
+    return intersections
+
+def update_intersections_pair(ent, collidable):
+    """Update Game and each entities' intersections."""
+    # Get all intersections between ent and collidable
+    intersections = entity_intersections(ent, collidable)
+    for intersection in intersections:
+        intersection.time += game.Game.GameTime
+            
+    # Sort all the intersections, and add to gave event list
+    intersections.sort()
+    game.Game.GameEvents = list(merge(game.Game.GameEvents, intersections))
+    
+    # Entities keep track of their intersections so they can mark them invalid.
+    ent.intersections = list(merge(ent.intersections, intersections))
+    collidable.intersections = list(merge(collidable.intersections, intersections))
     
 def update_intersections(ent):
     """Calculate all intersections between the given entity, and add them to the event list."""
@@ -240,26 +272,4 @@ def update_intersections(ent):
         if ent is collidable:
             # don't collide with self
             continue
-        intersections = []
-        # Get all pairs of line segments between the two entities' shapes
-        for line1, line2 in product(ent.shape, collidable.shape):
-            # Find all the intersections and add to the intersections list
-            pair_intersections = find_intersections(line1 + ent.position, ent.velocity, ent.acceleration, line2 + collidable.position, collidable.velocity, collidable.acceleration, current_time)
-
-            for intersection in pair_intersections:
-                intersection.e1 = ent
-                intersection.e2 = collidable
-                intersection.line1 = line1
-                intersection.line2 = line2
-                intersections.append(intersection)
-                
-        # Sort all the intersections, and add to gave event list
-        intersections.sort()
-        # if intersections:
-            # i = intersections[0]
-            # print(i,"\n", i.line1 + ent.position, ent.velocity, ent.acceleration, i.line2 + collidable.position, collidable.velocity, collidable.acceleration)
-        game.Game.GameEvents = list(merge(game.Game.GameEvents, intersections))
-        
-        # Entities keep track of their intersections so they can mark them invalid.
-        ent.intersections = list(merge(ent.intersections, intersections))
-        collidable.intersections = list(merge(collidable.intersections, intersections))
+        update_intersections_pair(ent, collidable)
