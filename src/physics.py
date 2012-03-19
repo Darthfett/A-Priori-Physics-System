@@ -3,25 +3,29 @@ The physics module contains any functions needed for handling intersections/coll
 objects.  It also handles the resolution of any collisions.
 
 Globals:
-    Intersections (MinHeap List of all collisions between objects, sorted by intersection time):
+    Intersections (List of all collisions between objects, sorted by intersection time):
         This List contains collisions between pairs of objects, sorted by the occurence time.
-        The collisions are added whenever any line of any object enters into a new cell.
-        They are removed only when any of the following occur:
-            - An object collides with another object (invalidated/handled).
-            - An object enters into a -new- cell, and a collision between any pair of lines
-              between the two objects already exists.
-                - In this scenario, the existing intersection's collision time between should be
-                  within EPSILON of a new calculation, and thus a collision detection between
-                  the pair of lines is not needed.
-        All will have a valid intersection time and position, but may be marked 'invalid' if:
-            - Either of the two objects has been directly moved
-            - Either of the two objects has had its velocity directly changed
-            - Either of the two objects has had its acceleration directly changed
-            - Either of the two objects is removed/deleted
+        Collisions are (should be) added to this list whenever:
+         * A collidable object is created
+         * An object's position/velocity/acceleration changes (such as via collision or player controls)
+        They are (should be) invalidated only when any of the following occur:
+         * An object's position/velocity/acceleration changes (such as via collision or player controls)
+         * An object is removed
+        They are (should be) removed only when:
+         * The game logic encounters a collision marked as invalid
+         * The game finishes drawing a frame
+            - In this scenario the game will filter this list of any invalid collisions.
+        All Intersections will have a valid intersection time and position, but may be marked 'invalid'.
 
 Functions:
-    ParabolaLineCollision(rva, pq): Returns a List of Intersection objects representing the
-                                    the collisions between the parabola rva and line pq.
+    ParabolaLineCollision(pos, vel, acc, p, q):
+        Returns a List of Intersection objects representing the collisions between a parabola and a line.
+    find_roots(a, b, c):
+        Given a quadratic equation ax^2 + bx + c, find the roots of the equation as a list.
+    find_intersections(line1, v1, a1, line2, v2, a2, current_time):
+        Returns a list of valid Intersections between two lines with velocity/acceleration,
+        with time relative to current_time.
+    
 
 Classes:
     Intersection: Represents the time and position of an intersection between two objects.
@@ -132,6 +136,10 @@ class Intersection:
         occurs."""
         self.time, self.pos, self.invalid = time, pos, invalid
         self.e1, self.e2, self.line1, self.line2 = [None] * 4
+
+class InequalityError(ValueError):
+    """An InequalityError occurs when 'find_roots' is called with an inequality, e.g. 1 = 0."""
+    pass
     
 def find_roots(a, b, c):
     """Find the roots to a quadratic equation."""
@@ -139,10 +147,10 @@ def find_roots(a, b, c):
     if FloatEqual(a, 0):
         if FloatEqual(b, 0):
             if FloatEqual(c, 0):
+                raise ValueError("Cannot find roots for equation 0 = 0")
                 return []
-                # raise Exception("Cannot find roots for equation identity.")
             else:
-                # raise Exception("Cannot find roots for a non-equation.")
+                raise InequalityError("Cannot find roots for equation {0} = 0.".format(c))
                 return []
         return []
     
@@ -170,13 +178,17 @@ def ParabolaLineCollision(pos, vel, acc, p, q):
         if vel == Vector(0, 0):
             return []
         else:
+            b = (vel.cross(q) - vel.cross(p))
+            c = (pos.cross(q) - pos.cross(p) - p.cross(q))
             roots = [-c / b]
     else:
         a = .5 * (acc.cross(q) - acc.cross(p))
         b = (vel.cross(q) - vel.cross(p))
         c = (pos.cross(q) - pos.cross(p) - p.cross(q))
-        
-        roots = find_roots(a, b, c)
+        try:
+            roots = find_roots(a, b, c)
+        except InequalityError:
+            roots = []
 
     if len(roots) == 0:
         return []
