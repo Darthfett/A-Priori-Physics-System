@@ -4,26 +4,21 @@ import event
 
 class Quit(Exception):
     """An Exception that is raised when the player quits."""
-    def __init__(self, key):
-        if key == pygame.K_q or key == pygame.K_ESCAPE:
-            raise Quit
-
-class RegenerateGround:
-    def __init__(self, key):
-        if key == pygame.K_r:
-            game.Game.CurrentLevel.regenerate_ground()
+    
+def quit():
+    raise Quit
+    
+def regenerate_ground():
+    game.Game.CurrentLevel.regenerate_ground()
             
-class Pause:
-    def __init__(self, key):
-        if key == pygame.K_p:
-            game.Game().pause()
+def flip_pause_state():
+    game.Game().pause()
             
-class ResetPlayer:
-    def __init__(self, key):
-        if key == pygame.K_SPACE:
-            game.Game.CurrentLevel.reset_player()
+def reset_player():
+    game.Game.CurrentLevel.reset_player()
             
-event.KeyPressEvent.register(Quit)
-event.KeyPressEvent.register(RegenerateGround)
-event.KeyPressEvent.register(Pause)
-event.KeyPressEvent.register(ResetPlayer)
+event.KeyPressEvent[pygame.K_q].register(quit)
+event.KeyPressEvent[pygame.K_ESCAPE].register(quit)
+event.KeyPressEvent[pygame.K_r].register(regenerate_ground)
+event.KeyPressEvent[pygame.K_p].register(flip_pause_state)
+event.KeyPressEvent[pygame.K_SPACE].register(reset_player)
