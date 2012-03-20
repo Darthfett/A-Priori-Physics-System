@@ -45,7 +45,7 @@ class Line:
         return Line(self.p - other, self.q - other)
 
     def __repr__(self):
-        return "[%s to %s]" % (self.p, self.q)
+        return "[{0} to {1}]".format(self.p, self.q)
 
     def __getitem__(self, item):
         """Returns a point in p, q."""

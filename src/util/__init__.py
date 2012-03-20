@@ -39,7 +39,7 @@ from util.rect import *
 
 NAN = float("nan")
 INFINITY = float("inf")
-EPSILON = 1e-10
+EPSILON = 1e-8
 
 def Position(position, velocity, acceleration, delta_time):
     """Get a new position given velocity/acceleration and some time in ms."""

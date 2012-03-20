@@ -1,5 +1,6 @@
 import math
 import util
+import debug
 
 class Vector:
     """A Vector is a 2 dimensional [x, y] pair.
@@ -130,7 +131,10 @@ class Vector:
         return 2
 
     def __repr__(self):
-        return "(%s, %s)"% (format(self.x, '.2f'), format(self.y, '.2f'))
+        if debug.Debug:
+            return "({0}, {1})".format(self.x, self.y)
+        else:
+            return "({0}, {1})".format(format(self.x, '.2f'), format(self.y, '.2f'))
 
     def __getitem__(self, item):
         """Supports getting coordinate by index, like an x, y tuple."""
