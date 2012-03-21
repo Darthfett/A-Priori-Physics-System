@@ -162,3 +162,23 @@ def generate_circle(n, radius):
         lines.append(Line(vertex, vertices[i+1]))
     lines.append(Line(vertices[-1], vertices[0]))
     return lines
+    
+class TimeComparable:
+    """All TimeComparable objects can be compared according to their 'time' property."""
+    def __lt__(self, other):
+        return self.time < other.time
+
+    def __le__(self, other):
+        return self.time <= other.time
+
+    def __eq__(self, other):
+        return self.time == other.time
+
+    def __ne__(self, other):
+        return self.time != other.time
+
+    def __gt__(self, other):
+        return self.time > other.time
+
+    def __ge__(self, other):
+        return self.time >= other.time

@@ -88,7 +88,7 @@ KeyPressEvent = _KeyEvent()
 KeyReleaseEvent = _KeyEvent()
 KeyToggleEvent = _KeyEvent()
 
-class _KeyPress:
+class _KeyPress(TimeComparable):
     """Event used to indicate a key was pressed.  Key Press/Release events are automatically
     generated when CurrentState does not match the next key state."""
     def __call__(self):
@@ -106,7 +106,7 @@ class _KeyPress:
         self.time = time
         self.invalid = False
 
-class _KeyRelease:
+class _KeyRelease(TimeComparable):
     """Event used to indicate a key was released.  Key Press/Release events are automatically
     generated when CurrentState does not match the next key state."""
     def __call__(self):
@@ -136,11 +136,12 @@ def update(current_time):
     # Handle key press/release events
     global _CurrentState    
     next_state = pygame.key.get_pressed()
-    
+    key_events = []
     for key, was_pressed in enumerate(_CurrentState):
         if next_state[key] and not was_pressed:
-            game.Game.RealEvents.append(_KeyPress(key, current_time))
+            key_events.append(_KeyPress(key, current_time))
 
         if was_pressed and not next_state[key]:
-            game.Game.RealEvents.append(_KeyRelease(key, current_time))
+            key_events.append(_KeyRelease(key, current_time))
+    game.Game.RealEvents = list(merge(game.Game.RealEvents, key_events))
     _CurrentState = next_state

@@ -66,7 +66,7 @@ def handle_collision(I):
     I.e1.recalculate_intersections()
     I.e2.recalculate_intersections()
 
-class Intersection:
+class Intersection(TimeComparable):
     """Represents the time and position of an intersection between two objects."""
     __slots__ = ['time', 'pos', 'invalid', 'e1', 'e2', 'line1', 'line2']
     
@@ -77,27 +77,6 @@ class Intersection:
             raise Exception("Intersection %s occurs between nonexistent things" % self)
         
         handle_collision(self)
-
-    def __lt__(self, other):
-        return self.time < other.time
-
-    def __le__(self, other):
-        return self.time <= other.time
-
-    def __eq__(self, other):
-        return self.time == other.time
-
-    def __ne__(self, other):
-        return self.time != other.time
-
-    def __gt__(self, other):
-        return self.time > other.time
-
-    def __ge__(self, other):
-        return self.time >= other.time
-    
-    def __str__(self):
-        return "I(%s, %s, %s) between %s(%s) and %s(%s)" % (format(self.time, '.2f'), self.pos, self.invalid, self.line1, self.e1, self.line2, self.e2)
         
     def __repr__(self):
         return "I(%s, %s, %s)" % (format(self.time, '.2f'), self.pos, 'T' if self.invalid else 'F')
