@@ -36,6 +36,8 @@ from util.vector import *
 from util.point import *
 from util.line import *
 from util.rect import *
+from collections import deque
+from heapq import merge
 
 NAN = float("nan")
 INFINITY = float("inf")

@@ -182,7 +182,7 @@ def update_intersections_pair(ent, collidable):
             
     # Sort all the intersections, and add to gave event list
     intersections.sort()
-    game.Game.GameEvents = list(merge(game.Game.GameEvents, intersections))
+    game.Game.GameEvents = deque(merge(game.Game.GameEvents, intersections))
     
     # Entities keep track of their intersections so they can mark them invalid.
     ent.intersections = list(merge(ent.intersections, intersections))

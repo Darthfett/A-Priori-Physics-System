@@ -54,8 +54,8 @@ class Game:
     CurrentTime = 0
     GameTime = 0
     
-    GameEvents = []
-    RealEvents = []
+    GameEvents = deque()
+    RealEvents = deque()
 
     @property
     def speed(self):

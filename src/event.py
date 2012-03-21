@@ -143,5 +143,5 @@ def update(current_time):
 
         if was_pressed and not next_state[key]:
             key_events.append(_KeyRelease(key, current_time))
-    game.Game.RealEvents = list(merge(game.Game.RealEvents, key_events))
+    game.Game.RealEvents = deque(merge(game.Game.RealEvents, key_events))
     _CurrentState = next_state
