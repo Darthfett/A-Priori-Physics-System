@@ -45,38 +45,67 @@ import game
 Intersections = []
 
 ####################################################################################################
-
-def handle_collision(I):
-    if FloatEqual(game.Game.GameTime, I.e1.last_collide_time):
-        # Collision already handled
-        I.e1.last_collide_time = I.e2.last_collide_time = game.Game.GameTime
-        return
-    
-    I.e1.last_collide_time = I.e2.last_collide_time = game.Game.GameTime
-    
+        
+def resolve_entity(ent, line):
+    """Resolves an entity's movement by reflecting velocity off a line."""
+    # Reflect e1's velocity off of line
     try:
-        I.e1.velocity = I.e1.velocity.reflected(~I.line2.direction.normalized()) * game.Game.Friction
+        ent.velocity = ent.velocity.reflected(~line.direction.normalized()) * game.Game.Friction
     except AttributeError:
         pass
-    
-    try:
-        I.e2.velocity = I.e2.velocity.reflected(~I.line1.direction.normalized()) * game.Game.Friction
-    except AttributeError:
-        pass
-    I.e1.recalculate_intersections()
-    I.e2.recalculate_intersections()
 
 class Intersection(TimeComparable):
     """Represents the time and position of an intersection between two objects."""
     __slots__ = ['time', 'pos', 'invalid', 'e1', 'e2', 'line1', 'line2']
     
     def __call__(self):
+        """Handles resolving the intersection."""
         if self.invalid:
+            # Intersection is invalid, just skip past it
             return
         if not hasattr(self, "e1") or not hasattr(self, "e2"):
-            raise Exception("Intersection %s occurs between nonexistent things" % self)
+            # Intersection somehow has no entities between which there was a collision
+            raise Exception("Intersection {0} occurs between nonexistent things".format(self))
+    
+        if FloatEqual(game.Game.GameTime, self.e1.last_collide_time):
+            # Collision already handled (this prevents an infinite loop upon collision)
+            self.e1.last_collide_time = self.e2.last_collide_time = game.Game.GameTime
+            return
         
-        handle_collision(self)
+        # Valid Collision; handle it:
+        # All future intersections for both objects will be invalidated and recalculated
+        
+        # Update collision time to prevent infinite loop
+        self.e1.last_collide_time = self.e2.last_collide_time = game.Game.GameTime
+        
+        line1 = self.line1 + self.e1.position # Get actual position
+        line2 = self.line2 + self.e2.position # Get actual position
+        
+        # Resolve collisions by reflecting each entity's velocity off of the incident line
+        if line1.p in line2:
+            # collision at line1.p
+            resolve_entity(self.e1, line2)
+            resolve_entity(self.e2, line2)
+        elif line1.q in line2:
+            # collision at line1.q
+            resolve_entity(self.e1, line2)
+            resolve_entity(self.e2, line2)
+        elif line2.p in line1:
+            # collision at line2.p
+            resolve_entity(self.e1, line1)
+            resolve_entity(self.e2, line1)
+            pass
+        elif line2.q in line1:
+            # collision at line2.q
+            resolve_entity(self.e1, line1)
+            resolve_entity(self.e2, line1)
+        else:
+            # collision not at either line-segments' endpoints
+            raise Exception("Intersection {0} occurs, but objects not actually intersecting".format(self))
+        
+        # Recalculate intersections
+        self.e1.recalculate_intersections()
+        self.e2.recalculate_intersections()
         
     def __repr__(self):
         return "I(%s, %s, %s)" % (format(self.time, '.2f'), self.pos, 'T' if self.invalid else 'F')
