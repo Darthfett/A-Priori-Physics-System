@@ -1,9 +1,13 @@
 # TO DO #
- * Have Shape objects' shape attribute indicate objects' current positions
-    - Shape class 
+ * Shape class
+    - Should indicate current position
+    - Store ordered list of points (not lines)
+       . bool 'open' to indicate last point connected to first
+    - Support find intersections with another object
+    - Color?
+    
  * Move mapping of keyboard keys to controls into a config file
  * Move level definition into a file
- * Center the screen on the player
  * Investigate different cases for collision
     - Multiple collisions
     - Movement up a ramp
