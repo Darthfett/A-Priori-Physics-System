@@ -46,6 +46,7 @@ class Game:
     # Window object (Screen.screen is the actual window)
     Screen = None
     FPS = 60
+    Friction = 0.3
     CurrentLevel = None
     
     _NextFrameTime = 0

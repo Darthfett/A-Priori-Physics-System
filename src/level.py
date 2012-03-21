@@ -8,20 +8,6 @@ import physics
 import game
 import player
 
-def generate_circle(n, radius):
-    center = Point(radius, radius)
-    vertices = []
-    for i in range(n):
-        vertex = center + Vector(radius * math.sin((i/n) * 2 * math.pi), radius * math.cos((i/n) * 2 * math.pi))
-        vertices.append(vertex)
-    lines = []
-    for i, vertex in enumerate(vertices):
-        if vertex is vertices[-1]:
-            break
-        lines.append(Line(vertex, vertices[i+1]))
-    lines.append(Line(vertices[-1], vertices[0]))
-    return lines
-
 class Level:
 
     _PlayerPosition = Vector(30, 350)
@@ -55,13 +41,11 @@ class Level:
         # set as the shape and render_lines for the ground
         self.ground.render_lines = lines
         self.ground.shape = lines
-        game.Game().pause(False)
         self.ground.recalculate_intersections()
     
     def reset_player(self):
         self.player.position = Level._PlayerPosition
         self.player.velocity = Level._PlayerVelocity
-        game.Game().pause(False)
         self.player.recalculate_intersections()
 
     def __init__(self, path, resources_path):

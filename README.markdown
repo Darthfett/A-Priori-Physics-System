@@ -7,15 +7,17 @@
 ## How to run ##
 
     usage: python src/main.py [options]
-
+    
     Runs the game Jetpack-Man
-
+    
     optional arguments:
       -h, --help           show this help message and exit
       -d, --debug          turn debug mode on
       -g, --draw_outlines  draw outlines of images instead of the actual images
       --fps FPS            Change max drawing FPS
       --speed SPEED        Change the speed multiplier
+      --friction FRICTION  Change the friction/bounciness (1 is none, 0 is
+                           infinite, > 1 is negative
 
 ## Controls ##
 Most of the control scheme and game is not yet implemented.

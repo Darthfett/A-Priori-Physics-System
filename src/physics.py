@@ -47,44 +47,20 @@ Intersections = []
 ####################################################################################################
 
 def handle_collision(I):
-    if not hasattr(I.e1, '_cur_colliding'):
-        I.e1._cur_colliding = []
-        I.e1._cur_colliding_time = game.Game.GameTime
-    if not hasattr(I.e2, '_cur_colliding'):
-        I.e2._cur_colliding = []
-        I.e2._cur_colliding_time = game.Game.GameTime
-        
-    if FloatEqual(I.e1._cur_colliding_time, game.Game.GameTime):
-        if I.e2 in I.e1._cur_colliding:
-            # Collision already handled
-            I.e1._cur_colliding_time = game.Game.GameTime
-            return
-        else:
-            I.e1._cur_colliding.append(I.e2)
-            I.e1._cur_colliding_time = game.Game.GameTime
-    else:
-        I.e1._cur_colliding = [I.e2]
-        I.e1._cur_colliding_time = game.Game.GameTime
-        
-    if FloatEqual(I.e2._cur_colliding_time, game.Game.GameTime):
-        if I.e1 in I.e2._cur_colliding:
-            # Collision already handled
-            I.e2._cur_colliding_time = game.Game.GameTime
-            return
-        else:
-            I.e2._cur_colliding.append(I.e1)
-            I.e2._cur_colliding_time = game.Game.GameTime
-    else:
-        I.e2._cur_colliding = [I.e1]
-        I.e2._cur_colliding_time = game.Game.GameTime
+    if FloatEqual(game.Game.GameTime, I.e1.last_collide_time):
+        # Collision already handled
+        I.e1.last_collide_time = I.e2.last_collide_time = game.Game.GameTime
+        return
+    
+    I.e1.last_collide_time = I.e2.last_collide_time = game.Game.GameTime
     
     try:
-        I.e1.velocity = I.e1.velocity.reflected(~I.line2.direction.normalized()) * .3
+        I.e1.velocity = I.e1.velocity.reflected(~I.line2.direction.normalized()) * game.Game.Friction
     except AttributeError:
         pass
     
     try:
-        I.e2.velocity = I.e2.velocity.reflected(~I.line1.direction.normalized()) * .3
+        I.e2.velocity = I.e2.velocity.reflected(~I.line1.direction.normalized()) * game.Game.Friction
     except AttributeError:
         pass
     I.e1.recalculate_intersections()

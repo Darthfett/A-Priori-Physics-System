@@ -90,6 +90,7 @@ class Collidable(Shape, Entity):
         """Instanciate a collidable with mass (defaults to INFINITY)."""
         self.intersections = []
         self.mass = mass
+        self.last_collide_time = -1
         if mass is None:
             self.mass = INFINITY
         Collidables.append(self)

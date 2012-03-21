@@ -99,9 +99,9 @@ class InequalityError(ValueError):
 def find_roots(a, b, c):
     """Find the roots to a quadratic equation, i.e. find x | ax^2 + bx + c = 0."""
     
-    if FloatEqual(a, 0):
-        if FloatEqual(b, 0):
-            if FloatEqual(c, 0):
+    if a == 0:
+        if b == 0:
+            if c == 0:
             
                 # 0x^2 + 0x + 0 = 0
                 #             0 = 0
@@ -121,13 +121,44 @@ def find_roots(a, b, c):
         return [-c / b]
     
     # discriminant reveals information about how many solutions there are
-    discriminant = b ** 2 - 4*a*c
+    tmp = not (c == 0)
+    if tmp:
+        discriminant = (b * b) - 4*a*c
+    else:
+        discriminant = b 
     
     if discriminant < 0:
         # No real solution
         return []
-    if discriminant < EPSILON:
-        # One real solution
-        return [-b / (2 * a)]
-    # Two real solutions
-    return [(-b + math.sqrt(discriminant)) / (2*a), (-b - math.sqrt(discriminant)) / (2*a)]
+    if tmp:
+        if discriminant < EPSILON:
+            # One real solution
+            return [-b / (2 * a)]
+        else:
+            # Two real solutions
+            x1 = (-b - math.copysign(math.sqrt(discriminant), b)) / (2*a)
+            x2 = c / (a * x1)
+    else:
+        if discriminant < EPSILON * EPSILON:
+            # One real solution
+            return [-b / (2 * a)]
+        else:
+            # Two real solutions
+            x1 = -b / a
+            x2 = 0
+    return [x1, x2]
+
+def generate_circle(n, radius):
+    """Generates a circle with n sides, with radius radius."""
+    center = Point(radius, radius)
+    vertices = []
+    for i in range(n):
+        vertex = center + Vector(radius * math.sin((i/n) * 2 * math.pi), radius * math.cos((i/n) * 2 * math.pi))
+        vertices.append(vertex)
+    lines = []
+    for i, vertex in enumerate(vertices):
+        if vertex is vertices[-1]:
+            break
+        lines.append(Line(vertex, vertices[i+1]))
+    lines.append(Line(vertices[-1], vertices[0]))
+    return lines
