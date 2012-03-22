@@ -54,7 +54,7 @@ class Level:
         width, height = 640, 480
         self.boundary = Rect(size=(width, height))
         
-        image = pygame.image.load(os.path.join(resources_path, "guy_transp.png"))
+        image = pygame.image.load(os.path.join(resources_path, "guy.png"))
         # shape = Rect(image.get_rect()).shape
         shape = generate_circle(6, 50)
         self.player = player.Player(image = image, shape = shape, position=Level._PlayerPosition, velocity=Level._PlayerVelocity)
