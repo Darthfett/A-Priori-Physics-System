@@ -174,6 +174,9 @@ class Game:
                 Game.CurrentTime = Game._NextFrameTime
             else:
                 raise Exception("Invalid event %s from next_event, does not match next GameEvent %s or next RealEvent %s." % (ev, Game.GameEvents[0], Game.RealEvents[0]))
+            # Handle mouse and keyboard events after every event
+            event.update(pygame.time.get_ticks() - Game._DelayTime)
+            
         Game.GameEvents = [ev for ev in Game.GameEvents if not ev.invalid]
         Game.RealEvents = [ev for ev in Game.RealEvents if not ev.invalid]
 
@@ -198,7 +201,6 @@ class Game:
                 event.update(Game._NextFrameTime)
 
                 delta_time = (Game._NextFrameTime - Game.CurrentTime)
-                current_game_time = Game.GameTime
                 if delta_time >= delta_frame_time:
                     # calculate the next frame
                     self._calc_next_frame()
