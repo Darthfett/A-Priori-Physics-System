@@ -7,8 +7,9 @@ Classes:
 """
 
 import pygame
-from util import *
-from entity import *
+import util
+import entity
+import game
 
 class Window:
     """A wrapper to the pygame display in order to draw to and translate to/from the pygame
@@ -20,11 +21,11 @@ class Window:
         """Converts coordinates into pygame coordinates, i.e.:
             +x is right, +y is up, (0, 0) is bottom left of screen into:
             +x is right, +y is down, (0, 0) is top left of screen"""
-        coords = Vector(coords)
+        coords = util.Vector(coords)
         # offset coords by screen center
         coords += (self.size * .5)
         # offset coords by centered_obj
-        center_point = game.Game.CurrentLevel.player.position + Vector(game.Game.CurrentLevel.player.image.get_size()) * .5
+        center_point = game.Game.CurrentLevel.player.position + util.Vector(game.Game.CurrentLevel.player.image.get_size()) * .5
         coords -= center_point
         
         coords.y = self.size.y - coords.y
@@ -34,7 +35,7 @@ class Window:
         """Converts object coordinates into pygame coordinates, given lower left coordinates of an
         object and the object's height."""
         # Get top left corner, and convert to pygame coordinates
-        rect = Rect(blitable.image.get_rect())
+        rect = util.Rect(blitable.image.get_rect())
         rect.offset(blitable.position)
         new_position = self.to_pygame_coords(rect.bottom_left)
         new_position.y -= blitable.image.get_height()
@@ -63,8 +64,8 @@ class Window:
     def draw_next_frame(self):
         """Draws all objects."""
         self.clear()
-        ents = set(Blitables)
-        ents = ents.union(LineRenderables)
+        ents = set(entity.Blitables)
+        ents = ents.union(entity.LineRenderables)
         for ent in ents:
             ent.draw(self)
     
@@ -81,5 +82,5 @@ class Window:
             # pygame.RESIZABLE     display window should be sizeable
             # pygame.NOFRAME       display window will have no border or controls
             
-        self.size = Vector(self.screen.get_size())
+        self.size = util.Vector(self.screen.get_size())
         pygame.display.set_caption(self.title)

@@ -25,23 +25,23 @@ Globals:
 
 Classes:
     Entity(object):         Entity objects have position.
-    Shape(object):          Shape objects have a 'shape' attribute -- a list of line-segments.
+    Shaped(object):         Shaped objects have a 'shape'(util.Shape) attribute.
     Collidable(Entity):     Collidable objects have mass and can be invalidated through
                                 manual changes of position/velocity/acceleration.
     Movable(Entity):        Movable objects have velocity and acceleration.
     Blitable(Entity):       Blitable objects have an image that can be blit to the screen.
-    LineRenderable(object): LineRenderable objects have a 'render_lines' attribute -- a list of
-                                lines intended to be drawn to the screen.
+    LineRenderable(object): LineRenderable objects have a 'render_shape' attribute (used to draw lines)
 """
 
-from util import *
-from debug import Debug
 import pygame
+
+import util
 import game
 import physics
+from debug import Debug
 
 # Gravity acceleration is the default acceleration used for an entity.
-Gravity = Vector(0, -200)
+Gravity = util.Vector(0, -200)
 
 # A listing of all entities of each type (for enumeration)
 Entities = []
@@ -58,26 +58,33 @@ class Entity:
         """Instanciate an entity with position (defaults to (0, 0))."""
         self.position = position
         if position is None:
-            self.position = Point(0, 0)
+            self.position = util.Point(0, 0)
 
         Entities.append(self)
         super().__init__(**kwargs)
 
-class Shape:
-    """Shape objects are things that occupy space."""
+class Shaped:
+    """Shaped objects are things that occupy space."""
+    
+    @property
+    def shape(self):
+        return self._shape
 
-    def __init__(self, shape, **kwargs):
-        self.shape = shape
+    def __init__(self, shape, enclosed = True, **kwargs):
+        if isinstance(shape, util.Shape):
+            self._shape = shape
+        else:
+            self._shape = util.Shape(shape, enclosed)
         super().__init__(**kwargs)
 
-class Collidable(Shape, Entity):
+class Collidable(Shaped, Entity):
     """Collidable objects are objects that can be collided with."""
     
     def __getattr__(self, name):
         if name == "velocity":
-            return Vector(0, 0)
+            return util.Vector(0, 0)
         if name == "acceleration":
-            return Vector(0, 0)
+            return util.Vector(0, 0)
         raise AttributeError("%r object has no attribute %r" % (type(self).__name__, name))
         
     def recalculate_intersections(self):
@@ -92,7 +99,7 @@ class Collidable(Shape, Entity):
         self.mass = mass
         self.last_collide_time = -1
         if mass is None:
-            self.mass = INFINITY
+            self.mass = util.INFINITY
         Collidables.append(self)
         super().__init__(**kwargs)
         physics.update_intersections(self)
@@ -103,7 +110,7 @@ class Movable(Entity):
     @property
     def position(self):
         del_time_seconds = (game.Game.GameTime - self._valid_time) / 1000
-        return Position(self._position, self._velocity, self.acceleration, del_time_seconds)
+        return util.Position(self._position, self._velocity, self.acceleration, del_time_seconds)
     
     @position.setter
     def position(self, position):
@@ -127,16 +134,16 @@ class Movable(Entity):
         velocity defaults to (0, 0), and acceleration to Gravity."""
         self._velocity, self.acceleration = velocity, acceleration
         if velocity is None:
-            self._velocity = Vector(0, 0)
+            self._velocity = util.Vector(0, 0)
 
         if acceleration is None:
             # Copy Gravity vector
-            self.acceleration = Vector(Gravity)
+            self.acceleration = util.Vector(Gravity)
 
         Movables.append(self)
         super().__init__(**kwargs)
 
-class Projectile(Movable, Collidable, Shape):
+class Projectile(Movable, Collidable, Shaped):
     """Projectile objects occupy space, can collide with objects, and move around."""
 
     def __init__(self, **kwargs):
@@ -172,18 +179,15 @@ class LineRenderable:
 
     def draw(self, surface):
         """Draws the individual lines of the line renderable to the specified surface."""
-        for line in self.render_lines:
+        for line in self.render_shape.lines:
             if hasattr(line, "color"):
                 surface.draw_aaline(line.color, line.p, line.q)
             else:
                 surface.draw_aaline(self.color, line.p, line.q)
 
-    def __init__(self, render_lines, color = None, **kwargs):
+    def __init__(self, render_shape, color = None, **kwargs):
         """Instanciate a line renderable with a list of lines."""
-        self.render_lines, self.color = render_lines, color
-
-        if render_lines is None:
-            self.render_lines = []
+        self.render_shape, self.color = util.Shape(render_shape, kwargs.get("enclosed", None)), color
 
         if color is None:
             self.color = (255, 255, 255)

@@ -26,18 +26,18 @@ Classes:
     Vector: A 2D mathematical vector in the x, y plane.
     Point: A subclass of Vector, identical in everything but name (useful for clarifying intent).
     Line: A 2D mathematical line determined by 2 points.  Can also be used to represent a line segment.
-    EventListener: A metaclass which allows classes to watch properties for changes.
+    Rect: A representation of a rectangle defined by size and bottom-left, shape, or a pygame rect.
+    Event: A simple event type which can be registered to
 """
 
 import math
 
 # These packages are all flattened to provide a nicer namespace.
-from util.vector import *
-from util.point import *
-from util.line import *
-from util.rect import *
-from collections import deque
-from heapq import merge
+from util.vector import Vector
+from util.point import Point
+from util.line import Line
+from util.shape import Shape
+from util.rect import Rect
 
 NAN = float("nan")
 INFINITY = float("inf")
@@ -46,12 +46,6 @@ EPSILON = 1e-8
 def Position(position, velocity, acceleration, delta_time):
     """Get a new position given velocity/acceleration and some time in ms."""
     return position + velocity * delta_time + .5 * acceleration * (delta_time ** 2)
-    
-def ms_to_s(ms):
-    return ms / 1000
-
-def s_to_ms(s):
-    return s * 1000
 
 def SignOf(a):
     """Get the sign of a number (positive: 1, negative: -1).
@@ -157,13 +151,42 @@ def generate_circle(n, radius):
     for i in range(n):
         vertex = center + Vector(radius * math.sin((i/n) * 2 * math.pi), radius * math.cos((i/n) * 2 * math.pi))
         vertices.append(vertex)
-    lines = []
-    for i, vertex in enumerate(vertices):
-        if vertex is vertices[-1]:
-            break
-        lines.append(Line(vertex, vertices[i+1]))
-    lines.append(Line(vertices[-1], vertices[0]))
-    return lines
+    return vertices
+
+class Event:
+    """An event can have any number of handlers, which are called when the event is fired,
+    along with any arguments passed.
+     * Add to an event's handlers with the += operator or register method.
+     * Remove a handler with the -= operator or removeHandler method.
+     * Fire an event by calling it, or calling the fire method.
+     * Clear all handlers with the clearObjectHandlers method."""
+    
+    def __iadd__(self, handler):
+        """Add an event handler.  The handler must be callable."""
+        if not callable(handler):
+            raise ValueError("Cannot register non-callable %r object %r" % (type(handler).__name__, handler))
+        self.__handlers.append(handler)
+        return self
+
+    def __isub__(self, handler):
+        self.__handlers.remove(handler)
+        return self
+
+    def __call__(self, *args, **kwargs):
+        for handler in self.__handlers:
+            handler(*args, **kwargs)
+        
+    register = __iadd__
+    removeHandler = __isub__
+    fire = __call__
+
+    def clearObjectHandlers(self, inObject):
+        for theHandler in self.__handlers:
+            if theHandler.im_self == inObject:
+                self -= theHandler
+
+    def __init__(self):
+        self.__handlers = []
     
 class TimeComparable:
     """All TimeComparable objects can be compared according to their 'time' property."""

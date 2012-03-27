@@ -36,16 +36,16 @@ class Line:
     def slope(self):
         """The slope (i.e. m in y = mx + b) of the line.  If the line is vertical,
         then this will be an infinite value."""
-        return ZeroDivide(self.q.y - self.p.y, self.q.x - self.p.x)
+        return util.ZeroDivide(self.q.y - self.p.y, self.q.x - self.p.x)
         
     def __add__(self, other):
-        return Line(self.p + other, self.q + other)
+        return util.line.Line(self.p + other, self.q + other)
         
     def __sub__(self, other):
         return Line(self.p - other, self.q - other)
 
     def __repr__(self):
-        return "[{0} to {1}]".format(self.p, self.q)
+        return "L[{0} to {1}]".format(self.p, self.q)
 
     def __getitem__(self, item):
         """Returns a point in p, q."""

@@ -1,17 +1,18 @@
-import pygame, os
-from util import *
-from entity import Entities, LineRenderables
-from ground import Ground
-
+import pygame
+import os
 import random
-import physics
+
+import util
 import game
+import physics
+import entity
 import player
+from ground import Ground
 
 class Level:
 
-    _PlayerPosition = Vector(30, 350)
-    _PlayerVelocity = Vector(0, 0)
+    _PlayerPosition = util.Vector(30, 350)
+    _PlayerVelocity = util.Vector(0, 0)
 
     def regenerate_ground(self):
         """Randomly generate something that looks like a rough ground terrain."""
@@ -23,24 +24,19 @@ class Level:
 
         # generate vertices
         vertices = [(i, get_height(min_height, max_height)) for i in range(0, self.boundary.width+1, interval)]
-
-        # generate lines connecting vertices
-        lines = []
-        for i, vertex in enumerate(vertices):
-            if vertex is vertices[-1]:
-                break
-            lines.append(Line(vertex, vertices[i+1]))
+        enclosed = False
         
         # Rectangle:
-        # lines = []
-        # lines.append(Line((10, 10), (self.width - 10, 10)))
-        # lines.append(Line((self.width - 10, 10), (self.width - 10, self.height - 10)))
-        # lines.append(Line((self.width - 10, self.height - 10), (10, self.height - 10)))
-        # lines.append(Line((10, self.height - 10), (10, 10)))
+        # vertices = []
+        # vertices.append(Point(10, 10))
+        # vertices.append(Point(self.width - 10, 10))
+        # vertices.append(Point(self.width - 10, self.height - 10))
+        # vertices.append(Point(10, self.height - 10))
+        # enclosed = True
         
-        # set as the shape and render_lines for the ground
-        self.ground.render_lines = lines
-        self.ground.shape = lines
+        # set as the shape and render_shape for the ground
+        self.ground.render_shape = util.Shape(vertices, enclosed)
+        self.ground._shape = self.ground.render_shape
         self.ground.recalculate_intersections()
     
     def reset_player(self):
@@ -52,14 +48,14 @@ class Level:
         """Take a file at path, and extract level details."""
         # TODO: Load this in as a file
         width, height = 640, 480
-        self.boundary = Rect(size=(width, height))
+        self.boundary = util.Rect(size=(width, height))
         
         image = pygame.image.load(os.path.join(resources_path, "guy.png"))
-        # shape = Rect(image.get_rect()).shape
-        shape = generate_circle(6, 50)
+        # shape = util.Rect(image.get_rect()).shape
+        shape = util.generate_circle(6, 50)
         self.player = player.Player(image = image, shape = shape, position=Level._PlayerPosition, velocity=Level._PlayerVelocity)
         self.width, self.height = width, height
-        self.ground = Ground(shape = [], render_lines = [])
+        self.ground = Ground(shape = [], render_shape = [])
         self.regenerate_ground()
         
         physics.update_intersections(self.ground)

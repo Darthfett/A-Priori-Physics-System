@@ -1,7 +1,7 @@
+import pygame
 from util.point import Point
 from util.vector import Vector
 from util.line import Line
-import pygame
 
 class Rect:
 
@@ -56,31 +56,10 @@ class Rect:
     @property
     def shape(self):
         """Returns a rectangle composed of four lines."""
-        return [Line(self.bottom_left, self.bottom_right),
-                Line(self.bottom_right, self.top_right),
-                Line(self.top_right, self.top_left),
-                Line(self.top_left, self.bottom_left)]
-             
-    @shape.setter
-    def shape(self, shape):
-        min_line_x = lambda l: min(l.p.x, l.q.x)
-        min_line_y = lambda l: min(l.p.y, l.q.y)
-        max_line_x = lambda l: max(l.p.x, l.q.x)
-        max_line_y = lambda l: max(l.p.y, l.q.y)
-        
-        left = min_line_x(shape[0])
-        right = max_line_x(shape[0])
-        bottom = min_line_y(shape[0])
-        top = max_line_y(shape[0])
-        
-        for line in shape:
-            left = min(min_line_x(line), left)
-            right = max(max_line_x(line), right)
-            bottom = min(min_line_y(line), bottom)
-            top = max(max_line_y(line), top)
-        
-        self._bottom_left = Point(left, bottom)
-        self._size = Vector(right-left, top-bottom)
+        return [Point(self.bottom_left),
+                Point(self.bottom_right),
+                Point(self.top_right),
+                Point(self.top_left)]
              
     @property
     def top(self):

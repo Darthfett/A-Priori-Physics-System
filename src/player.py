@@ -7,7 +7,7 @@ Classes:
 """
 
 import pygame
-from util import *
+import util
 import entity
 import event
 
@@ -16,22 +16,22 @@ class Player(entity.Blitable, entity.Projectile):
     
     def a_pressed(self):
         self.velocity = self.velocity
-        self.acceleration += Vector(-200, 0)
+        self.acceleration += util.Vector(-200, 0)
         self.recalculate_intersections()
         
     def a_released(self):
         self.velocity = self.velocity
-        self.acceleration -= Vector(-200, 0)
+        self.acceleration -= util.Vector(-200, 0)
         self.recalculate_intersections()
     
     def d_pressed(self):
         self.velocity = self.velocity
-        self.acceleration += Vector(200, 0)
+        self.acceleration += util.Vector(200, 0)
         self.recalculate_intersections()
         
     def d_released(self):
         self.velocity = self.velocity
-        self.acceleration -= Vector(200, 0)
+        self.acceleration -= util.Vector(200, 0)
         self.recalculate_intersections()
     
     def __init__(self, **kwargs):

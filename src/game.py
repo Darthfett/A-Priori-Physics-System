@@ -31,13 +31,12 @@ Classes:
 import pygame
 import os
 import math
+from collections import deque
 
-from util import *
-import physics
+import util
 import event
 import controls
 from window import Window
-import player
 from level import Level
 
 class Game:
@@ -105,25 +104,25 @@ class Game:
         try:
             game_event = Game.GameEvents[0]
         except IndexError:
-            game_event = event.Event()
-            game_event.time = INFINITY
+            game_event = util.Event()
+            game_event.time = util.INFINITY
         try:
             real_event = Game.RealEvents[0]
         except IndexError:
-            real_event = event.Event()
-            real_event.time = INFINITY
+            real_event = util.Event()
+            real_event.time = util.INFINITY
 
         # Get time-to-event
         game_delta_time = game_event.time - Game.GameTime
         real_delta_time = real_event.time - Game.CurrentTime
 
-        if game_event.time < Game.GameTime - EPSILON:
+        if game_event.time < Game.GameTime - util.EPSILON:
             raise Exception("Event must occur at a future time (%s > %s)" % (game_event.time, Game.GameTime))
         elif real_event.time < Game.CurrentTime:
             raise Exception("Event %s must occur at a future time." % real_event)
 
         # Normalize game time-to-event to be comparable with real time-to-events
-        game_delta_time = ZeroDivide(abs(game_delta_time), self._speed)
+        game_delta_time = util.ZeroDivide(abs(game_delta_time), self._speed)
 
         if game_delta_time > frame_delta or math.isnan(game_delta_time):
             # Game time events are some time after this frame.
@@ -170,6 +169,7 @@ class Game:
                 ev()
                 Game.RealEvents.remove(ev)
             elif ev is None:
+                # Move time up to current time, this will end the while loop.
                 Game.GameTime += (Game._NextFrameTime - Game.CurrentTime) * self._speed
                 Game.CurrentTime = Game._NextFrameTime
             else:

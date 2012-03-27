@@ -132,9 +132,9 @@ class Vector:
 
     def __repr__(self):
         if debug.Debug:
-            return "({0}, {1})".format(self.x, self.y)
+            return "V({0}, {1})".format(self.x, self.y)
         else:
-            return "({0}, {1})".format(format(self.x, '.2f'), format(self.y, '.2f'))
+            return "V({0}, {1})".format(format(self.x, '.2f'), format(self.y, '.2f'))
 
     def __getitem__(self, item):
         """Supports getting coordinate by index, like an x, y tuple."""

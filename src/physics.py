@@ -31,12 +31,15 @@ Classes:
     Intersection: Represents the time and position of an intersection between two objects.
 """
 
-from util import *
 import math
-from heapq import merge
 from itertools import chain, product
+from collections import deque
+from heapq import merge
+
+import util
 import entity
 import game
+import multiprocessing
 
 ####################################################################################################
 
@@ -54,7 +57,19 @@ def resolve_entity(ent, line):
     except AttributeError:
         pass
 
-class Intersection(TimeComparable):
+def resolve_entities(ent, other, line):
+    normal = ~line.direction.normalized()
+    if math.isinf(ent.mass):
+        if math.isinf(other.mass):
+            raise Exception("What happens when an unstoppable force hits an immovable object?  THIS happens! >:(")
+        # For component of other's velocity in 'normal' direction: v_other = 2*v_ent - v_other
+        # For component of other's velocity in 'line' direction: v_other = v_other * (1 - friction)
+    elif math.isinf(other.mass):
+        # For component of ent's velocity in 'normal' direction: v_ent = 2*v_other - v_ent
+        # For component of ent's velocity in 'line' direction: v_ent = v_ent * (1 - friction)
+        pass
+
+class Intersection(util.TimeComparable):
     """Represents the time and position of an intersection between two objects."""
     __slots__ = ['time', 'pos', 'invalid', 'e1', 'e2', 'line1', 'line2']
     
@@ -67,7 +82,7 @@ class Intersection(TimeComparable):
             # Intersection somehow has no entities between which there was a collision
             raise Exception("Intersection {0} occurs between nonexistent things".format(self))
     
-        if FloatEqual(game.Game.GameTime, self.e1.last_collide_time):
+        if util.FloatEqual(game.Game.GameTime, self.e1.last_collide_time):
             # Collision already handled (this prevents an infinite loop upon collision)
             self.e1.last_collide_time = self.e2.last_collide_time = game.Game.GameTime
             return
@@ -78,8 +93,8 @@ class Intersection(TimeComparable):
         # Update collision time to prevent infinite loop
         self.e1.last_collide_time = self.e2.last_collide_time = game.Game.GameTime
         
-        line1 = self.line1 + self.e1.position # Get actual position
-        line2 = self.line2 + self.e2.position # Get actual position
+        line1 = self.line1 + self.e1.position
+        line2 = self.line2 + self.e2.position
         
         # Resolve collisions by reflecting each entity's velocity off of the incident line
         if line1.p in line2:
@@ -110,7 +125,7 @@ class Intersection(TimeComparable):
     def __repr__(self):
         return "I(%s, %s, %s)" % (format(self.time, '.2f'), self.pos, 'T' if self.invalid else 'F')
 
-    def __init__(self, time = INFINITY, pos = None, invalid = False):
+    def __init__(self, time = util.INFINITY, pos = None, invalid = False):
         """Instanciate an intersection (with INFINITE 'time', None 'pos', and False 'invalid' default attributes).
         An intersection is considered invalid if some outside factors change its time or position
         validity.  See the physics module documentation on the global Intersections for when this
@@ -126,8 +141,8 @@ def ParabolaLineCollision(pos, vel, acc, p, q):
     # time of intersection is defined by the equation
     # a*time^2 + b*time + c = 0
     
-    if acc == Vector(0, 0):
-        if vel == Vector(0, 0):
+    if acc == util.Vector(0, 0):
+        if vel == util.Vector(0, 0):
             return []
         else:
             b = (vel.cross(q) - vel.cross(p))
@@ -138,8 +153,8 @@ def ParabolaLineCollision(pos, vel, acc, p, q):
         b = (vel.cross(q) - vel.cross(p))
         c = (pos.cross(q) - pos.cross(p) - p.cross(q))
         try:
-            roots = find_roots(a, b, c)
-        except InequalityError:
+            roots = util.find_roots(a, b, c)
+        except util.InequalityError:
             roots = []
 
     if len(roots) == 0:
@@ -149,14 +164,25 @@ def ParabolaLineCollision(pos, vel, acc, p, q):
         time = roots[0]
         
         # Intersection position
-        relative_position = Position(pos, vel, acc, time)
+        relative_position = util.Position(pos, vel, acc, time)
         return [Intersection(time * 1000, relative_position)]
         
     # Intersection positions
-    relative_positions = [Position(pos, vel, acc, time) for time in roots]
+    relative_positions = [util.Position(pos, vel, acc, time) for time in roots]
     
     return [Intersection(time * 1000, position) for time, position in zip(roots, relative_positions)]
     
+# def find_intersections(line1, v1, a1, line2, v2, a2, e1 = None, e2 = None):
+# def find_intersections(args):
+    # line1, v1, a1, line2, v2, a2 = args[:6]
+    # if len(args) > 6:
+        # e1 = args[6]
+        # if len(args) > 7:
+            # e2 = args[7]
+        # else:
+            # e2 = None
+    # else:
+        # e1 = None    
 def find_intersections(line1, v1, a1, line2, v2, a2):
     """Returns an unsorted list of intersections between line1 and line2."""
     
@@ -172,24 +198,49 @@ def find_intersections(line1, v1, a1, line2, v2, a2):
     i4 = ParabolaLineCollision(line2.q, v_line2_line1, a_line2_line1, *line1)
     
     intersections = []
-    for int in chain(i1, i2, i3, i4):
-        if int.time < -EPSILON:
+    for intersection in chain(i1, i2, i3, i4):
+        if intersection.time < -util.EPSILON:
             continue
         # A position is invalid if it is not inside one of the two line --segments--
-        if (Position(line1.p, v_line1_line2, a_line1_line2, int.time / 1000) in line2 or
-                Position(line1.q, v_line1_line2, a_line1_line2, int.time / 1000) in line2 or
-                Position(line2.p, v_line2_line1, a_line2_line1, int.time / 1000) in line1 or
-                Position(line2.q, v_line2_line1, a_line2_line1, int.time / 1000) in line1):
-            # position valid
-            intersections.append(int)
+        if (util.Position(line1.p, v_line1_line2, a_line1_line2, intersection.time / 1000) in line2 or
+                util.Position(line1.q, v_line1_line2, a_line1_line2, intersection.time / 1000) in line2 or
+                util.Position(line2.p, v_line2_line1, a_line2_line1, intersection.time / 1000) in line1 or
+                util.Position(line2.q, v_line2_line1, a_line2_line1, intersection.time / 1000) in line1):
+            # position is valid
+            intersections.append(intersection)
     return intersections
+    
+def entity_intersections2(ent,collidable):
+    """Find all intersections between two entities."""
+    intersections = []
+    
+    # Relative velocity and acceleration (v12: velocity of 'ent'(1) relative to 'collidable'(2))
+    v12 = ent.velocity - collidable.velocity
+    v21 = collidable.velocity - ent.velocity
+    a12 = ent.acceleration - collidable.acceleration
+    a21 = collidable.acceleration - ent.acceleration
+    
+    intersections = []
+    
+    # Get all pairs of line segments between the two entities' shapes
+    for point in ent.shape.points:
+        for line in collidable.shape.lines:
+            point_ints = ParabolaLineCollision(point, v12, a12, *line)
+            
+            # Filter out and add only valid intersections
+            for intersection in point_ints:
+                if intersection.time < -util.EPSILON:
+                    continue
+                # A position is invalid if it is not inside one of the two line --segments--
+                if util.Position(point, v12, a12, intersection.time / 1000) in line:
+                    intersections.append(intersection)
 
 def entity_intersections(ent, collidable):
     """Find all intersections between two entities."""
     intersections = []
     
     # Get all pairs of line segments between the two entities' shapes
-    for line1, line2 in product(ent.shape, collidable.shape):
+    for line1, line2 in product(ent.shape.lines, collidable.shape.lines):
     
         # Find all the intersections and add to the intersections list
         pair_intersections = find_intersections(line1 + ent.position, ent.velocity, ent.acceleration, line2 + collidable.position, collidable.velocity, collidable.acceleration)

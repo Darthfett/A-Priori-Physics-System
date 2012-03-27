@@ -22,59 +22,23 @@ Globals:
 Functions:
     update: Runs through all events currently in the pygame event queue, and puts them
             into the proper game event queue, to be handled in-order in the next frame.
-
-Classes:
-    Event: A generic event class, that can be used to register event handlers.
 """
 
 import pygame
 
-from util import *
+import util
 import game
+from collections import deque
+from heapq import merge
 
-class Event:
-    """An event can have any number of handlers, which are called when the event is fired,
-    along with any arguments passed.
-     * Add to an event's handlers with the += operator or register method.
-     * Remove a handler with the -= operator or removeHandler method.
-     * Fire an event by calling it, or calling the fire method.
-     * Clear all handlers with the clearObjectHandlers method."""
-    
-    def __iadd__(self, handler):
-        """Add an event handler.  The handler must be callable."""
-        if not callable(handler):
-            raise ValueError("Cannot register non-callable %r object %r" % (type(handler).__name__, handler))
-        self.__handlers.append(handler)
-        return self
-
-    def __isub__(self, handler):
-        self.__handlers.remove(handler)
-        return self
-
-    def __call__(self, *args, **kwargs):
-        for handler in self.__handlers:
-            handler(*args, **kwargs)
-        
-    register = __iadd__
-    removeHandler = __isub__
-    fire = __call__
-
-    def clearObjectHandlers(self, inObject):
-        for theHandler in self.__handlers:
-            if theHandler.im_self == inObject:
-                self -= theHandler
-
-    def __init__(self):
-        self.__handlers = []
-
-class _KeyEvent(Event):
+class _KeyEvent(util.Event):
     """A KeyEvent object can be directly registered to for any key (will be passed as first parameter),
     or a specific key can be registered to, which will not pass the key as a parameter."""
     def __getitem__(self, key):
         """Get Event for the specified key."""
         if key not in self.__events:
             # None exist, create new one
-            self.__events[key] = Event()
+            self.__events[key] = util.Event()
         
         return self.__events[key]
         
@@ -83,12 +47,12 @@ class _KeyEvent(Event):
         super().__init__()
         
         
-# Information about these two in the module docstring.
+# Information about these in the module docstring.
 KeyPressEvent = _KeyEvent()
 KeyReleaseEvent = _KeyEvent()
 KeyToggleEvent = _KeyEvent()
 
-class _KeyPress(TimeComparable):
+class _KeyPress(util.TimeComparable):
     """Event used to indicate a key was pressed.  Key Press/Release events are automatically
     generated when CurrentState does not match the next key state."""
     def __call__(self):
@@ -106,7 +70,7 @@ class _KeyPress(TimeComparable):
         self.time = time
         self.invalid = False
 
-class _KeyRelease(TimeComparable):
+class _KeyRelease(util.TimeComparable):
     """Event used to indicate a key was released.  Key Press/Release events are automatically
     generated when CurrentState does not match the next key state."""
     def __call__(self):
