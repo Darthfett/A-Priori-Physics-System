@@ -71,9 +71,36 @@ def resolve_entities(ent, other, line):
 
 class Intersection(util.TimeComparable):
     """Represents the time and position of an intersection between two objects."""
-    __slots__ = ['time', 'pos', 'invalid', 'e1', 'e2', 'line1', 'line2']
+    __slots__ = ['time', 'pos', 'invalid', 'e1', 'e2', 'line1', 'line2', 'line', 'point']
     
     def __call__(self):
+        """Handles resolving the intersection."""
+        if self.invalid:
+            # Intersection is invalid, just skip past it
+            return
+        if not hasattr(self, "e1") or not hasattr(self, "e2"):
+            # Intersection somehow has no entities between which there was a collision
+            raise Exception("Intersection {0} occurs between nonexistent things".format(self))
+    
+        if util.FloatEqual(game.Game.GameTime, self.e1.last_collide_time):
+            # Collision already handled (this prevents an infinite loop upon collision)
+            self.e1.last_collide_time = self.e2.last_collide_time = game.Game.GameTime
+            return
+        
+        # Valid Collision; handle it:
+        # All future intersections for both objects will be invalidated and recalculated
+        
+        # Update collision time to prevent infinite loop
+        self.e1.last_collide_time = self.e2.last_collide_time = game.Game.GameTime
+        
+        resolve_entity(self.e1, self.line)
+        resolve_entity(self.e2, self.line)
+        
+        # Recalculate intersections
+        self.e1.recalculate_intersections()
+        self.e2.recalculate_intersections()
+    
+    def __call2__(self):
         """Handles resolving the intersection."""
         if self.invalid:
             # Intersection is invalid, just skip past it
@@ -210,7 +237,7 @@ def find_intersections(line1, v1, a1, line2, v2, a2):
             intersections.append(intersection)
     return intersections
     
-def entity_intersections2(ent,collidable):
+def entity_intersections(ent,collidable):
     """Find all intersections between two entities."""
     intersections = []
     
@@ -225,6 +252,8 @@ def entity_intersections2(ent,collidable):
     # Get all pairs of line segments between the two entities' shapes
     for point in ent.shape.points:
         for line in collidable.shape.lines:
+            point = point + ent.position
+            line = line + collidable.position
             point_ints = ParabolaLineCollision(point, v12, a12, *line)
             
             # Filter out and add only valid intersections
@@ -233,9 +262,32 @@ def entity_intersections2(ent,collidable):
                     continue
                 # A position is invalid if it is not inside one of the two line --segments--
                 if util.Position(point, v12, a12, intersection.time / 1000) in line:
+                    intersection.e1 = ent
+                    intersection.e2 = collidable
+                    intersection.line = line
+                    intersection.point = point
                     intersections.append(intersection)
+                    
+    for point in collidable.shape.points:
+        for line in ent.shape.lines:
+            point = point + collidable.position
+            line = line + ent.position
+            point_ints = ParabolaLineCollision(point, v21, a21,  *line)
+            
+            # Filter out and add only valid intersections
+            for intersection in point_ints:
+                if intersection.time < -util.EPSILON:
+                    continue
+                # A position is invalid if it is not inside one of the two line --segments--
+                if util.Position(point, v21, a21, intersection.time / 1000) in line:
+                    intersection.e1 = collidable
+                    intersection.e2 = ent
+                    intersection.line = line
+                    intersection.point = point
+                    intersections.append(intersection)
+    return intersections
 
-def entity_intersections(ent, collidable):
+def entity_intersections2(ent, collidable):
     """Find all intersections between two entities."""
     intersections = []
     
