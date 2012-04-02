@@ -87,11 +87,11 @@ class Collidable(Shaped, Entity):
             return util.Vector(0, 0)
         raise AttributeError("%r object has no attribute %r" % (type(self).__name__, name))
         
-    def recalculate_intersections(self):
+    def recalculate_intersections(self, exclude = None):
         for intersection in self.intersections:
             intersection.invalid = True
         self.intersections = []
-        physics.update_intersections(self)
+        physics.update_intersections(self, exclude)
 
     def __init__(self, mass = None, **kwargs):
         """Instanciate a collidable with mass (defaults to INFINITY)."""
@@ -137,7 +137,7 @@ class Movable(Entity):
             self._velocity = util.Vector(0, 0)
 
         if acceleration is None:
-            # Copy Gravity vector
+            # Copy of Gravity vector, so as not to modify it.
             self.acceleration = util.Vector(Gravity)
 
         Movables.append(self)
@@ -156,7 +156,7 @@ class Blitable:
     def draw(self, surface):
         """Blits the blitable to the specified surface."""
         if Debug.DrawOutlines and hasattr(self, "shape"):
-            for line in self.shape:
+            for line in self.shape.lines:
                 try:
                     surface.draw_aaline((255, 255, 255), line.p + self.position, line.q + self.position)
                 except AttributeError:

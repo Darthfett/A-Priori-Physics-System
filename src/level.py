@@ -28,10 +28,10 @@ class Level:
         
         # Rectangle:
         # vertices = []
-        # vertices.append(Point(10, 10))
-        # vertices.append(Point(self.width - 10, 10))
-        # vertices.append(Point(self.width - 10, self.height - 10))
-        # vertices.append(Point(10, self.height - 10))
+        # vertices.append(util.Point(10, 10))
+        # vertices.append(util.Point(self.width - 10, 10))
+        # vertices.append(util.Point(self.width - 10, self.height - 10))
+        # vertices.append(util.Point(10, self.height - 10))
         # enclosed = True
         
         # set as the shape and render_shape for the ground

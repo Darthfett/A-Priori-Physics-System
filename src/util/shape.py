@@ -9,9 +9,6 @@ class Shape:
         
     def __repr__(self):
         return 'Shape(' + str(self.points) + ', ' + str(enclosed) + ')'
-    
-    def __getitem__(self, index):
-        return self.lines[index]
 
     def __init__(self, points, enclosed = None):
         if isinstance(points, Shape):

@@ -3,7 +3,7 @@ import util
 import debug
 
 class Vector:
-    """A Vector is a 2 dimensional [x, y] pair.
+    """A Vector is an immutable 2 dimensional [x, y] pair.
     Supports access through [] operator, as well as x, y members.
     Also provides many typical operations between 2D vectors."""
 
@@ -21,12 +21,6 @@ class Vector:
         
     def reflected(self, across_norm):
         return self - (2 * across_norm * self) * across_norm
-
-    def normalize(self):
-        len = self.length
-        self.x = self.x / len
-        self.y = self.y / len
-        return self
 
     def normalized(self):
         """Returns a vector in the same direction, of length 1."""
@@ -49,14 +43,13 @@ class Vector:
              (s_to_p.direction.x) * (line.direction.y)) / line.length
         return line.p + line.direction.normalized() * d
 
-    def project_onto(self, line):
-        """Converts this point into the closest point on the line."""
-        self.x, self.y = self.projected_onto(line)
-
 #Operators:
 
+    def __setattr__(self, name, value):
+        raise AttributeError("Cannot assign values to object {0} of type {1}".format(self, type(self)))
+
     def __eq__(self, vec):
-        return util.FloatEqual(self.x, vec.x) and util.FloatEqual(self.y, vec.y)
+        return self.x == vec.x and self.y == vec.y
 
     def __add__(self, vec):
         return Vector(self.x + vec[0], self.y + vec[1])
@@ -92,28 +85,6 @@ class Vector:
         """__rdiv__ operator performs scalar division with a scalar."""
         return Vector(self.x / scalar, self.y / scalar)
 
-    def __imul__(self, other):
-        """__imul__ operator performs scalar product with a scalar."""
-        self.x *= scalar
-        self.y *= scalar
-        return self
-
-    def __idiv__(self, scalar):
-        """__idiv__ operator performs scalar division with a scalar."""
-        self.x /= scalar
-        self.y /= scalar
-        return self
-
-    def __iadd__(self, vec):
-        self.x += vec[0]
-        self.y += vec[1]
-        return self
-
-    def __isub__(self, vec):
-        self.x -= vec[0]
-        self.y -= vec[1]
-        return self
-
     def __neg__(self):
         return Vector(-self.x, -self.y)
 
@@ -145,8 +116,10 @@ class Vector:
         raise IndexError
 
     def __init__(self, x, y = None):
-        """Initialize an x, y Vector.  Can take a tuple or individual arguments."""
+        """Initialize an immutable x, y Vector.  Can take a tuple or individual arguments."""
         if y is None:
-            self.x, self.y = x
+            object.__setattr__(self, 'x', x[0])
+            object.__setattr__(self, 'y', x[1])
         else:
-            self.x, self.y = x, y
+            object.__setattr__(self, 'x', x)
+            object.__setattr__(self, 'y', y)

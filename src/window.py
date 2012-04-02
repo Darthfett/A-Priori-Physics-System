@@ -16,19 +16,21 @@ class Window:
     coordinate system."""
     DEFAULT_WIDTH = 640
     DEFAULT_HEIGHT = 480
+    FollowPlayer = True
     
     def to_pygame_coords(self, coords):
         """Converts coordinates into pygame coordinates, i.e.:
             +x is right, +y is up, (0, 0) is bottom left of screen into:
             +x is right, +y is down, (0, 0) is top left of screen"""
         coords = util.Vector(coords)
-        # offset coords by screen center
-        coords += (self.size * .5)
-        # offset coords by centered_obj
-        center_point = game.Game.CurrentLevel.player.position + util.Vector(game.Game.CurrentLevel.player.image.get_size()) * .5
-        coords -= center_point
+        if Window.FollowPlayer:
+            # offset coords by screen center
+            coords = coords + (self.size * .5)
+            # offset coords by centered_obj
+            center_point = game.Game.CurrentLevel.player.position + util.Vector(game.Game.CurrentLevel.player.image.get_size()) * .5
+            coords = coords - center_point
         
-        coords.y = self.size.y - coords.y
+        coords = util.Vector(0, self.size.y) + util.Vector(coords.x, -coords.y)
         return coords
 
     def to_pygame(self, blitable):
@@ -38,7 +40,7 @@ class Window:
         rect = util.Rect(blitable.image.get_rect())
         rect.offset(blitable.position)
         new_position = self.to_pygame_coords(rect.bottom_left)
-        new_position.y -= blitable.image.get_height()
+        new_position = new_position + util.Vector(0, -blitable.image.get_height())
         return new_position
 
     def draw_line(self, color, start_pos, end_pos, width=1):

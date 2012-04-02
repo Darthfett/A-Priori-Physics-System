@@ -73,7 +73,7 @@ class Intersection(util.TimeComparable):
     """Represents the time and position of an intersection between two objects."""
     __slots__ = ['time', 'pos', 'invalid', 'e1', 'e2', 'line1', 'line2', 'line', 'point']
     
-    def __call__(self):
+    def __call2__(self):
         """Handles resolving the intersection."""
         if self.invalid:
             # Intersection is invalid, just skip past it
@@ -96,11 +96,11 @@ class Intersection(util.TimeComparable):
         resolve_entity(self.e1, self.line)
         resolve_entity(self.e2, self.line)
         
-        # Recalculate intersections
+        # Recalculate intersections (exclude e1 from e2, to avoid duplicate calculation)
         self.e1.recalculate_intersections()
-        self.e2.recalculate_intersections()
+        self.e2.recalculate_intersections(self.e1)
     
-    def __call2__(self):
+    def __call__(self):
         """Handles resolving the intersection."""
         if self.invalid:
             # Intersection is invalid, just skip past it
@@ -145,9 +145,9 @@ class Intersection(util.TimeComparable):
             # collision not at either line-segments' endpoints
             raise Exception("Intersection {0} occurs, but objects not actually intersecting".format(self))
         
-        # Recalculate intersections
+        # Recalculate intersections (exclude e1 from e2, to avoid duplicate calculations)
         self.e1.recalculate_intersections()
-        self.e2.recalculate_intersections()
+        self.e2.recalculate_intersections()#self.e1)
         
     def __repr__(self):
         return "I(%s, %s, %s)" % (format(self.time, '.2f'), self.pos, 'T' if self.invalid else 'F')
@@ -218,7 +218,6 @@ def find_intersections(line1, v1, a1, line2, v2, a2):
     a_line1_line2 = a1 - a2
     v_line2_line1 = v2 - v1
     a_line2_line1 = a2 - a1
-    
     i1 = ParabolaLineCollision(line1.p, v_line1_line2, a_line1_line2, *line2)
     i2 = ParabolaLineCollision(line1.q, v_line1_line2, a_line1_line2, *line2)
     i3 = ParabolaLineCollision(line2.p, v_line2_line1, a_line2_line1, *line1)
@@ -236,8 +235,26 @@ def find_intersections(line1, v1, a1, line2, v2, a2):
             # position is valid
             intersections.append(intersection)
     return intersections
+
+def entity_intersections(ent, collidable):
+    """Find all intersections between two entities."""
+    intersections = []
     
-def entity_intersections(ent,collidable):
+    # Get all pairs of line segments between the two entities' shapes
+    for line1, line2 in product(ent.shape.lines, collidable.shape.lines):
+    
+        # Find all the intersections and add to the intersections list
+        pair_intersections = find_intersections(line1 + ent.position, ent.velocity, ent.acceleration, line2 + collidable.position, collidable.velocity, collidable.acceleration)
+
+        for intersection in pair_intersections:
+            intersection.e1 = ent
+            intersection.e2 = collidable
+            intersection.line1 = line1
+            intersection.line2 = line2
+            intersections.append(intersection)
+    return intersections
+    
+def entity_intersections2(ent, collidable):
     """Find all intersections between two entities."""
     intersections = []
     
@@ -285,25 +302,8 @@ def entity_intersections(ent,collidable):
                     intersection.line = line
                     intersection.point = point
                     intersections.append(intersection)
-    return intersections
-
-def entity_intersections2(ent, collidable):
-    """Find all intersections between two entities."""
-    intersections = []
-    
-    # Get all pairs of line segments between the two entities' shapes
-    for line1, line2 in product(ent.shape.lines, collidable.shape.lines):
-    
-        # Find all the intersections and add to the intersections list
-        pair_intersections = find_intersections(line1 + ent.position, ent.velocity, ent.acceleration, line2 + collidable.position, collidable.velocity, collidable.acceleration)
-
-        for intersection in pair_intersections:
-            intersection.e1 = ent
-            intersection.e2 = collidable
-            intersection.line1 = line1
-            intersection.line2 = line2
-            intersections.append(intersection)
-    return intersections
+    r = sorted(intersections, key=lambda I: I.time)
+    return r
 
 def update_intersections_pair(ent, collidable):
     """Update Game and each entities' intersections."""
@@ -312,7 +312,7 @@ def update_intersections_pair(ent, collidable):
     for intersection in intersections:
         intersection.time += game.Game.GameTime
             
-    # Sort all the intersections, and add to gave event list
+    # intersections need to be sorted so they are evaluated in-order.
     intersections.sort()
     game.Game.GameEvents = deque(merge(game.Game.GameEvents, intersections))
     
@@ -320,11 +320,11 @@ def update_intersections_pair(ent, collidable):
     ent.intersections = list(merge(ent.intersections, intersections))
     collidable.intersections = list(merge(collidable.intersections, intersections))
     
-def update_intersections(ent):
+def update_intersections(ent, exclude = None):
     """Calculate all intersections between the given entity, and add them to the event list."""
     current_time = game.Game.GameTime
     for collidable in entity.Collidables:
-        if ent is collidable:
+        if ent is collidable or collidable is exclude:
             # don't collide with self
             continue
         update_intersections_pair(ent, collidable)
