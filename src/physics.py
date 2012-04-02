@@ -147,7 +147,7 @@ class Intersection(util.TimeComparable):
         
         # Recalculate intersections (exclude e1 from e2, to avoid duplicate calculations)
         self.e1.recalculate_intersections()
-        self.e2.recalculate_intersections()#self.e1)
+        self.e2.recalculate_intersections(self.e1)
         
     def __repr__(self):
         return "I(%s, %s, %s)" % (format(self.time, '.2f'), self.pos, 'T' if self.invalid else 'F')
