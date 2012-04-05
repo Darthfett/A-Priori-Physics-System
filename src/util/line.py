@@ -38,6 +38,12 @@ class Line:
         then this will be an infinite value."""
         return util.ZeroDivide(self.q.y - self.p.y, self.q.x - self.p.x)
         
+    def __hash__(self):
+        return hash((self.p, self.q))
+
+    def __setattr__(self, name, value):
+        raise AttributeError("Cannot assign values to object {0} of type {1}".format(self, type(self)))
+        
     def __add__(self, other):
         return util.line.Line(self.p + other, self.q + other)
         
@@ -63,10 +69,13 @@ class Line:
         if q is None:
             if isinstance(p, Line):
                 # defining with a line
-                self.p, self.q = p
+                object.__setattr__(self, 'p', p[0])
+                object.__setattr__(self, 'q', p[1])
             else:
                 # defining with a tuple of points
-                self.p, self.q = (p[0] if isinstance(p[0], Vector) else Point(p[0])), (p[1] if isinstance(p[1], Vector) else Point(p[1]))
+                object.__setattr__(self, 'p', p[0] if isinstance(p[0], Vector) else Point(p[0]))
+                object.__setattr__(self, 'q', p[1] if isinstance(p[1], Vector) else Point(p[1]))
         else:
             # defining with two tuples
-            self.p, self.q = (p if isinstance(p, Vector) else Point(p)), (q if isinstance(q, Vector) else Point(q))
+            object.__setattr__(self, 'p', p if isinstance(p, Vector) else Point(p))
+            object.__setattr__(self, 'q', q if isinstance(q, Vector) else Point(q))
