@@ -73,7 +73,7 @@ class Intersection(util.TimeComparable):
     """Represents the time and position of an intersection between two objects."""
     __slots__ = ['time', 'pos', 'invalid', 'e1', 'e2', 'line1', 'line2', 'line', 'point']
     
-    def __call2__(self):
+    def __call__(self):
         """Handles resolving the intersection."""
         if self.invalid:
             # Intersection is invalid, just skip past it
@@ -100,7 +100,7 @@ class Intersection(util.TimeComparable):
         self.e1.recalculate_intersections()
         self.e2.recalculate_intersections(self.e1)
     
-    def __call__(self):
+    def __call2__(self):
         """Handles resolving the intersection."""
         if self.invalid:
             # Intersection is invalid, just skip past it
@@ -148,6 +148,9 @@ class Intersection(util.TimeComparable):
         # Recalculate intersections (exclude e1 from e2, to avoid duplicate calculations)
         self.e1.recalculate_intersections()
         self.e2.recalculate_intersections(self.e1)
+        
+    def __hash__(self):
+        return hash(self.time)
         
     def __repr__(self):
         return "I(%s, %s, %s)" % (format(self.time, '.2f'), self.pos, 'T' if self.invalid else 'F')
@@ -198,6 +201,34 @@ def ParabolaLineCollision(pos, vel, acc, p, q):
     relative_positions = [util.Position(pos, vel, acc, time) for time in roots]
     
     return [Intersection(time * 1000, position) for time, position in zip(roots, relative_positions)]
+
+def ParabolaLineSegmentCollision(pos, vel, acc, line):
+    def valid(intersection):
+        return intersection.time > -util.EPSILON and (
+               util.Position(pos, vel, acc, intersection.time / 1000) in line
+        )
+    p, q = line
+    intersections = ParabolaLineCollision(pos, vel, acc, p, q)
+    intersections = [intersection for intersection in intersections if valid(intersection)]
+    for i in intersections:
+        if type(i) is not Intersection:
+            raise
+            
+    return intersections
+
+class Try:
+
+    def __repr__(self):
+        return 'ParabolaLineSegmentCollision({pos}, {vel}, {acc}, {line})'.format(
+            **{
+                'pos':  self.pos,
+                'vel':  self.vel,
+                'acc':  self.acc,
+                'line': self.line
+            })
+
+    def __init__(self, pos, vel, acc, line):
+        self.pos, self.vel, self.acc, self.line = pos, vel, acc, line
     
 # def find_intersections(line1, v1, a1, line2, v2, a2, e1 = None, e2 = None):
 # def find_intersections(args):
@@ -216,35 +247,64 @@ def find_intersections(line1, v1, a1, line2, v2, a2):
     # Find collisions with relative velocity/acceleration
     v_line1_line2 = v1 - v2
     a_line1_line2 = a1 - a2
-    v_line2_line1 = v2 - v1
-    a_line2_line1 = a2 - a1
-    i1 = ParabolaLineCollision(line1.p, v_line1_line2, a_line1_line2, *line2)
-    i2 = ParabolaLineCollision(line1.q, v_line1_line2, a_line1_line2, *line2)
-    i3 = ParabolaLineCollision(line2.p, v_line2_line1, a_line2_line1, *line1)
-    i4 = ParabolaLineCollision(line2.q, v_line2_line1, a_line2_line1, *line1)
-    
+    v_line2_line1 = -v_line1_line2
+    a_line2_line1 = -a_line1_line2
+    tried_valid = []
+    tried = []
     intersections = []
-    for intersection in chain(i1, i2, i3, i4):
-        if intersection.time < -util.EPSILON:
-            continue
-        # A position is invalid if it is not inside one of the two line --segments--
-        if (util.Position(line1.p, v_line1_line2, a_line1_line2, intersection.time / 1000) in line2 or
-                util.Position(line1.q, v_line1_line2, a_line1_line2, intersection.time / 1000) in line2 or
-                util.Position(line2.p, v_line2_line1, a_line2_line1, intersection.time / 1000) in line1 or
-                util.Position(line2.q, v_line2_line1, a_line2_line1, intersection.time / 1000) in line1):
-            # position is valid
-            intersections.append(intersection)
-    return intersections
+    
+    i1 = ParabolaLineSegmentCollision(line1.p, v_line1_line2, a_line1_line2, line2)
+    i2 = ParabolaLineSegmentCollision(line1.q, v_line1_line2, a_line1_line2, line2)
+    i3 = ParabolaLineSegmentCollision(line2.p, v_line2_line1, a_line2_line1, line1)
+    i4 = ParabolaLineSegmentCollision(line2.q, v_line2_line1, a_line2_line1, line1)
+    
+    t1 = Try(line1.p, v_line1_line2, a_line1_line2, line2)
+    t2 = Try(line1.q, v_line1_line2, a_line1_line2, line2)
+    t3 = Try(line2.p, v_line2_line1, a_line2_line1, line1)
+    t4 = Try(line2.q, v_line2_line1, a_line2_line1, line1)
+    
+    if i1: tried_valid.append(t1)
+    if i2: tried_valid.append(t2)
+    if i3: tried_valid.append(t3)
+    if i4: tried_valid.append(t4)
+    tried.extend([t1, t2, t3, t4])
+    
+    m = None
+    if i1 or i2 or i3 or i4:
+        m = min(chain(i1, i2, i3, i4), key=lambda i: i.time)
+    
+    m_i = None
+    
+    if m in i1:
+        m_i = t1
+    elif m in i2:
+        m_i = t2
+    elif m in i3:
+        m_i = t3
+    elif m in i4:
+        m_i = t4
+    
+    intersections = list(chain(i1, i2, i3, i4))
+    return intersections, tried_valid, m_i, tried
 
-def entity_intersections(ent, collidable):
+def entity_intersections2(ent, collidable):
     """Find all intersections between two entities."""
     intersections = []
+    tried_valid = []
+    tried = []
+    current_min = None
+    m = util.INFINITY
     
     # Get all pairs of line segments between the two entities' shapes
     for line1, line2 in product(ent.shape.lines, collidable.shape.lines):
     
         # Find all the intersections and add to the intersections list
-        pair_intersections = find_intersections(line1 + ent.position, ent.velocity, ent.acceleration, line2 + collidable.position, collidable.velocity, collidable.acceleration)
+        pair_intersections, t_i, min_i, t_i_a = find_intersections(line1 + ent.position, ent.velocity, ent.acceleration, line2 + collidable.position, collidable.velocity, collidable.acceleration)
+        tried_valid.extend(t_i)
+        tried.extend(t_i_a)
+        if pair_intersections and min(pair_intersections, key=lambda i: i.time).time < m:
+            m = min(pair_intersections, key=lambda i: i.time).time
+            current_min = min_i
 
         for intersection in pair_intersections:
             intersection.e1 = ent
@@ -252,9 +312,9 @@ def entity_intersections(ent, collidable):
             intersection.line1 = line1
             intersection.line2 = line2
             intersections.append(intersection)
-    return intersections
+    return intersections, tried_valid, current_min, tried
     
-def entity_intersections2(ent, collidable):
+def entity_intersections(ent, collidable):
     """Find all intersections between two entities."""
     intersections = []
     
@@ -265,50 +325,81 @@ def entity_intersections2(ent, collidable):
     a21 = collidable.acceleration - ent.acceleration
     
     intersections = []
+    tried_valid = []
+    tried = []
+    current_min = None
+    m = util.INFINITY
     
     # Get all pairs of line segments between the two entities' shapes
     for point in ent.shape.points:
         for line in collidable.shape.lines:
             point = point + ent.position
             line = line + collidable.position
-            point_ints = ParabolaLineCollision(point, v12, a12, *line)
+            point_ints = ParabolaLineSegmentCollision(point, v12, a12, line)
+            _temp = Try(point, v12, a12, line)
+            tried.append(_temp)
+            if point_ints: tried_valid.append(_temp)
+            if point_ints and min(point_ints, key=lambda i: i.time).time < m:
+                m = min(point_ints, key=lambda i: i.time).time
+                current_min = _temp
             
             # Filter out and add only valid intersections
             for intersection in point_ints:
-                if intersection.time < -util.EPSILON:
-                    continue
-                # A position is invalid if it is not inside one of the two line --segments--
-                if util.Position(point, v12, a12, intersection.time / 1000) in line:
-                    intersection.e1 = ent
-                    intersection.e2 = collidable
-                    intersection.line = line
-                    intersection.point = point
-                    intersections.append(intersection)
+                intersection.e1 = ent
+                intersection.e2 = collidable
+                intersection.line = line
+                intersection.point = point
+                intersections.append(intersection)
                     
     for point in collidable.shape.points:
         for line in ent.shape.lines:
             point = point + collidable.position
             line = line + ent.position
-            point_ints = ParabolaLineCollision(point, v21, a21,  *line)
+            point_ints = ParabolaLineSegmentCollision(point, v21, a21, line)
+            
+            _temp = Try(point, v21, a21, line)
+            tried.append(_temp)
+            if point_ints: tried_valid.append(_temp)
+            if point_ints and min(point_ints, key=lambda i: i.time).time < m:
+                m = min(point_ints, key=lambda i: i.time).time
+                current_min = _temp
             
             # Filter out and add only valid intersections
             for intersection in point_ints:
-                if intersection.time < -util.EPSILON:
-                    continue
-                # A position is invalid if it is not inside one of the two line --segments--
-                if util.Position(point, v21, a21, intersection.time / 1000) in line:
-                    intersection.e1 = collidable
-                    intersection.e2 = ent
-                    intersection.line = line
-                    intersection.point = point
-                    intersections.append(intersection)
+                intersection.e1 = collidable
+                intersection.e2 = ent
+                intersection.line = line
+                intersection.point = point
+                intersections.append(intersection)
     r = sorted(intersections, key=lambda I: I.time)
-    return r
+    return r, tried_valid, current_min, tried
 
 def update_intersections_pair(ent, collidable):
     """Update Game and each entities' intersections."""
     # Get all intersections between ent and collidable
-    intersections = entity_intersections(ent, collidable)
+    intersections, tried_valid1, min1, tried1 = entity_intersections(ent, collidable)
+    i2, tried_valid2, min2, tried2 = entity_intersections2(ent, collidable)
+    i1_times = {i.time for i in intersections}
+    i2_times = {i.time for i in i2}
+    if i1_times or i2_times:
+        if i1_times and i2_times and not util.FloatEqual(min(i1_times), min(i2_times)) or (
+           i1_times and not i2_times or (
+           i2_times and not i1_times
+           )
+        ):
+            print('!')
+            with open('i1.txt', 'a') as f:
+                f.write('i_times\n' + '\n'.join(map(str, sorted(i1_times))) + '\n\n')
+                f.write('min_i_time_causer\n' + str(min1) + '\n\n')
+                f.write('intersections\n' + '\n'.join(map(str, sorted(set(intersections)))) + '\n\n')
+                f.write('tried (valid)\n' + '\n'.join(map(str, tried_valid1)) + '\n\n')
+                f.write('tried (all)\n' + '\n'.join(map(str, tried1)) + '\n\n\n\n')
+            with open('i2.txt', 'a') as f:
+                f.write('i_times\n' + '\n'.join(map(str, sorted(i2_times))) + '\n\n')
+                f.write('min_i_time_causer\n' + str(min2) + '\n\n')
+                f.write('intersections\n' + '\n'.join(map(str, sorted(set(i2)))) + '\n\n')
+                f.write('tried (valid)\n' + '\n'.join(map(str, tried_valid2)) + '\n\n')
+                f.write('tried (all)\n' + '\n'.join(map(str, tried2)) + '\n\n\n\n')
     for intersection in intersections:
         intersection.time += game.Game.GameTime
             

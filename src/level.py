@@ -52,7 +52,7 @@ class Level:
         
         image = pygame.image.load(os.path.join(resources_path, "guy.png"))
         # shape = util.Rect(image.get_rect()).shape
-        shape = util.generate_circle(6, 50)
+        shape = util.generate_circle(3, 50)
         self.player = player.Player(image = image, shape = shape, position=Level._PlayerPosition, velocity=Level._PlayerVelocity)
         self.width, self.height = width, height
         self.ground = Ground(shape = [], render_shape = [])
