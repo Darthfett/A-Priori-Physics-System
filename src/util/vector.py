@@ -45,8 +45,8 @@ class Vector:
 
 #Operators:
 
-    def __setattr__(self, name, value):
-        raise AttributeError("Cannot assign values to object {0} of type {1}".format(self, type(self)))
+    #def __setattr__(self, name, value):
+    #    raise AttributeError("Cannot assign values to object {0} of type {1}".format(self, type(self)))
         
     def __hash__(self):
         return hash((self.x, self.y))

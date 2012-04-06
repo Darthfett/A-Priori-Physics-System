@@ -39,7 +39,7 @@ from heapq import merge
 import util
 import entity
 import game
-import multiprocessing
+from multiprocessing import Pool
 
 ####################################################################################################
 
@@ -71,7 +71,7 @@ def resolve_entities(ent, other, line):
 
 class Intersection(util.TimeComparable):
     """Represents the time and position of an intersection between two objects."""
-    __slots__ = ['time', 'pos', 'invalid', 'e1', 'e2', 'line']
+    __slots__ = ['time', 'pos', 'line', 'invalid', 'e1', 'e2']
     
     def __call__(self):
         """Handles resolving the intersection."""
@@ -103,13 +103,13 @@ class Intersection(util.TimeComparable):
     def __repr__(self):
         return "Intersection({0}, {1}, {2})".format(format(self.time, '.2f'), self.pos, self.invalid)
 
-    def __init__(self, time = util.INFINITY, pos = None, invalid = False):
+    def __init__(self, time = util.INFINITY, pos = None, line = None, invalid = False):
         """Instanciate an intersection (with INFINITE 'time', None 'pos', and False 'invalid' default attributes).
         An intersection is considered invalid if some outside factors change its time or position
         validity.  See the physics module documentation on the global Intersections for when this
         occurs."""
-        self.time, self.pos, self.invalid = time, pos, invalid
-        self.e1, self.e2, self.line = [None] * 3
+        self.time, self.pos, self.line, self.invalid = time, pos, line, invalid
+        self.e1, self.e2 = [None] * 2
 
 def ParabolaLineCollision(pos, vel, acc, line):
     """Takes a parabola pos, vel, acc, and a line p q, and returns the intersections between them as a list of
@@ -145,18 +145,23 @@ def ParabolaLineCollision(pos, vel, acc, line):
         
         # Intersection position
         relative_position = util.Position(pos, vel, acc, time)
-        return [Intersection(time * 1000, relative_position, relative_position not in line)]
+        return [Intersection(time * 1000, relative_position, line)]
         
     # Intersection positions
     relative_positions = [util.Position(pos, vel, acc, time) for time in roots]
     
-    return [Intersection(time * 1000, position, position not in line) for time, position in zip(roots, relative_positions)]
+    return [Intersection(time * 1000, position, line) for time, position in zip(roots, relative_positions)]
 
 def ParabolaLineSegmentCollision(pos, vel, acc, line):
     intersections = ParabolaLineCollision(pos, vel, acc, line)
-    intersections = [i for i in intersections if i.time > -util.EPSILON and not i.invalid]
+    intersections = [i for i in intersections if i.time > -util.EPSILON and i.pos in i.line]
             
     return intersections
+
+def _parabola_line_collision_wrapper(args):
+    return ParabolaLineSegmentCollision(*args)
+    
+# _pool = Pool(16)
     
 def entity_intersections(ent, collidable):
     """Find all intersections between two entities."""
@@ -168,44 +173,21 @@ def entity_intersections(ent, collidable):
     a12 = ent.acceleration - collidable.acceleration
     a21 = -a12
     
-    intersections = []
+    args = [(point + ent.position, v12, a12, line + collidable.position) for point, line in product(ent.shape.points, collidable.shape.lines)]
+    args += [(point + collidable.position, v21, a21, line + ent.position) for point, line in product(collidable.shape.points, ent.shape.lines)]
     
-    # Get all pairs of line segments between the two entities' shapes
-    for point in ent.shape.points:
-        point = point + ent.position
-        for line in collidable.shape.lines:
-            line = line + collidable.position
-            point_ints = ParabolaLineSegmentCollision(point, v12, a12, line)
-            
-            # Filter out and add only valid intersections
-            for intersection in point_ints:
-                intersection.e1 = ent
-                intersection.e2 = collidable
-                intersection.line = line
-                intersection.pos = point
-                intersections.append(intersection)
-                    
-    for point in collidable.shape.points:
-        point = point + collidable.position
-        for line in ent.shape.lines:
-            line = line + ent.position
-            point_ints = ParabolaLineSegmentCollision(point, v21, a21, line)
-            
-            # Filter out and add only valid intersections
-            for intersection in point_ints:
-                intersection.e1 = collidable
-                intersection.e2 = ent
-                intersection.line = line
-                intersection.pos = point
-                intersections.append(intersection)
-    return sorted(intersections)
+    return sorted([i for intersections in map(_parabola_line_collision_wrapper, args) for i in intersections])
+    # return sorted([i for intersections in _pool.map(_parabola_line_collision_wrapper, args) for i in intersections])
 
 def update_intersections_pair(ent, collidable):
     """Update Game and each entities' intersections."""
     # Get all intersections between ent and collidable
     intersections = entity_intersections(ent, collidable)
+    
     for intersection in intersections:
         intersection.time += game.Game.GameTime
+        intersection.e1 = ent
+        intersection.e2 = collidable
             
     game.Game.GameEvents = deque(merge(game.Game.GameEvents, intersections))
     

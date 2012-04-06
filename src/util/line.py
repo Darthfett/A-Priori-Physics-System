@@ -41,8 +41,8 @@ class Line:
     def __hash__(self):
         return hash((self.p, self.q))
 
-    def __setattr__(self, name, value):
-        raise AttributeError("Cannot assign values to object {0} of type {1}".format(self, type(self)))
+    #def __setattr__(self, name, value):
+    #    raise AttributeError("Cannot assign values to object {0} of type {1}".format(self, type(self)))
         
     def __add__(self, other):
         return util.line.Line(self.p + other, self.q + other)
