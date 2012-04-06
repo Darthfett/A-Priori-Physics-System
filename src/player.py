@@ -34,6 +34,16 @@ class Player(entity.Blitable, entity.Projectile):
         self.acceleration -= util.Vector(200, 0)
         self.recalculate_intersections()
     
+    def w_pressed(self):
+        self.velocity = self.velocity
+        self.acceleration += util.Vector(0, 300)
+        self.recalculate_intersections()
+        
+    def w_released(self):
+        self.velocity = self.velocity
+        self.acceleration -= util.Vector(0, 300)
+        self.recalculate_intersections()
+    
     def __init__(self, **kwargs):
         """Instanciate the Player class.  Required keyword arguments:
                image - A str or pygame Surface
@@ -42,4 +52,6 @@ class Player(entity.Blitable, entity.Projectile):
         event.KeyReleaseEvent[pygame.K_a].register(self.a_released)
         event.KeyPressEvent[pygame.K_d].register(self.d_pressed)
         event.KeyReleaseEvent[pygame.K_d].register(self.d_released)
+        event.KeyPressEvent[pygame.K_w].register(self.w_pressed)
+        event.KeyReleaseEvent[pygame.K_w].register(self.w_released)
         super().__init__(**kwargs)
