@@ -159,9 +159,9 @@ class Blitable:
         if Debug.DrawOutlines and hasattr(self, "shape"):
             for line in self.shape.lines:
                 try:
-                    surface.draw_aaline((255, 255, 255), line.p + self.position, line.q + self.position)
+                    surface.draw_aaline((0, 0, 0), line.p + self.position, line.q + self.position)
                 except AttributeError:
-                    surface.draw_aaline((255, 255, 255), line.p, line.q)
+                    surface.draw_aaline((0, 0, 0), line.p, line.q)
         else:
             surface.blit(self)
 
@@ -191,7 +191,7 @@ class LineRenderable:
         self.render_shape, self.color = util.Shape(render_shape, kwargs.get("enclosed", None)), color
 
         if color is None:
-            self.color = (255, 255, 255)
+            self.color = (0, 0, 0)
 
         LineRenderables.append(self)
         super().__init__(**kwargs)

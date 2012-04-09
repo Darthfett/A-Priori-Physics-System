@@ -121,13 +121,15 @@ def find_roots(a, b, c):
     if tmp:
         discriminant = (b * b) - 4*a*c
     else:
+        if b == 0:
+            return [0]
         discriminant = b 
     
     if discriminant < 0:
         # No real solution
         return []
     if tmp:
-        if discriminant < EPSILON:
+        if discriminant == 0:
             # One real solution
             return [-b / (2 * a)]
         else:
@@ -135,7 +137,7 @@ def find_roots(a, b, c):
             x1 = (-b - math.copysign(math.sqrt(discriminant), b)) / (2*a)
             x2 = c / (a * x1)
     else:
-        if discriminant < EPSILON * EPSILON:
+        if discriminant == 0:
             # One real solution
             return [-b / (2 * a)]
         else:

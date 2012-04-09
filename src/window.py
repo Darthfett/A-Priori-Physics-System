@@ -60,7 +60,7 @@ class Window:
     
     def clear(self):
         """Clear the screen."""
-        self.screen.fill((0, 0, 0))
+        self.screen.fill((255, 255, 255))
         
 
     def draw_next_frame(self):
