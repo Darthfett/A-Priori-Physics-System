@@ -45,9 +45,11 @@ class Player(entity.Blitable, entity.Projectile):
         self.recalculate_intersections()
     
     def __init__(self, **kwargs):
-        """Instanciate the Player class.  Required keyword arguments:
-               image - A str or pygame Surface
-               shape - A list of line segments"""
+        """
+        Instanciate the Player class.  Required keyword arguments:
+            image - A str or pygame Surface
+            shape - A list of line segments
+        """
         event.KeyPressEvent[pygame.K_a].register(self.a_pressed)
         event.KeyReleaseEvent[pygame.K_a].register(self.a_released)
         event.KeyPressEvent[pygame.K_d].register(self.d_pressed)

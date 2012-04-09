@@ -44,9 +44,16 @@ class Vector:
         return line.p + line.direction.normalized() * d
 
 #Operators:
+    
+    def __getstate__(self):
+        return {name: getattr(self, name) for name in self.__slots__}
 
-    #def __setattr__(self, name, value):
-    #    raise AttributeError("Cannot assign values to object {0} of type {1}".format(self, type(self)))
+    def __setstate__(self, state):
+        for name, value in state.items():
+            object.__setattr__(self, name, value)
+
+    def __setattr__(self, name, value):
+        raise AttributeError("Cannot assign values to object {0} of type {1}".format(self, type(self)))
         
     def __hash__(self):
         return hash((self.x, self.y))
