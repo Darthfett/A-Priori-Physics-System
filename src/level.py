@@ -1,5 +1,6 @@
-import pygame
 import os
+
+import pygame
 import random
 
 import util
@@ -47,24 +48,24 @@ class Level:
     def level_2(self):
         vertices = []
         vertices.extend([util.Point(0, 0),
-                        util.Point(500, 0),
-                        util.Point(500, 100),
-                        util.Point(1000, 100),
-                        util.Point(1350, 0),
-                        util.Point(1500, 0),
-                        util.Point(1500, 500),
-                        util.Point(1000, 500),
-                        util.Point(150, 650),
-                        util.Point(150, 1000),
-                        util.Point(500, 1000),
-                        util.Point(1000, 950),
+                         util.Point(500, 0),
+                         util.Point(500, 100),
+                         util.Point(1000, 100),
+                         util.Point(1350, 0),
+                         util.Point(1500, 0),
+                         util.Point(1500, 500),
+                         util.Point(1000, 500),
+                         util.Point(150, 650),
+                         util.Point(150, 1000),
+                         util.Point(500, 1000),
+                         util.Point(1000, 950),
                         
-                        util.Point(1000, 1150),
-                        util.Point(0, 1150),
-                        util.Point(0, 500),
-                        util.Point(1000, 250),
-                        util.Point(1350, 250),
-                        util.Point(0, 250)])
+                         util.Point(1000, 1150),
+                         util.Point(0, 1150),
+                         util.Point(0, 500),
+                         util.Point(1000, 250),
+                         util.Point(1350, 250),
+                         util.Point(0, 250)])
         self.ground = Ground(shape = vertices, render_shape = vertices)
                         
                         
@@ -78,10 +79,10 @@ class Level:
         image = pygame.image.load(os.path.join(resources_path, "jetpack_guy.PNG"))
         shape = util.Rect(image.get_rect()).shape
         # shape = util.generate_circle(8, 50)
-        self.player = player.Player(image = image, shape = shape, position=Level._PlayerPosition, velocity=Level._PlayerVelocity)
+        self.player = player.Player(image=image, shape=shape, position=Level._PlayerPosition, velocity=Level._PlayerVelocity)
         self.width, self.height = width, height
         self.level_2()
-        #self.ground = Ground(shape = [], render_shape = [])
+        #self.ground = Ground(shape=[], render_shape=[])
         #self.regenerate_ground()
         
         physics.update_intersections(self.ground)

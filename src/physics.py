@@ -39,7 +39,6 @@ from heapq import merge
 import util
 import entity
 import game
-from multiprocessing import Pool
 
 ####################################################################################################
 
@@ -53,7 +52,7 @@ def resolve_entity(ent, line):
     """Resolves an entity's movement by reflecting velocity off a line."""
     # Reflect e1's velocity off of line
     try:
-        ent.velocity = ent.velocity.reflected(~line.direction.normalized()) * game.Game.Friction
+        ent.velocity = ent.velocity.reflected(~line.direction.normalized()) * game.Game.Bounciness
     except AttributeError:
         pass
 
@@ -63,10 +62,10 @@ def resolve_entities(ent, other, line):
         if math.isinf(other.mass):
             raise Exception("What happens when an unstoppable force hits an immovable object?  THIS happens! >:(")
         # For component of other's velocity in 'normal' direction: v_other = 2*v_ent - v_other
-        # For component of other's velocity in 'line' direction: v_other = v_other * (1 - friction)
+        # For component of other's velocity in 'line' direction: v_other = v_other * (1 - Bounciness)
     elif math.isinf(other.mass):
         # For component of ent's velocity in 'normal' direction: v_ent = 2*v_other - v_ent
-        # For component of ent's velocity in 'line' direction: v_ent = v_ent * (1 - friction)
+        # For component of ent's velocity in 'line' direction: v_ent = v_ent * (1 - Bounciness)
         pass
 
 class Intersection(util.TimeComparable):
@@ -161,8 +160,6 @@ def ParabolaLineSegmentCollision(pos, vel, acc, line):
 def _parabola_line_collision_wrapper(args):
     return ParabolaLineSegmentCollision(*args)
     
-# _pool = Pool(16)
-    
 def entity_intersections(ent, collidable):
     """Find all intersections between two entities."""
     intersections = []
@@ -177,7 +174,6 @@ def entity_intersections(ent, collidable):
     args += [(point + collidable.position, v21, a21, line + ent.position) for point, line in product(collidable.shape.points, ent.shape.lines)]
     
     return sorted([i for intersections in map(_parabola_line_collision_wrapper, args) for i in intersections])
-    # return sorted([i for intersections in _pool.map(_parabola_line_collision_wrapper, args) for i in intersections])
 
 def update_intersections_pair(ent, collidable):
     """Update Game and each entities' intersections."""

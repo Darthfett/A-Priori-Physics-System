@@ -10,7 +10,7 @@ class Shape:
     def __repr__(self):
         return 'Shape(' + str(self.points) + ', ' + str(enclosed) + ')'
 
-    def __init__(self, points, enclosed = None):
+    def __init__(self, points, enclosed=None):
         if isinstance(points, Shape):
             self.points = points.points
             if enclosed is None or type(enclosed) is not bool:
@@ -23,5 +23,5 @@ class Shape:
                 self.enclosed = True
             else:
                 if type(enclosed) is not bool:
-                    raise TypeError("'enclosed' must be of type bool, not {0}".format(typeof(enclosed)))
+                    raise TypeError("'enclosed' must be of type bool, not {0}".format(type(enclosed)))
                 self.enclosed = enclosed

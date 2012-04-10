@@ -28,10 +28,11 @@ Functions:
 Classes:
     Game: Represents the game's state.
 """
-import pygame
 import os
 import math
 from collections import deque
+
+import pygame
 
 import util
 import event
@@ -45,7 +46,7 @@ class Game:
     # Window object (Screen.screen is the actual window)
     Screen = None
     FPS = 60
-    Friction = 0.3
+    Bounciness = 0.9
     CurrentLevel = None
     
     _NextFrameTime = 0
@@ -183,43 +184,49 @@ class Game:
     def run(self):
         """Start the main event loop."""
 
-        # Main loop
+        # Calculate the time in ms to wait in-between each frame.
         delta_frame_time = 1000 / Game.FPS
         
-        # Give the black screen to avoid starting-up flicker
+        # Clear the screen and display it to avoid startup-flicker.
         Game.Screen.clear()
         pygame.display.flip()
         
-        # Ignore any initialization time
+        # Get the time after initialization, to use as an offset.
         Game._DelayTime = pygame.time.get_ticks()
         try:
             while True:
-                # The real real time, offset by the Delay from init
+                # Update the time and ignore initialization time.
                 Game._NextFrameTime = pygame.time.get_ticks() - Game._DelayTime
 
-                # Handle mouse and keyboard events
+                # Set timestamp for mouse and keyboard events and put them in the event queue.
                 event.update(Game._NextFrameTime)
-
+                
                 delta_time = (Game._NextFrameTime - Game.CurrentTime)
                 if delta_time >= delta_frame_time:
-                    # calculate the next frame
+                    # It's time (or past time) to update the screen.
+                    #
+                    # Catch the simulation up to the current time by handling
+                    # events in-order, and then draw the next frame.
                     self._calc_next_frame()
-
-                    # draw the next frame
                     Game.Screen.draw_next_frame()
-
-                    # Update the Display
                     pygame.display.flip()
-                pygame.time.delay(1)
+                    
+                pygame.time.delay(1)  # Sleep 1 ms
 
         except controls.Quit:
             # Player has commanded the game to quit.
             print("Game over, man!  GAME OVER!")
         finally:
+            # Game is exiting.  Clean up anything we need to before exiting.
             pygame.quit()
 
     def __init__(self, speed=1):
+    
+        # The Game class is a 'borg' style class -- all instances share the 
+        # same state.
         self.__dict__ = self.__shared_state
+        
+        # If this is the first Game instance, initialize it.
         if not hasattr(self, "_speed"):
             self._speed = speed
             self._real_speed = None

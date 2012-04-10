@@ -7,6 +7,7 @@ Classes:
 """
 
 import pygame
+
 import util
 import entity
 import game
@@ -71,7 +72,7 @@ class Window:
         for ent in ents:
             ent.draw(self)
     
-    def __init__(self, title = "Jetpack Man", size = (DEFAULT_WIDTH, DEFAULT_HEIGHT)):
+    def __init__(self, title="Jetpack Man", size=(DEFAULT_WIDTH, DEFAULT_HEIGHT)):
         """Initialize the screen, window size, and title."""
         self.title = title
         self.screen = pygame.display.set_mode(size) # Accept default flags:

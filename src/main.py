@@ -1,20 +1,23 @@
 """
 The main module should be run as __main__ in order to set up and start the game.
 """
-import sys, os, pygame
+import sys
+import os
 import argparse
-import debug
 
+import pygame
+
+import debug
 import game
 
 # Initialize and run the game!
-def main(speed = 1, fps = game.Game.FPS, friction = game.Game.Friction, debug_mode = False, draw_outlines = False):
+def main(speed=1, fps=game.Game.FPS, bounciness=game.Game.Bounciness, debug_mode=False, draw_outlines=False):
     """Runs the game."""
     # Handle arguments
     debug._DebugMode = debug_mode
     debug.Debug.DrawOutlines = draw_outlines
     game.Game.FPS = fps
-    game.Game.Friction = friction
+    game.Game.Bounciness = bounciness
     
     # Set up an SDL environment video parameter, required for pygame.
     os.environ['SDL_VIDEO_CENTERED'] = '1'
@@ -41,11 +44,11 @@ if __name__ == "__main__":
     parser.add_argument('--speed', help='Change the speed multiplier',
                         dest='speed', default=1, type=float)
 
-    parser.add_argument('--friction', help='Change the friction/bounciness (1 is none, 0 is infinite, > 1 is negative',
-                        dest='friction', default=game.Game.Friction, type=float)
+    parser.add_argument('--bounciness', help='Change the bounciness (1 is elastic, 0 is sticky)',
+                        dest='bounciness', default=game.Game.Bounciness, type=float)
     
     # Get arguments
     args = parser.parse_args()
 
     # Run game
-    main(args.speed, args.FPS, args.friction, args.debug, args.draw_outlines)
+    main(args.speed, args.FPS, args.bounciness, args.debug, args.draw_outlines)

@@ -41,7 +41,7 @@ from util.rect import Rect
 
 NAN = float("nan")
 INFINITY = float("inf")
-EPSILON = 1e-8
+EPSILON = 1e-10
 
 def Position(position, velocity, acceleration, delta_time):
     """Get a new position given velocity/acceleration and some time in ms."""
@@ -119,7 +119,7 @@ def find_roots(a, b, c):
     # discriminant reveals information about how many solutions there are
     tmp = not (c == 0)
     if tmp:
-        discriminant = (b * b) - 4*a*c
+        discriminant = (b * b) - 4 * a * c
     else:
         if b == 0:
             return [0]
@@ -134,7 +134,7 @@ def find_roots(a, b, c):
             return [-b / (2 * a)]
         else:
             # Two real solutions
-            x1 = (-b - math.copysign(math.sqrt(discriminant), b)) / (2*a)
+            x1 = (-b - math.copysign(math.sqrt(discriminant), b)) / (2 * a)
             x2 = c / (a * x1)
     else:
         if discriminant == 0:
@@ -151,7 +151,7 @@ def generate_circle(n, radius):
     center = Point(radius, radius)
     vertices = []
     for i in range(n):
-        vertex = center + Vector(radius * math.sin((i/n) * 2 * math.pi), radius * math.cos((i/n) * 2 * math.pi))
+        vertex = center + Vector(radius * math.sin((i / n) * 2 * math.pi), radius * math.cos((i / n) * 2 * math.pi))
         vertices.append(vertex)
     return vertices
 

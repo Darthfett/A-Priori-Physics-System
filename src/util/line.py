@@ -1,6 +1,6 @@
+import util
 from util.vector import Vector
 from util.point import Point
-import util
 
 class Line:
     """A Line is defined with two Points, p and q.  This class supports many typical operations
@@ -8,7 +8,7 @@ class Line:
     can be done by using the 'in' operator to determine if a specific point is on the line and
     between the two points that define the segment."""
 
-    __slots__ = ['p', 'q', 'color']
+    #__slots__ = ['p', 'q', 'color']
 
     def collinear(self, r):
         """Returns whether a Point r is collinear with the line."""
@@ -31,6 +31,16 @@ class Line:
         if util.FloatEqual(p.x, q.x):
             return p.x
         return self.p.y - (self.slope * self.p.x)
+    
+    # def __getstate__(self):
+        # return {name: getattr(self, name) for name in self.__slots__}
+
+    # def __setstate__(self, state):
+        # for name, value in state.items():
+            # object.__setattr__(self, name, value)
+
+    # def __setattr__(self, name, value):
+        # raise AttributeError("Cannot assign values to object {0} of type {1}".format(self, type(self)))
 
     @property
     def slope(self):
@@ -79,3 +89,4 @@ class Line:
             # defining with two tuples
             object.__setattr__(self, 'p', p if isinstance(p, Vector) else Point(p))
             object.__setattr__(self, 'q', q if isinstance(q, Vector) else Point(q))
+        object.__setattr__(self, 'color', (0, 0, 0))

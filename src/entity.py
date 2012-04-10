@@ -31,6 +31,7 @@ Classes:
     Movable(Entity):        Movable objects have velocity and acceleration.
     Blitable(Entity):       Blitable objects have an image that can be blit to the screen.
     LineRenderable(object): LineRenderable objects have a 'render_shape' attribute (used to draw lines)
+
 """
 
 import pygame
@@ -70,7 +71,7 @@ class Shaped:
     def shape(self):
         return self._shape
 
-    def __init__(self, shape, enclosed = True, **kwargs):
+    def __init__(self, shape, enclosed=True, **kwargs):
         if isinstance(shape, util.Shape):
             self._shape = shape
         else:
@@ -94,7 +95,7 @@ class Collidable(Shaped, Entity):
         self.intersections = [intersection for intersection in self.intersections if not intersection.invalid]
         physics.update_intersections(self, exclude)
 
-    def __init__(self, mass = None, **kwargs):
+    def __init__(self, mass=None, **kwargs):
         """Instanciate a collidable with mass (defaults to INFINITY)."""
         self.intersections = []
         self.mass = mass
@@ -130,7 +131,7 @@ class Movable(Entity):
         self.position = self.position
         self._velocity = velocity
 
-    def __init__(self, velocity = None, acceleration = None, **kwargs):
+    def __init__(self, velocity=None, acceleration=None, **kwargs):
         """Instanciate a movable with velocity and acceleration (and then indirectly with position).
         velocity defaults to (0, 0), and acceleration to Gravity."""
         self._velocity, self.acceleration = velocity, acceleration
@@ -186,7 +187,7 @@ class LineRenderable:
             else:
                 surface.draw_aaline(self.color, line.p, line.q)
 
-    def __init__(self, render_shape, color = None, **kwargs):
+    def __init__(self, render_shape, color=None, **kwargs):
         """Instanciate a line renderable with a list of lines."""
         self.render_shape, self.color = util.Shape(render_shape, kwargs.get("enclosed", None)), color
 

@@ -1,4 +1,5 @@
 import pygame
+
 from util.point import Point
 from util.vector import Vector
 from util.line import Line
@@ -194,7 +195,7 @@ class Rect:
     def center(self, c):
         self.bottom_left = Point(c) - self._size * .5
 
-    def __init__(self, rect = None, **k):
+    def __init__(self, rect=None, **k):
         """Instanciate a rect by copying another, or with a bottom_left and size, or with a shape."""
         
         if rect is not None:

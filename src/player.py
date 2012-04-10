@@ -7,6 +7,7 @@ Classes:
 """
 
 import pygame
+
 import util
 import entity
 import event

@@ -22,18 +22,24 @@ Globals:
 Functions:
     update: Runs through all events currently in the pygame event queue, and puts them
             into the proper game event queue, to be handled in-order in the next frame.
+
 """
+
+from collections import deque
+from heapq import merge
 
 import pygame
 
 import util
 import game
-from collections import deque
-from heapq import merge
 
 class _KeyEvent(util.Event):
-    """A KeyEvent object can be directly registered to for any key (will be passed as first parameter),
-    or a specific key can be registered to, which will not pass the key as a parameter."""
+    """
+    A KeyEvent object can be directly registered to for any key (will be passed as first parameter),
+    or a specific key can be registered to, which will not pass the key as a parameter.
+    
+    """
+    
     def __getitem__(self, key):
         """Get Event for the specified key."""
         if key not in self.__events:
@@ -53,8 +59,12 @@ KeyReleaseEvent = _KeyEvent()
 KeyToggleEvent = _KeyEvent()
 
 class _KeyPress(util.TimeComparable):
-    """Event used to indicate a key was pressed.  Key Press/Release events are automatically
-    generated when CurrentState does not match the next key state."""
+    """
+    Event used to indicate a key was pressed.  Key Press/Release events are automatically
+    generated when CurrentState does not match the next key state.
+    
+    """
+    
     def __call__(self):
         """Run all relevant events."""
         # Run key-specific events
@@ -71,8 +81,12 @@ class _KeyPress(util.TimeComparable):
         self.invalid = False
 
 class _KeyRelease(util.TimeComparable):
-    """Event used to indicate a key was released.  Key Press/Release events are automatically
-    generated when CurrentState does not match the next key state."""
+    """
+    Event used to indicate a key was released.  Key Press/Release events are automatically
+    generated when CurrentState does not match the next key state.
+    
+    """
+    
     def __call__(self):
         """Run all relevant events."""
         # Run key-specific events

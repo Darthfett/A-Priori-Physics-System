@@ -1,4 +1,5 @@
 import math
+
 import util
 import debug
 
@@ -7,7 +8,7 @@ class Vector:
     Supports access through [] operator, as well as x, y members.
     Also provides many typical operations between 2D vectors."""
 
-    __slots__ = ['x', 'y']
+    #__slots__ = ['x', 'y']
 
     @property
     def length(self):
@@ -45,12 +46,12 @@ class Vector:
 
 #Operators:
     
-    def __getstate__(self):
-        return {name: getattr(self, name) for name in self.__slots__}
+    # def __getstate__(self):
+        # return {name: getattr(self, name) for name in self.__slots__}
 
-    def __setstate__(self, state):
-        for name, value in state.items():
-            object.__setattr__(self, name, value)
+    # def __setstate__(self, state):
+        # for name, value in state.items():
+            # object.__setattr__(self, name, value)
 
     def __setattr__(self, name, value):
         raise AttributeError("Cannot assign values to object {0} of type {1}".format(self, type(self)))
@@ -125,7 +126,7 @@ class Vector:
             return self.y
         raise IndexError
 
-    def __init__(self, x, y = None):
+    def __init__(self, x, y=None):
         """Initialize an immutable x, y Vector.  Can take a tuple or individual arguments."""
         if y is None:
             object.__setattr__(self, 'x', x[0])
