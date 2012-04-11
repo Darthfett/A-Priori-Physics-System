@@ -1,0 +1,36 @@
+"""
+The entities module contains all user-defined entity objects.  They are
+typically derived from classes in the entity module.
+
+Classes:
+  Ground                An entity that acts as a boundary for moving objects.
+  Player                An entity that is controlled by the player.
+
+"""
+
+import entity
+
+# Resolve player class to improve the name space
+from entities.player import Player
+
+class Ground(entity.LineRenderable, entity.Collidable, entity.Shaped):
+    """
+    Represents an object that acts as a boundary to moving objects.
+    
+    inherits from:
+      entity.LineRenderable
+      entity.Collidable
+      entity.Shaped
+    
+    """
+
+    def __init__(self, **kwargs):
+        """
+        Instanciate a Ground boundary.
+        
+        keyword arguments:
+          render_shape      A util.Shape for drawing
+          shape             A util.Shape for collision detection/resolution
+        """
+
+        super().__init__(**kwargs)

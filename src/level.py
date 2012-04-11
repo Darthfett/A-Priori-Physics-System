@@ -7,8 +7,7 @@ import util
 import game
 import physics
 import entity
-import player
-from ground import Ground
+import entities
 
 class Level:
 
@@ -66,7 +65,7 @@ class Level:
                          util.Vector(1000, 250),
                          util.Vector(1350, 250),
                          util.Vector(0, 250)])
-        self.ground = Ground(shape = vertices, render_shape = vertices)
+        self.ground = entities.Ground(shape = vertices, render_shape = vertices)
                         
                         
 
@@ -79,10 +78,10 @@ class Level:
         image = pygame.image.load(os.path.join(resources_path, "jetpack_guy.PNG"))
         shape = util.Rect(image.get_rect()).shape
         # shape = util.generate_circle(8, 50)
-        self.player = player.Player(image=image, shape=shape, position=Level._PlayerPosition, velocity=Level._PlayerVelocity)
+        self.player = entities.Player(image=image, shape=shape, position=Level._PlayerPosition, velocity=Level._PlayerVelocity)
         self.width, self.height = width, height
         self.level_2()
-        #self.ground = Ground(shape=[], render_shape=[])
+        #self.ground = entities.Ground(shape=[], render_shape=[])
         #self.regenerate_ground()
         
         physics.update_intersections(self.ground)

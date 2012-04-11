@@ -1,5 +1,5 @@
 """
-The util module is intended to provide a large collection of utility objects for the game.
+The util module provides a large collection of utility objects for the game.
 
 Globals:
   NAN                   NAN is float("nan") -- "Not A Number"
