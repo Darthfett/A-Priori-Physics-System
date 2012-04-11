@@ -1,8 +1,6 @@
 # TO DO #
  * Shape class
     - Should indicate current position
-    - Store ordered list of points (not lines)
-       . bool 'open' to indicate last point connected to first
     - Support find intersections with another object
     - Color?
     
@@ -13,6 +11,7 @@
     - Movement up a ramp
     - Standing on ground
     - Worst case scenarios
+    - Impossible to solve scenarios
 
 ## Working Demo 1 ##
  * Player jumping
