@@ -1,5 +1,5 @@
 from util.line import Line
-from util.point import Point
+from util.vector import Vector
 
 class Shape:
     """A list of points that represents an object."""
@@ -18,10 +18,10 @@ class Shape:
             else:
                 self.enclosed = enclosed
         else:
-            self.points = [Point(point) for point in points]
+            self.points = [Vector(point) for point in points]
             if enclosed is None:
                 self.enclosed = True
             else:
-                if type(enclosed) is not bool:
+                if not isinstance(enclosed, bool):
                     raise TypeError("'enclosed' must be of type bool, not {0}".format(type(enclosed)))
                 self.enclosed = enclosed

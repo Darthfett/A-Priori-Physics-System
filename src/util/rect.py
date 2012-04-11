@@ -1,6 +1,5 @@
 import pygame
 
-from util.point import Point
 from util.vector import Vector
 from util.line import Line
 
@@ -40,10 +39,10 @@ class Rect:
             clamped.bottom = rect.bottom
         
         if clamped.width > rect.width:
-            clamped.center = Point(rect.center[0], clamped.center.y)
+            clamped.center = Vector(rect.center[0], clamped.center.y)
         
         if clamped.height > rect.height:
-            clamped.center = Point(clamped.center.x, rect.center[1])
+            clamped.center = Vector(clamped.center.x, rect.center[1])
         return clamped
 
     def offset(self, offset):
@@ -57,10 +56,10 @@ class Rect:
     @property
     def shape(self):
         """Returns a rectangle composed of four lines."""
-        return [Point(self.bottom_left),
-                Point(self.bottom_right),
-                Point(self.top_right),
-                Point(self.top_left)]
+        return [Vector(self.bottom_left),
+                Vector(self.bottom_right),
+                Vector(self.top_right),
+                Vector(self.top_left)]
              
     @property
     def top(self):
@@ -96,71 +95,71 @@ class Rect:
 
     @property
     def top_left(self):
-        return Point(self._bottom_left + (0, self.height))
+        return Vector(self._bottom_left + (0, self.height))
 
     @top_left.setter
     def top_left(self, tr):
-        self._bottom_left = Point(Point(tr) - self.size)
+        self._bottom_left = Vector(Vector(tr) - self.size)
 
     @property
     def bottom_right(self):
-        return Point(self._bottom_left + (self.width, 0))
+        return Vector(self._bottom_left + (self.width, 0))
 
     @bottom_right.setter
     def bottom_right(self, br):
-        self._bottom_left = Point(br)
+        self._bottom_left = Vector(br)
         self._bottom_left.x -= self.width
 
     @property
     def top_right(self):
-        return Point(self._bottom_left + self.size)
+        return Vector(self._bottom_left + self.size)
 
     @top_right.setter
     def top_right(self, tr):
-        self.bottom_left = Point(tr) - self.size
+        self.bottom_left = Vector(tr) - self.size
 
     @property
     def bottom_left(self):
-        return Point(self._bottom_left)
+        return Vector(self._bottom_left)
 
     @bottom_left.setter
     def bottom_left(self, bl):
-        self._bottom_left = Point(bl)
+        self._bottom_left = Vector(bl)
 
     @property
     def center_left(self):
-        return Point(self._bottom_left + (0, self.height * .5))
+        return Vector(self._bottom_left + (0, self.height * .5))
 
     @center_left.setter
     def center_left(self, cl):
-        self._bottom_left = Point(cl)
+        self._bottom_left = Vector(cl)
         self._bottom_left.y -= self.height * .5
 
     @property
     def center_bottom(self):
-        return Point(self._bottom_left + (self.width * .5, 0))
+        return Vector(self._bottom_left + (self.width * .5, 0))
 
     @center_bottom.setter
     def center_bottom(self, cb):
-        self._bottom_left = Point(cb)
+        self._bottom_left = Vector(cb)
         self._bottom_left.x -= self.width * .5
 
     @property
     def center_top(self):
-        return Point(self._bottom_left + (self.width * .5, self.height))
+        return Vector(self._bottom_left + (self.width * .5, self.height))
 
     @center_top.setter
     def center_top(self, ct):
-        self._bottom_left = Point(ct)
+        self._bottom_left = Vector(ct)
         self._bottom_left -= (self.width * .5, self.height)
 
     @property
     def center_left(self):
-        return Point(self._bottom_left + (self.width, self.height * .5))
+        return Vector(self._bottom_left + (self.width, self.height * .5))
 
     @center_left.setter
     def center_left(self, cl):
-        self._bottom_left = Point(cl)
+        self._bottom_left = Vector(cl)
         self._bottom_left -= (self.width, self.height * .5)
 
     @property
@@ -193,7 +192,7 @@ class Rect:
 
     @center.setter
     def center(self, c):
-        self.bottom_left = Point(c) - self._size * .5
+        self.bottom_left = Vector(c) - self._size * .5
 
     def __init__(self, rect=None, **k):
         """Instanciate a rect by copying another, or with a bottom_left and size, or with a shape."""
@@ -201,9 +200,9 @@ class Rect:
         if rect is not None:
             # Rect is a copy
             if isinstance(rect, pygame.Rect):
-                self._bottom_left = Point(rect.topleft)
+                self._bottom_left = Vector(rect.topleft)
             else:
-                self._bottom_left = Point(rect.bottom_left)
+                self._bottom_left = Vector(rect.bottom_left)
             self._size = Vector(rect.size)
         else:
             # New rect
@@ -219,9 +218,9 @@ class Rect:
             else:
                 # Rect is bottom_left and size
                 if bottom_left is None:
-                    self._bottom_left = Point(0, 0)
+                    self._bottom_left = Vector(0, 0)
                 else:
-                    self._bottom_left = Point(bottom_left)
+                    self._bottom_left = Vector(bottom_left)
 
                 if size is None:
                     self._size = Vector(0, 0)

@@ -2,67 +2,61 @@
 The util module is intended to provide a large collection of utility objects for the game.
 
 Globals:
-    NAN:
-        NAN is float("nan").
-    INFINITY:
-        INFINITY is float("inf").
-    EPSILON:
-        EPSILON is a very small number used to test whether two floats are 'relatively equal'.
-        This is required because of the inaccuracy in representing floating point numbers.
+  NAN                   NAN is float("nan") -- "Not A Number"
+  INFINITY              INFINITY is float("inf").
+  EPSILON               EPSILON is a very small number used to test whether
+                        two numbers are 'relatively equal'.
 
 Functions:
-    SignOf: Get the sign of a number (for use in multiplication).
-    FloatEqual: Determine whether two floats are equal (within EPSILON).
-    ZeroDivide: When potentially dividing by zero, use this function in order to get
-                the more mathematical answer.
-                a/b , b ~= 0:
-                    INFINITY if a > 0, -INFINITY if a < 0, NAN if a ~= 0
-    Within(a, b, c): Determines whether b is between a and c (inclusive).
-    Collinear(p, q, r): Determines whether p, q, and r all lie upon the same line.
-    RayContainsPoint(r, dp, p): Returns p is on the ray from point r in direction dp.
-    SegmentContainsPoint(a, b, c): Returns whether c is within the segment between a and b.
+  Position              Offset a point over a time period.
+  FloatEqual            Determine whether two numbers are equal.
+  ZeroDivide            Divide two numbers, and get INFINITY or NAN values
+                        when dividing by zero.
+  Within                Determine if a number if between two others.
+  Collinear             Determine if three points lie on the same line.
+  SegmentContainsPoint
+                        Determine if a point lies in a line segment.
 
 Classes:
-    Vector: A 2D mathematical vector in the x, y plane.
-    Point: A subclass of Vector, identical in everything but name (useful for clarifying intent).
-    Line: A 2D mathematical line determined by 2 points.  Can also be used to represent a line segment.
-    Rect: A representation of a rectangle defined by size and bottom-left, shape, or a pygame rect.
-    Event: A simple event type which can be registered to
+  Vector                A 2D mathematical vector in the x, y plane.
+  Line                  A 2D mathematical line determined by 2 points.  Can also be used to represent a line segment.
+  Rect                  A representation of a rectangle defined by size and bottom-left, shape, or a pygame rect.
+  Event                 A simple event type which can be registered to
+
 """
 
 import math
 
 # These packages are all flattened to provide a nicer namespace.
 from util.vector import Vector
-from util.point import Point
 from util.line import Line
 from util.shape import Shape
 from util.rect import Rect
 
 NAN = float("nan")
 INFINITY = float("inf")
-EPSILON = 1e-10
+EPSILON = 1e-8
 
 def Position(position, velocity, acceleration, delta_time):
     """Get a new position given velocity/acceleration and some time in ms."""
     return position + velocity * delta_time + .5 * acceleration * (delta_time ** 2)
 
-def SignOf(a):
-    """Get the sign of a number (positive: 1, negative: -1).
-    VERY small negative numbers are positive."""
-    if a < -EPSILON:
-        return -1
-    else:
-        return 1
-
 def FloatEqual(a, b):
     """Returns if difference between a and b is below EPSILON."""
-    return -EPSILON < a-b < EPSILON
+    #return -EPSILON < a-b < EPSILON
+    
+    
+    
+    largest = max(abs(a), abs(b))
+    diff = EPSILON * largest
+    if largest < EPSILON:
+        return -EPSILON < a-b < EPSILON
+    return -diff < a-b < diff
 
 def ZeroDivide(a, b):
     """Returns more mathematical values for a / b if b ~= 0."""
-    if FloatEqual(b, 0):
-        if FloatEqual(a, 0):
+    if b == 0:
+        if a == 0:
             return NAN
         if a >= EPSILON:
             return INFINITY
@@ -76,12 +70,6 @@ def Within(a, b, c):
 def Collinear(p, q, r):
     """Returns whether p, q, and r are collinear."""
     return FloatEqual((q - p).cross(r - p), 0)
-
-def RayContainsPoint(r, dp, p):
-    """Returns whether the ray from r to dp contains point p."""
-    b = Collinear(r, dp, p)
-    b = b and (p.x >= r.x - EPSILON if dp.x - r.x > 0 else p.x <= r.x + EPSILON)
-    return b and (p.y >= r.y - EPSILON if dp.y - r.y > 0 else p.y <= r.y + EPSILON)
 
 def SegmentContainsPoint(a, b, c):
     """Returns whether c is within the segment ab."""
@@ -148,7 +136,7 @@ def find_roots(a, b, c):
 
 def generate_circle(n, radius):
     """Generates a circle with n sides, with radius radius."""
-    center = Point(radius, radius)
+    center = Vector(radius, radius)
     vertices = []
     for i in range(n):
         vertex = center + Vector(radius * math.sin((i / n) * 2 * math.pi), radius * math.cos((i / n) * 2 * math.pi))

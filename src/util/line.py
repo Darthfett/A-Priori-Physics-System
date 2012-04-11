@@ -1,6 +1,5 @@
 import util
 from util.vector import Vector
-from util.point import Point
 
 class Line:
     """
@@ -52,11 +51,11 @@ class Line:
         """Initialize a line with an iterable of points, or two points."""
         if q is None:
             # defining with an iterable of points
-            object.__setattr__(self, 'p', p[0] if isinstance(p[0], Vector) else Point(p[0]))
-            object.__setattr__(self, 'q', p[1] if isinstance(p[1], Vector) else Point(p[1]))
+            object.__setattr__(self, 'p', p[0] if isinstance(p[0], Vector) else Vector(p[0]))
+            object.__setattr__(self, 'q', p[1] if isinstance(p[1], Vector) else Vector(p[1]))
         else:
             # defining with two points
-            object.__setattr__(self, 'p', p if isinstance(p, Vector) else Point(p))
-            object.__setattr__(self, 'q', q if isinstance(q, Vector) else Point(q))
+            object.__setattr__(self, 'p', p if isinstance(p, Vector) else Vector(p))
+            object.__setattr__(self, 'q', q if isinstance(q, Vector) else Vector(q))
 
         object.__setattr__(self, 'color', (0, 0, 0))

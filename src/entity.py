@@ -59,7 +59,7 @@ class Entity:
         """Instanciate an entity with position (defaults to (0, 0))."""
         self.position = position
         if position is None:
-            self.position = util.Point(0, 0)
+            self.position = util.Vector(0, 0)
 
         Entities.append(self)
         super().__init__(**kwargs)

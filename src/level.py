@@ -29,10 +29,10 @@ class Level:
         
         # Rectangle:
         # vertices = []
-        # vertices.append(util.Point(10, 10))
-        # vertices.append(util.Point(self.width - 10, 10))
-        # vertices.append(util.Point(self.width - 10, self.height - 10))
-        # vertices.append(util.Point(10, self.height - 10))
+        # vertices.append(util.Vector(10, 10))
+        # vertices.append(util.Vector(self.width - 10, 10))
+        # vertices.append(util.Vector(self.width - 10, self.height - 10))
+        # vertices.append(util.Vector(10, self.height - 10))
         # enclosed = True
         
         # set as the shape and render_shape for the ground
@@ -47,25 +47,25 @@ class Level:
     
     def level_2(self):
         vertices = []
-        vertices.extend([util.Point(0, 0),
-                         util.Point(500, 0),
-                         util.Point(500, 100),
-                         util.Point(1000, 100),
-                         util.Point(1350, 0),
-                         util.Point(1500, 0),
-                         util.Point(1500, 500),
-                         util.Point(1000, 500),
-                         util.Point(150, 650),
-                         util.Point(150, 1000),
-                         util.Point(500, 1000),
-                         util.Point(1000, 950),
+        vertices.extend([util.Vector(0, 0),
+                         util.Vector(500, 0),
+                         util.Vector(500, 100),
+                         util.Vector(1000, 100),
+                         util.Vector(1350, 0),
+                         util.Vector(1500, 0),
+                         util.Vector(1500, 500),
+                         util.Vector(1000, 500),
+                         util.Vector(150, 650),
+                         util.Vector(150, 1000),
+                         util.Vector(500, 1000),
+                         util.Vector(1000, 950),
                         
-                         util.Point(1000, 1150),
-                         util.Point(0, 1150),
-                         util.Point(0, 500),
-                         util.Point(1000, 250),
-                         util.Point(1350, 250),
-                         util.Point(0, 250)])
+                         util.Vector(1000, 1150),
+                         util.Vector(0, 1150),
+                         util.Vector(0, 500),
+                         util.Vector(1000, 250),
+                         util.Vector(1350, 250),
+                         util.Vector(0, 250)])
         self.ground = Ground(shape = vertices, render_shape = vertices)
                         
                         
