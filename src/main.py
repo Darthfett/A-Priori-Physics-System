@@ -1,5 +1,17 @@
 """
-The main module should be run as __main__ in order to set up and start the game.
+usage: python src/main.py [options]
+
+Runs the game Jetpack-Man
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -d, --debug           turn debug mode on
+  -g, --draw_outlines   draw outlines of images instead of the actual images
+  --fps FPS             Change max drawing FPS
+  --speed SPEED         Change the speed multiplier
+  --bounciness BOUNCINESS
+                        Change the bounciness (1 is elastic, 0 is sticky)
+
 """
 import sys
 import os
@@ -12,8 +24,22 @@ import game
 
 # Initialize and run the game!
 def main(speed=1, fps=game.Game.FPS, bounciness=game.Game.Bounciness, debug_mode=False, draw_outlines=False):
-    """Runs the game."""
-    # Handle arguments
+    """
+    Initialize and run the game.
+    
+    keyword arguments:
+      speed=1           Speed multiplier for the game (speed=2 is twice as
+                        fast)
+      fps=60            Max FPS limiter (does not affect game speed)
+      bounciness=0.9    Bounciness of objects (1: 100% elastic, 0: 0% elastic)
+      debug_mode=False  
+                        Flag to indicate 'debug mode' state
+      draw_outlines=False
+                        If in debug_mode, draw collision outlines of objects
+                        instead of blitting an image
+    
+    """
+
     debug._DebugMode = debug_mode
     debug.Debug.DrawOutlines = draw_outlines
     game.Game.FPS = fps
@@ -28,11 +54,8 @@ def main(speed=1, fps=game.Game.FPS, bounciness=game.Game.Bounciness, debug_mode
     _game.run()
 
 if __name__ == "__main__":
-    # The game is being run as standalone script
+    parser = argparse.ArgumentParser(description='Runs the game Jetpack-Man', usage='python src/%(prog)s [options]')
 
-    # Create Argument parser
-    parser = argparse.ArgumentParser(description='Runs the game Jetpack-Man',
-                                     usage='python src/%(prog)s [options]')
     parser.add_argument('-d', '--debug', help='turn debug mode on',
                         dest='debug', default=False, action='store_true')
     parser.add_argument('-g', '--draw_outlines', help='draw outlines of images instead of the actual images',
@@ -47,8 +70,8 @@ if __name__ == "__main__":
     parser.add_argument('--bounciness', help='Change the bounciness (1 is elastic, 0 is sticky)',
                         dest='bounciness', default=game.Game.Bounciness, type=float)
     
-    # Get arguments
+    # Parse arguments to the script
     args = parser.parse_args()
 
-    # Run game
+    # Initialize and run the game
     main(args.speed, args.FPS, args.bounciness, args.debug, args.draw_outlines)

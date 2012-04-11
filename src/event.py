@@ -67,11 +67,9 @@ class _KeyPress(util.TimeComparable):
     
     def __call__(self):
         """Run all relevant events."""
-        # Run key-specific events
         KeyPressEvent[self.key]()
         KeyToggleEvent[self.key](True)
         
-        # Run non-key-specific events
         KeyPressEvent(self.key)
         KeyToggleEvent(True)
 
@@ -89,11 +87,9 @@ class _KeyRelease(util.TimeComparable):
     
     def __call__(self):
         """Run all relevant events."""
-        # Run key-specific events
         KeyReleaseEvent[self.key]()
         KeyToggleEvent[self.key](False)
         
-        # Run non-key-specific events
         KeyReleaseEvent(self.key)
         KeyToggleEvent(False)
 

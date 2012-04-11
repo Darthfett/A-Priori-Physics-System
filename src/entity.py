@@ -44,7 +44,7 @@ from debug import Debug
 # Gravity acceleration is the default acceleration used for an entity.
 Gravity = util.Vector(0, -200)
 
-# A listing of all entities of each type (for enumeration)
+# Lists containing all objects of each type (use these to iterate)
 Entities = []
 Collidables = []
 Movables = []
@@ -132,8 +132,11 @@ class Movable(Entity):
         self._velocity = velocity
 
     def __init__(self, velocity=None, acceleration=None, **kwargs):
-        """Instanciate a movable with velocity and acceleration (and then indirectly with position).
-        velocity defaults to (0, 0), and acceleration to Gravity."""
+        """
+        Instanciate a movable with velocity and acceleration (and then indirectly with position).
+        Velocity defaults to (0, 0), and acceleration to Gravity.
+        
+        """
         self._velocity, self.acceleration = velocity, acceleration
         if velocity is None:
             self._velocity = util.Vector(0, 0)
