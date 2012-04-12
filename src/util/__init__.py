@@ -1,13 +1,13 @@
 """
 The util module provides a large collection of utility objects for the game.
 
-Globals:
+globals:
   NAN                   NAN is float("nan") -- "Not A Number"
   INFINITY              INFINITY is float("inf").
   EPSILON               EPSILON is a very small number used to test whether
                         two numbers are 'relatively equal'.
 
-Functions:
+functions:
   Position              Offset a point over a time period.
   FloatEqual            Determine whether two numbers are equal.
   ZeroDivide            Divide two numbers, and get INFINITY or NAN values
@@ -17,7 +17,7 @@ Functions:
   SegmentContainsPoint
                         Determine if a point lies in a line segment.
 
-Classes:
+classes:
   Vector                A 2D mathematical vector in the x, y plane.
   Line                  A 2D mathematical line determined by 2 points.  Can also be used to represent a line segment.
   Rect                  A representation of a rectangle defined by size and bottom-left, shape, or a pygame rect.

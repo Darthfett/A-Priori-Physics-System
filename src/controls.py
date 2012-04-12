@@ -6,11 +6,11 @@ classes:
                                 the game.
                                 
 functions:
-  quit                          Quit the game
-  regenerate_ground             Randomly regenerate the ground terrain
-  flip_pause_state              Pause/unpause the game
+  quit                          Quit the game.
+  regenerate_ground             Randomly regenerate the ground terrain.
+  flip_pause_state              Pause/unpause the game.
   reset_player                  Move the player back to starting position, and
-                                reset the player's velocity
+                                reset the player's velocity.
 
 """
 
@@ -24,15 +24,22 @@ class Quit(Exception):
     pass
     
 def quit():
+    """Quit the game."""
     raise Quit
     
 def regenerate_ground():
+    """Randomly regenerate the ground terrain."""
     game.current_level.regenerate_ground()
             
 def flip_pause_state():
+    """Pause/unpause the game."""
     game.Game().pause()
             
 def reset_player():
+    """
+    Move the player back to starting position, and reset the player's velocity.
+    
+    """
     game.current_level.reset_player()
             
 event.KeyPressEvent[pygame.K_q].register(quit)

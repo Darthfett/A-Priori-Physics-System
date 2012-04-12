@@ -1,34 +1,36 @@
 """
-The physics module contains any functions needed for handling intersections/collisions between
-objects.  It also handles the resolution of any collisions.
+The physics module contains any functions needed for handling collision
+detection and collision resolution.
 
-Globals:
-    Intersections (List of all collisions between objects, sorted by intersection time):
-        This List contains collisions between pairs of objects, sorted by the occurence time.
-        Collisions are (should be) added to this list whenever:
-         * A collidable object is created
-         * An object's position/velocity/acceleration changes (such as via collision or player controls)
-        They are (should be) invalidated only when any of the following occur:
-         * An object's position/velocity/acceleration changes (such as via collision or player controls)
-         * An object is removed
-        They are (should be) removed only when:
-         * The game logic encounters a collision marked as invalid
-         * The game finishes drawing a frame
-            - In this scenario the game will filter this list of any invalid collisions.
-        All Intersections will have a valid intersection time and position, but may be marked 'invalid'.
+globals:
+  Intersections         A sorted list containing all currently known future
+                        intersections between pairs of entities.  New
+                        collisions are calculated and old ones invalidated as
+                        they are handled, as objects' trajectories update, etc.
 
-Functions:
-    ParabolaLineCollision(pos, vel, acc, p, q):
-        Returns a List of Intersection objects representing the collisions between a parabola and a line.
-    find_roots(a, b, c):
-        Given a quadratic equation ax^2 + bx + c, find the roots of the equation as a list.
-    find_intersections(line1, v1, a1, line2, v2, a2, current_time):
-        Returns a list of valid Intersections between two lines with velocity/acceleration,
-        with time relative to current_time.
+classes:
+  Intersection          Represents a collision between two objects at a
+                        specific point in time.
+
+functions:
+  ParabolaLineCollision
+                        Find all intersections between a point with velocity
+                        and acceleration and non-moving line as a list.
+  ParabolaLineSegmentCollision
+                        Find all intersections between a point with velocity
+                        and acceleration and a non-moving line-segment as a
+                        list.
+  entity_intersections
+                        Find all intersections between two entities as a sorted
+                        list.
+  update_intersections_pair
+                        Add all intersections between two entities to the event
+                        queue, and update their respective intersection lists.
+  update_intersections
+                        Add all intersections between all entities and a
+                        specific entity to the event queue, and update their
+                        respective intersection lists.
     
-
-Classes:
-    Intersection: Represents the time and position of an intersection between two objects.
 """
 
 import math
@@ -40,23 +42,17 @@ import util
 import entity
 from game import game
 
-####################################################################################################
-
-# A List of Intersections, sorted by intersection time.
-# Note: Some intersections may be flagged 'invalid'.
 Intersections = []
-
-####################################################################################################
         
-def resolve_entity(ent, line):
-    """Resolves an entity's movement by reflecting velocity off a line."""
+def _resolve_entity(ent, line):
+    """Resolves an entity intersection by reflecting its velocity off a line."""
     # Reflect e1's velocity off of line
     try:
         ent.velocity = ent.velocity.reflected(~line.direction.normalized()) * game.bounciness
     except AttributeError:
         pass
 
-def resolve_entities(ent, other, line):
+def _resolve_entities(ent, other, line):
     normal = ~line.direction.normalized()
     if math.isinf(ent.mass):
         if math.isinf(other.mass):
@@ -69,11 +65,28 @@ def resolve_entities(ent, other, line):
         pass
 
 class Intersection(util.TimeComparable):
-    """Represents the time and position of an intersection between two objects."""
+    """
+    Represents an intersection between two objects.
+    
+    properties:
+      time              The game time at which the intersection occurs.
+      pos               Relative to the non-moving 'line', this is where the
+                        intersection occurs.
+      line              The line onto which the entities collided.  This is
+                        offset by the owning entity's position at the time of
+                        the intersection's calculation.
+      invalid           Whether this intersection is no longer valid.
+      e1                One of the entities between which the intersection
+                        occurred.
+      e2                One of the entities between which the intersection
+                        occurred.
+    
+    """
+
     __slots__ = ['time', 'pos', 'line', 'invalid', 'e1', 'e2']
     
     def __call__(self):
-        """Handles resolving the intersection."""
+        """Handle resolving the intersection."""
         if self.invalid:
             # Intersection is invalid, just skip past it
             return
@@ -92,8 +105,8 @@ class Intersection(util.TimeComparable):
         # Update collision time to prevent infinite loop
         self.e1.last_collide_time = self.e2.last_collide_time = game.game_time
         
-        resolve_entity(self.e1, self.line)
-        resolve_entity(self.e2, self.line)
+        _resolve_entity(self.e1, self.line)
+        _resolve_entity(self.e2, self.line)
         
         # Recalculate intersections (exclude e1 from e2, to avoid duplicate calculation)
         self.e1.recalculate_intersections()
@@ -103,17 +116,17 @@ class Intersection(util.TimeComparable):
         return "Intersection({0}, {1}, {2})".format(format(self.time, '.2f'), self.pos, self.invalid)
 
     def __init__(self, time = util.INFINITY, pos = None, line = None, invalid = False):
-        """Instanciate an intersection (with INFINITE 'time', None 'pos', and False 'invalid' default attributes).
-        An intersection is considered invalid if some outside factors change its time or position
-        validity.  See the physics module documentation on the global Intersections for when this
-        occurs."""
         self.time, self.pos, self.line, self.invalid = time, pos, line, invalid
-        self.e1, self.e2 = [None] * 2
+        self.e1 = self.e2 = None
 
 def ParabolaLineCollision(pos, vel, acc, line):
-    """Takes a parabola pos, vel, acc, and a line p q, and returns the intersections between them as a list of
-    Intersections.
-    Intersections are not necessarily in the line segment pq."""
+    """
+    Get all intersections between a point pos with velocity vel and
+    acceleration acc, and a non-moving line line.
+    
+    Returns intersections with both positive and negative time.
+    
+    """
 
     # time of intersection is defined by the equation
     # a*time^2 + b*time + c = 0
@@ -152,16 +165,24 @@ def ParabolaLineCollision(pos, vel, acc, line):
     return [Intersection(time * 1000, position, line) for time, position in zip(roots, relative_positions)]
 
 def ParabolaLineSegmentCollision(pos, vel, acc, line):
+    """
+    Get all intersections between a point pos with velocity vel and
+    acceleration acc, and a non-moving line-segment line.
+    
+    Returns intersections with both positive and negative time.
+    
+    """
+
     intersections = ParabolaLineCollision(pos, vel, acc, line)
-    intersections = [i for i in intersections if i.time > -util.EPSILON and i.pos in i.line]
+    intersections = [i for i in intersections if i.pos in i.line]
             
     return intersections
 
 def _parabola_line_collision_wrapper(args):
-    return ParabolaLineSegmentCollision(*args)
+    return [i for i in ParabolaLineSegmentCollision(*args) if i.time > -util.EPSILON]
     
 def entity_intersections(ent, collidable):
-    """Find all intersections between two entities."""
+    """Get all future intersections between two entities as a sorted list."""
     intersections = []
     
     # Relative velocity and acceleration (v12: velocity of 'ent'(1) relative to 'collidable'(2))
@@ -176,7 +197,11 @@ def entity_intersections(ent, collidable):
     return sorted([i for intersections in map(_parabola_line_collision_wrapper, args) for i in intersections])
 
 def update_intersections_pair(ent, collidable):
-    """Update Game and each entities' intersections."""
+    """
+    Find all intersections between two entities, and update the game event
+    queue and each entity's intersection list.
+    
+    """
     # Get all intersections between ent and collidable
     intersections = entity_intersections(ent, collidable)
     
@@ -192,7 +217,11 @@ def update_intersections_pair(ent, collidable):
     collidable.intersections = list(merge(collidable.intersections, intersections))
     
 def update_intersections(ent, exclude = None):
-    """Calculate all intersections between the given entity, and add them to the event list."""
+    """
+    Find all intersections between all entities and ent, and update the game
+    event queue and each entity's intersection list.
+    
+    """
     current_time = game.game_time
     for collidable in entity.Collidables:
         if ent is collidable or collidable is exclude:

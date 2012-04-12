@@ -5,6 +5,14 @@ class Shape:
     """A list of points that represents an object."""
     @property
     def lines(self):
+        """
+        A list of lines that connect each adjacent point.
+        
+        If the shape is enclosed, the last point will also be connected to the
+        first point.
+        
+        """
+        
         return [Line(self.points[i-1], self.points[i]) for i in range((1-int(self.enclosed)), len(self.points))]
         
     def __repr__(self):
@@ -22,6 +30,5 @@ class Shape:
             if enclosed is None:
                 self.enclosed = True
             else:
-                if not isinstance(enclosed, bool):
-                    raise TypeError("'enclosed' must be of type bool, not {0}".format(type(enclosed)))
+                enclosed = bool(enclosed)
                 self.enclosed = enclosed
