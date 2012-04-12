@@ -21,9 +21,10 @@ import pygame
 
 import debug
 import game
+from game import game as Game
 
 # Initialize and run the game!
-def main(speed=1, fps=game.Game.FPS, bounciness=game.Game.Bounciness, debug_mode=False, draw_outlines=False):
+def main(speed=1, fps=Game.fps, bounciness=Game.bounciness, debug_mode=False, draw_outlines=False):
     """
     Initialize and run the game.
     
@@ -42,16 +43,16 @@ def main(speed=1, fps=game.Game.FPS, bounciness=game.Game.Bounciness, debug_mode
 
     debug._DebugMode = debug_mode
     debug.Debug.DrawOutlines = draw_outlines
-    game.Game.FPS = fps
-    game.Game.Bounciness = bounciness
+    Game.fps = fps
+    Game.bounciness = bounciness
+    Game._speed = speed
     
     # Set up an SDL environment video parameter, required for pygame.
     os.environ['SDL_VIDEO_CENTERED'] = '1'
     
     pygame.init()
-    _game = game.Game(speed = speed)
     game.init()
-    _game.run()
+    Game.run()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Runs the game Jetpack-Man', usage='python src/%(prog)s [options]')
@@ -62,13 +63,13 @@ if __name__ == "__main__":
                         dest='draw_outlines', default=False, action='store_true')
 
     parser.add_argument('--fps', help='Change max drawing FPS',
-                        dest='FPS', default=game.Game.FPS, type=float)
+                        dest='FPS', default=Game.fps, type=float)
 
     parser.add_argument('--speed', help='Change the speed multiplier',
                         dest='speed', default=1, type=float)
 
     parser.add_argument('--bounciness', help='Change the bounciness (1 is elastic, 0 is sticky)',
-                        dest='bounciness', default=game.Game.Bounciness, type=float)
+                        dest='bounciness', default=Game.bounciness, type=float)
     
     # Parse arguments to the script
     args = parser.parse_args()

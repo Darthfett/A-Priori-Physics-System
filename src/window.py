@@ -10,7 +10,7 @@ import pygame
 
 import util
 import entity
-import game
+from game import game
 
 class Window:
     """A wrapper to the pygame display in order to draw to and translate to/from the pygame
@@ -28,7 +28,7 @@ class Window:
             # offset coords by screen center
             coords = coords + (self.size * .5)
             # offset coords by centered_obj
-            center_point = game.Game.CurrentLevel.player.position + util.Vector(game.Game.CurrentLevel.player.image.get_size()) * .5
+            center_point = game.current_level.player.position + util.Vector(game.current_level.player.image.get_size()) * .5
             coords = coords - center_point
         
         coords = util.Vector(0, self.size.y) + util.Vector(coords.x, -coords.y)

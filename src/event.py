@@ -31,7 +31,7 @@ from heapq import merge
 import pygame
 
 import util
-import game
+from game import game
 
 class _KeyEvent(util.Event):
     """
@@ -117,5 +117,5 @@ def update(current_time):
 
         if was_pressed and not next_state[key]:
             key_events.append(_KeyRelease(key, current_time))
-    game.Game.RealEvents = deque(merge(game.Game.RealEvents, key_events))
+    game.real_events = deque(merge(game.real_events, key_events))
     _CurrentState = next_state

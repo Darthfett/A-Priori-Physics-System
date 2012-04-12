@@ -38,7 +38,7 @@ from heapq import merge
 
 import util
 import entity
-import game
+from game import game
 
 ####################################################################################################
 
@@ -52,7 +52,7 @@ def resolve_entity(ent, line):
     """Resolves an entity's movement by reflecting velocity off a line."""
     # Reflect e1's velocity off of line
     try:
-        ent.velocity = ent.velocity.reflected(~line.direction.normalized()) * game.Game.Bounciness
+        ent.velocity = ent.velocity.reflected(~line.direction.normalized()) * game.bounciness
     except AttributeError:
         pass
 
@@ -81,16 +81,16 @@ class Intersection(util.TimeComparable):
             # Intersection somehow has no entities between which there was a collision
             raise Exception("Intersection {0} occurs between nonexistent things".format(self))
     
-        if util.FloatEqual(game.Game.GameTime, self.e1.last_collide_time):
+        if util.FloatEqual(game.game_time, self.e1.last_collide_time):
             # Collision already handled (this prevents an infinite loop upon collision)
-            self.e1.last_collide_time = self.e2.last_collide_time = game.Game.GameTime
+            self.e1.last_collide_time = self.e2.last_collide_time = game.game_time
             return
         
         # Valid Collision; handle it:
         # All future intersections for both objects will be invalidated and recalculated
         
         # Update collision time to prevent infinite loop
-        self.e1.last_collide_time = self.e2.last_collide_time = game.Game.GameTime
+        self.e1.last_collide_time = self.e2.last_collide_time = game.game_time
         
         resolve_entity(self.e1, self.line)
         resolve_entity(self.e2, self.line)
@@ -181,11 +181,11 @@ def update_intersections_pair(ent, collidable):
     intersections = entity_intersections(ent, collidable)
     
     for intersection in intersections:
-        intersection.time += game.Game.GameTime
+        intersection.time += game.game_time
         intersection.e1 = ent
         intersection.e2 = collidable
             
-    game.Game.GameEvents = deque(merge(game.Game.GameEvents, intersections))
+    game.game_events = deque(merge(game.game_events, intersections))
     
     # Entities keep track of their intersections so they can mark them invalid.
     ent.intersections = list(merge(ent.intersections, intersections))
@@ -193,7 +193,7 @@ def update_intersections_pair(ent, collidable):
     
 def update_intersections(ent, exclude = None):
     """Calculate all intersections between the given entity, and add them to the event list."""
-    current_time = game.Game.GameTime
+    current_time = game.game_time
     for collidable in entity.Collidables:
         if ent is collidable or collidable is exclude:
             # don't collide with self

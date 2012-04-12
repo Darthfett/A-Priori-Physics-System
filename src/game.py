@@ -28,34 +28,20 @@ Functions:
 Classes:
     Game: Represents the game's state.
 """
+
+# standard modules
 import os
 import math
 from collections import deque
 
+# 3rd party modules
 import pygame
 
-import util
-import event
-import controls
-from window import Window
-from level import Level
-
-class Game:
-    __shared_state = {}
-
-    # Window object (Screen.screen is the actual window)
-    Screen = None
-    FPS = 60
-    Bounciness = 0.9
-    CurrentLevel = None
+class _Game:
+    """
+    Represents the state of the game.
     
-    _NextFrameTime = 0
-    _DelayTime = 0
-    CurrentTime = 0
-    GameTime = 0
-    
-    GameEvents = deque()
-    RealEvents = deque()
+    """
 
     @property
     def speed(self):
@@ -103,23 +89,23 @@ class Game:
         """Get the next event in GameEvents or RealEvents that happens within the next frame_delta ms."""
         # Get next event (or a never-going-to-happen event, if there are no events)
         try:
-            game_event = Game.GameEvents[0]
+            game_event = self.game_events[0]
         except IndexError:
             game_event = util.Event()
             game_event.time = util.INFINITY
         try:
-            real_event = Game.RealEvents[0]
+            real_event = self.real_events[0]
         except IndexError:
             real_event = util.Event()
             real_event.time = util.INFINITY
 
         # Get time-to-event
-        game_delta_time = game_event.time - Game.GameTime
-        real_delta_time = real_event.time - Game.CurrentTime
+        game_delta_time = game_event.time - self.game_time
+        real_delta_time = real_event.time - self.current_time
 
-        if game_event.time < Game.GameTime - util.EPSILON:
-            raise Exception("Event must occur at a future time (%s > %s)" % (game_event.time, Game.GameTime))
-        elif real_event.time < Game.CurrentTime:
+        if game_event.time < self.game_time - util.EPSILON:
+            raise Exception("Event must occur at a future time (%s > %s)" % (game_event.time, self.game_time))
+        elif real_event.time < self.current_time:
             raise Exception("Event %s must occur at a future time." % real_event)
 
         # Normalize game time-to-event to be comparable with real time-to-events
@@ -145,70 +131,70 @@ class Game:
                     return real_event
 
     def _calc_next_frame(self):
-        while Game.CurrentTime < Game._NextFrameTime:
-            ev = self._next_event(Game._NextFrameTime - Game.CurrentTime)
-            if len(Game.GameEvents) > 0 and ev is Game.GameEvents[0]:
+        while self.current_time < self._next_frame_time:
+            ev = self._next_event(self._next_frame_time - self.current_time)
+            if len(self.game_events) > 0 and ev is self.game_events[0]:
                 # Game time event
-                delta_time = (ev.time - Game.GameTime) / self._speed
+                delta_time = (ev.time - self.game_time) / self._speed
 
                 # Put current time at the event time
-                Game.GameTime += delta_time * self._speed
-                Game.CurrentTime += delta_time
+                self.game_time += delta_time * self._speed
+                self.current_time += delta_time
 
                 # Handle event
                 ev()
-                Game.GameEvents.remove(ev)
-            elif len(Game.RealEvents) > 0 and ev is Game.RealEvents[0]:
+                self.game_events.remove(ev)
+            elif len(self.real_events) > 0 and ev is self.real_events[0]:
                 # Real time event
-                delta_time = ev.time - Game.CurrentTime
+                delta_time = ev.time - self.current_time
 
                 # Put current time at the event time
-                Game.GameTime += delta_time * self._speed
-                Game.CurrentTime += delta_time
+                self.game_time += delta_time * self._speed
+                self.current_time += delta_time
 
                 # Handle event
                 ev()
-                Game.RealEvents.remove(ev)
+                self.real_events.remove(ev)
             elif ev is None:
                 # Move time up to current time, this will end the while loop.
-                Game.GameTime += (Game._NextFrameTime - Game.CurrentTime) * self._speed
-                Game.CurrentTime = Game._NextFrameTime
+                self.game_time += (self._next_frame_time - self.current_time) * self._speed
+                self.current_time = self._next_frame_time
             else:
-                raise Exception("Invalid event %s from next_event, does not match next GameEvent %s or next RealEvent %s." % (ev, Game.GameEvents[0], Game.RealEvents[0]))
+                raise Exception("Invalid event %s from next_event, does not match next GameEvent %s or next RealEvent %s." % (ev, self.game_events[0], self.real_events[0]))
             # Handle mouse and keyboard events after every event
-            event.update(pygame.time.get_ticks() - Game._DelayTime)
+            event.update(pygame.time.get_ticks() - self._delay_time)
             
-        Game.GameEvents = [ev for ev in Game.GameEvents if not ev.invalid]
-        Game.RealEvents = [ev for ev in Game.RealEvents if not ev.invalid]
+        self.game_events = [ev for ev in self.game_events if not ev.invalid]
+        self.real_events = [ev for ev in self.real_events if not ev.invalid]
 
     def run(self):
         """Start the main event loop."""
 
         # Calculate the time in ms to wait in-between each frame.
-        delta_frame_time = 1000 / Game.FPS
+        delta_frame_time = 1000 / self.fps
         
         # Clear the screen and display it to avoid startup-flicker.
-        Game.Screen.clear()
+        self.screen.clear()
         pygame.display.flip()
         
         # Get the time after initialization, to use as an offset.
-        Game._DelayTime = pygame.time.get_ticks()
+        self._delay_time = pygame.time.get_ticks()
         try:
             while True:
                 # Update the time and ignore initialization time.
-                Game._NextFrameTime = pygame.time.get_ticks() - Game._DelayTime
+                self._next_frame_time = pygame.time.get_ticks() - self._delay_time
 
                 # Set timestamp for mouse and keyboard events and put them in the event queue.
-                event.update(Game._NextFrameTime)
+                event.update(self._next_frame_time)
                 
-                delta_time = (Game._NextFrameTime - Game.CurrentTime)
+                delta_time = (self._next_frame_time - self.current_time)
                 if delta_time >= delta_frame_time:
                     # It's time (or past time) to update the screen.
                     #
                     # Catch the simulation up to the current time by handling
                     # events in-order, and then draw the next frame.
                     self._calc_next_frame()
-                    Game.Screen.draw_next_frame()
+                    self.screen.draw_next_frame()
                     pygame.display.flip()
                     
                 pygame.time.delay(1)  # Sleep 1 ms
@@ -220,23 +206,38 @@ class Game:
             # Game is exiting.  Clean up anything we need to before exiting.
             pygame.quit()
 
-    def __init__(self, speed=1):
-    
-        # The Game class is a 'borg' style class -- all instances share the 
-        # same state.
-        self.__dict__ = self.__shared_state
+    def __init__(self):
+        self.screen = None
+        self.fps = 60
+        self.bounciness = 0.9
+        self.current_level = None
         
-        # If this is the first Game instance, initialize it.
-        if not hasattr(self, "_speed"):
-            self._speed = speed
-            self._real_speed = None
+        self._next_frame_time = 0
+        self._delay_time = 0
+        self.current_time = 0
+        self.game_time = 0
+        
+        self.game_events = deque()
+        self.real_events = deque()
+        
+        self._speed = 1
+        self._real_speed = None
+
+game = _Game()
+
+# library-specific modules
+import util
+import event
+import controls
+from window import Window
+from level import Level
 
 def init():
     # Resources path
     resources_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "../resources")
 
     # Init Window
-    Game.Screen = Window() # Accept default size and title
+    game.screen = Window() # Accept default size and title
 
     # Load First Level
-    Game.CurrentLevel = Level("level_1.todo", resources_path)
+    game.current_level = Level("level_1.todo", resources_path)

@@ -1,6 +1,6 @@
 import pygame
 
-import game
+from game import game
 import event
 
 class Quit(Exception):
@@ -11,13 +11,13 @@ def quit():
     raise Quit
     
 def regenerate_ground():
-    game.Game.CurrentLevel.regenerate_ground()
+    game.current_level.regenerate_ground()
             
 def flip_pause_state():
     game.Game().pause()
             
 def reset_player():
-    game.Game.CurrentLevel.reset_player()
+    game.current_level.reset_player()
             
 event.KeyPressEvent[pygame.K_q].register(quit)
 event.KeyPressEvent[pygame.K_ESCAPE].register(quit)

@@ -37,7 +37,7 @@ Classes:
 import pygame
 
 import util
-import game
+from game import game
 import physics
 from debug import Debug
 
@@ -111,18 +111,18 @@ class Movable(Entity):
     
     @property
     def position(self):
-        del_time_seconds = (game.Game.GameTime - self._valid_time) / 1000
+        del_time_seconds = (game.game_time - self._valid_time) / 1000
         return util.Position(self._position, self._velocity, self.acceleration, del_time_seconds)
     
     @position.setter
     def position(self, position):
         """Updating position inherently invalidates all collisions, but does not take care of doing this."""
         self._position = position
-        self._valid_time = game.Game.GameTime
+        self._valid_time = game.game_time
         
     @property
     def velocity(self):
-        del_time_seconds = (game.Game.GameTime - self._valid_time) / 1000
+        del_time_seconds = (game.game_time - self._valid_time) / 1000
         return self._velocity + del_time_seconds * self.acceleration
     
     @velocity.setter

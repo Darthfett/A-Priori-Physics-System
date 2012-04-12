@@ -4,7 +4,7 @@ import pygame
 import random
 
 import util
-import game
+from game import game
 import physics
 import entity
 import entities
