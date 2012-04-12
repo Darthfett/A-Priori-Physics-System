@@ -10,8 +10,9 @@ Classes:
 
 import entity
 
-# Resolve player class to improve the name space
+# Resolve namespace of Player to improve the namespace access
 from entities.player import Player
+
 
 class Ground(entity.LineRenderable, entity.Collidable, entity.Shaped):
     """
@@ -31,6 +32,7 @@ class Ground(entity.LineRenderable, entity.Collidable, entity.Shaped):
         keyword arguments:
           render_shape      A util.Shape for drawing
           shape             A util.Shape for collision detection/resolution
+
         """
 
         super().__init__(**kwargs)

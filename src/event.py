@@ -2,26 +2,17 @@
 The event module is intended to contain any handling of pygame events, and provide some interfaces
 for working with events in general.
 
-Globals:
-    KeyPressEvent:
-        An interface for registering events upon key presses.  Register callables directly, and they
-        will get called with the key pressed.  e.g.:
-            >>> KeyPressEvent.register(print) # will do the following:
-            >>> print(pygame.K_$key$) # for any key $key$
-        Register to the pygame key index, and they will get called automatically, e.g.:
-            >>> KeyPressEvent[pygame.K_r].register(print) # will do the following:
-            >>> print() # whenever the 'r' key is pressed.
-    KeyReleaseEvent:
-        An interface for registering events upon key releases.
-        This works identically to KeyPressEvent.
-    KeyToggleEvent:
-        An interface for registering events upon key toggling.
-        This works identically to KeyPressEvent and KeyReleaseEvent, but it also always passes a boolean
-        to indicate whether the key was 'pressed' or not.
+globals:
+  KeyPressEvent         An event object which runs all registered objects when
+                        a key is pressed.
+  KeyReleaseEvent       An event object which runs all registered objects when
+                        a key is released.
+  KeyToggleEvent        An event object which runs all registered objects when
+                        a key is pressed or released (toggled).
 
-Functions:
-    update: Runs through all events currently in the pygame event queue, and puts them
-            into the proper game event queue, to be handled in-order in the next frame.
+functions:
+  update                Run through all events currently in the pygame event
+                        queue and put them into the real event queue.
 
 """
 
@@ -104,7 +95,12 @@ class _KeyRelease(util.TimeComparable):
 _CurrentState = []
 
 def update(current_time):
-    """Run through all pygame events and add them to the event queue."""
+    """
+    Run through all events currently in the pygame event queue and put them
+    into the real event queue.
+    
+    """
+    
     pygame.event.pump()
 
     # Handle key press/release events

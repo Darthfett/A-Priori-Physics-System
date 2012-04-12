@@ -1,3 +1,19 @@
+"""
+The controls module maps the player's keyboard keys to their controls.
+
+classes:
+  Quit                          An Exception that is raised when the player quits
+                                the game.
+                                
+functions:
+  quit                          Quit the game
+  regenerate_ground             Randomly regenerate the ground terrain
+  flip_pause_state              Pause/unpause the game
+  reset_player                  Move the player back to starting position, and
+                                reset the player's velocity
+
+"""
+
 import pygame
 
 from game import game

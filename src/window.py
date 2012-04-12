@@ -1,9 +1,15 @@
 """
-The window module provides functionality for drawing to the screen, as well as functionality for
-repositioning the center of the window.
+The window module provides functionality for drawing to the screen, as well as
+functionality for repositioning the center of the window.
 
-Classes:
-    Window: A wrapper to the pygame display in order to draw and translate coordinate systems.
+It also handles all translation of coordinates from pygame to more normal
+coordinates, where the lower left is (0, 0), and Up is the positive-y
+direction.
+
+classes:
+  Window                Wraps the pygame display to translate coordinates, and
+                        center the screen on the player.
+
 """
 
 import pygame
@@ -13,14 +19,50 @@ import entity
 from game import game
 
 class Window:
-    """A wrapper to the pygame display in order to draw to and translate to/from the pygame
-    coordinate system."""
+
+    """
+    A wrapper to the pygame display, with some additional functionality for
+    translating coordinates, clearing the screen, drawing the next frame, and
+    centering on the player.
+    
+    members:
+      DEFAULT_WIDTH     The default width of the game window.
+      DEFAULT_HEIGHT    The default height of the game window.
+      FollowPlayer      Determines whether the window is always centered on the
+                        player during coordinate translation.
+
+    properties:
+      title             The title of the window.  Changing this value does not
+                        automatically update the window.
+      screen            The actual pygame screen onto which everything is
+                        drawn.
+      size              A Vector that determines the size of the window.
+      
+    methods:
+      to_pygame_coords  
+                        Given normal coordinates, translate them into the
+                        pygame equivalent.
+      to_pyame          Given a blitable object, get the coordinates at which
+                        the object should be drawn.
+      draw_line         Draw a line at the given normal coordinates.
+      draw_aaline       Draw an anti-aliased line at the given normal coords.
+      blit              A wrapper for the pygame screen's blit, which
+                        automatically translates the blitable's coordinates.
+      clear             Clear the screen with the default background color.
+      draw_next_frame   Clear the screen, and draw all objects at their current
+                        position.
+    
+    """
+    
     DEFAULT_WIDTH = 640
     DEFAULT_HEIGHT = 480
     FollowPlayer = True
     
     def to_pygame_coords(self, coords):
-        """Converts coordinates into pygame coordinates, i.e.:
+        """
+        Converts coordinates into pygame coordinates
+        
+        
             +x is right, +y is up, (0, 0) is bottom left of screen into:
             +x is right, +y is down, (0, 0) is top left of screen"""
         coords = util.Vector(coords)

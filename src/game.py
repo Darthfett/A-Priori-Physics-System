@@ -2,31 +2,13 @@
 The game module provides a central location for linking all of the game
 components together in a logical fashion.
 
-Globals:
-    Screen (window.Window):
-        The Window object.
-    FPS (number):
-        The number of frames to draw every second.
-    CurrentLevel (level.Level):
-        The current Level.
-    CurrentTime (integer):
-        The current time since game start in ms.
-    GameTime (integer):
-        The current simulation time in ms (doesn't change while game is paused).
-    GameEvents (List(Event)):
-        A sorted list of game events, in the order they occur.  All GameEvents should have a
-        'time' property and a 'handle' method, with 'time' being the GameTime at which it should occur.
-    RealEvents(List(Event)):
-        A sorted list of real events, in the order they occur.  All RealEvents should have a
-        'time' property and a 'handle' method, with 'time' being the RealTime at which it should occur.
+globals:
+  game                  A singleton instance of _Game primarily used as a
+                        medium to run the core game logic.
 
+functions:
+  init                  Initialize the screen and load the first level
 
-Functions:
-    run: Start the event loop.
-    init: Initialize game modules.
-    
-Classes:
-    Game: Represents the game's state.
 """
 
 # standard modules
@@ -40,6 +22,22 @@ import pygame
 class _Game:
     """
     Represents the state of the game.
+    
+    methods:
+      pause             Pause or unpause the game.
+      run               Runs the game.
+    
+    properties:
+      speed             The (positive) speed multiplier for the game.  
+      paused            The paused state of the game.
+      screen            The Window object for the game.
+      fps               The rate at which the game state is being updated.
+      bounciness        The bounciness of objects in a collision.
+      current_level     The current level.
+      current_time      The current time of the game.  Used for real events.
+      game_time         The current game time.  Used for game events.
+      game_events       A sorted list of game events in the order they occur.
+      real_events       A sorted list of real events in the order they occur.
     
     """
 
@@ -66,7 +64,7 @@ class _Game:
 
     @paused.setter
     def paused(self, pause):
-        """pause/unpause (True/False) the game."""
+        """Set the paused/unpaused state of the game."""
         pause = bool(pause)
         if self.paused is pause:
             # already in the right state
@@ -79,23 +77,36 @@ class _Game:
             self._real_speed = None
 
     def pause(self, paused=None):
-        """Pause, unpause, or flip paused state (default)."""
+        """Pause, unpause, or flip the game paused state (default)."""
         if paused is None:
             self.paused = not self.paused
         else:
             self.paused = bool(paused)
 
     def _next_event(self, frame_delta):
-        """Get the next event in GameEvents or RealEvents that happens within the next frame_delta ms."""
-        # Get next event (or a never-going-to-happen event, if there are no events)
+        """
+        Get the next game/real event that happens within the next frame_delta ms.
+        
+        The caller is responsible for removing events from the proper queue, if
+        they are handled.  The returned event is guaranteed to be one of these:
+            game.game_events[0]
+            game.real_events[0]
+            None
+
+        """
+        
+        # Get the next game event:        
         try:
             game_event = self.game_events[0]
         except IndexError:
+            # No events in queue, create a dummy event that will never happen
             game_event = util.Event()
             game_event.time = util.INFINITY
+        # Get the next real event:
         try:
             real_event = self.real_events[0]
         except IndexError:
+            # No events in queue, create a dummy event that will never happen
             real_event = util.Event()
             real_event.time = util.INFINITY
 
@@ -103,34 +114,47 @@ class _Game:
         game_delta_time = game_event.time - self.game_time
         real_delta_time = real_event.time - self.current_time
 
+        # Ensure that event's timestamp is valid
         if game_event.time < self.game_time - util.EPSILON:
             raise Exception("Event must occur at a future time (%s > %s)" % (game_event.time, self.game_time))
         elif real_event.time < self.current_time:
             raise Exception("Event %s must occur at a future time." % real_event)
 
-        # Normalize game time-to-event to be comparable with real time-to-events
+        # Normalize the next game event's time-to-event to be directly comparable with
+        # the next real event's time-to-event.
+        # This will allow a direct comparison of game_delta_time and real_delta_time
+        # to be indicative of which event occurs first.
         game_delta_time = util.ZeroDivide(abs(game_delta_time), self._speed)
 
         if game_delta_time > frame_delta or math.isnan(game_delta_time):
-            # Game time events are some time after this frame.
+            # The next game event's time is not within this frame
             if real_delta_time > frame_delta:
+                # And neither is the next real event
                 return None
             else:
-                # Handle the 'real time event'
+                # The next real event is within this frame and valid
                 return real_event
         else:
+            # The next game event's time is within this frame
             if real_delta_time > frame_delta:
-                # Real time events are some time after this frame.
+                # The next real event's time is not within this frame
                 return game_event
             else:
+                # Both events' have times within this frame; find which happens first:
                 if game_delta_time < real_delta_time:
-                    # Game time event will happen first.
+                    # The next game event happens first
                     return game_event
                 else:
-                    # Real time event will happen first.
+                    # The next real event happens first
                     return real_event
 
     def _calc_next_frame(self):
+        """
+        Update the game state by repeatedly handling game/real events,
+        fast-forwarding to the time at which they occur until caught up with
+        _next_frame_time.
+        
+        """
         while self.current_time < self._next_frame_time:
             ev = self._next_event(self._next_frame_time - self.current_time)
             if len(self.game_events) > 0 and ev is self.game_events[0]:
@@ -168,7 +192,13 @@ class _Game:
         self.real_events = [ev for ev in self.real_events if not ev.invalid]
 
     def run(self):
-        """Start the main event loop."""
+        """
+        Start the main event loop.
+        
+        This handles delegation of tasks to check for user-input, update the
+        game state, and draw the game to the screen.
+        
+        """
 
         # Calculate the time in ms to wait in-between each frame.
         delta_frame_time = 1000 / self.fps
@@ -207,6 +237,7 @@ class _Game:
             pygame.quit()
 
     def __init__(self):
+        """Set the default state of the game."""
         self.screen = None
         self.fps = 60
         self.bounciness = 0.9
