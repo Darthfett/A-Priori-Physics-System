@@ -18,6 +18,9 @@ from util import Vector, Rect
 import entity
 from game import game
 
+class OutOfBoundsError(Exception):
+    """When something is out of bounds of pygame's drawing ability, this exception is raised."""
+
 class Window:
 
     """
@@ -94,7 +97,10 @@ class Window:
     def draw_aaline(self, color, start_pos, end_pos, blend=1):
         start = self.to_pygame_coords(start_pos)
         end = self.to_pygame_coords(end_pos)
-        pygame.draw.line(self.screen, color, start, end, blend)
+        try:
+            pygame.draw.line(self.screen, color, start, end, blend)
+        except TypeError as ex:
+            raise OutOfBoundsError("{0} is out of the level bounds.".format(start))
 
     def blit(self, blitable):
         """Draws an object to the screen."""

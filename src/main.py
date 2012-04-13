@@ -43,9 +43,9 @@ def main(speed=1, fps=Game.fps, bounciness=Game.bounciness, debug_mode=False, dr
 
     debug._DebugMode = debug_mode
     debug.Debug.DrawOutlines = draw_outlines
-    Game.fps = fps
-    Game.bounciness = bounciness
-    Game._speed = speed
+    Game.fps = min(max(fps, 10), 120)
+    Game.bounciness = min(max(bounciness, 0), 1)
+    Game._speed = min(max(speed, .01), 10)
     
     # Set up an SDL environment video parameter, required for pygame.
     os.environ['SDL_VIDEO_CENTERED'] = '1'
