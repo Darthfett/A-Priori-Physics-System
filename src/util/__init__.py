@@ -111,7 +111,7 @@ def find_roots(a, b, c):
     else:
         if b == 0:
             return [0]
-        discriminant = b 
+        discriminant = abs(b)
     
     if discriminant < 0:
         # No real solution
