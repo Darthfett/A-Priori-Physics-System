@@ -8,7 +8,7 @@ as a parameter, and call 'super().__init__(**kwargs)' in order to ensure its par
 are properly instanciated.
 
 Globals:
-    Gravity (util.Vector):
+    Gravity (Vector):
         The universal gravity vector.
     Entities (List(Entity)):
         The list of all Entities.
@@ -25,7 +25,7 @@ Globals:
 
 Classes:
     Entity(object):         Entity objects have position.
-    Shaped(object):         Shaped objects have a 'shape'(util.Shape) attribute.
+    Shaped(object):         Shaped objects have a 'shape'(Shape) attribute.
     Collidable(Entity):     Collidable objects have mass and can be invalidated through
                                 manual changes of position/velocity/acceleration.
     Movable(Entity):        Movable objects have velocity and acceleration.
@@ -37,12 +37,13 @@ Classes:
 import pygame
 
 import util
+from util import Vector, Shape
 from game import game
 import physics
 from debug import Debug
 
 # Gravity acceleration is the default acceleration used for an entity.
-Gravity = util.Vector(0, -200)
+Gravity = Vector(0, -200)
 
 # Lists containing all objects of each type (use these to iterate)
 Entities = []
@@ -59,7 +60,7 @@ class Entity:
         """Instanciate an entity with position (defaults to (0, 0))."""
         self.position = position
         if position is None:
-            self.position = util.Vector(0, 0)
+            self.position = Vector(0, 0)
 
         Entities.append(self)
         super().__init__(**kwargs)
@@ -72,10 +73,10 @@ class Shaped:
         return self._shape
 
     def __init__(self, shape, enclosed=True, **kwargs):
-        if isinstance(shape, util.Shape):
+        if isinstance(shape, Shape):
             self._shape = shape
         else:
-            self._shape = util.Shape(shape, enclosed)
+            self._shape = Shape(shape, enclosed)
         super().__init__(**kwargs)
 
 class Collidable(Shaped, Entity):
@@ -83,9 +84,9 @@ class Collidable(Shaped, Entity):
     
     def __getattr__(self, name):
         if name == "velocity":
-            return util.Vector(0, 0)
+            return Vector(0, 0)
         if name == "acceleration":
-            return util.Vector(0, 0)
+            return Vector(0, 0)
         raise AttributeError("%r object has no attribute %r" % (type(self).__name__, name))
         
     def recalculate_intersections(self, exclude = None):
@@ -139,11 +140,11 @@ class Movable(Entity):
         """
         self._velocity, self.acceleration = velocity, acceleration
         if velocity is None:
-            self._velocity = util.Vector(0, 0)
+            self._velocity = Vector(0, 0)
 
         if acceleration is None:
             # Copy of Gravity vector, so as not to modify it.
-            self.acceleration = util.Vector(Gravity)
+            self.acceleration = Vector(Gravity)
 
         Movables.append(self)
         super().__init__(**kwargs)
@@ -192,7 +193,7 @@ class LineRenderable:
 
     def __init__(self, render_shape, color=None, **kwargs):
         """Instanciate a line renderable with a list of lines."""
-        self.render_shape, self.color = util.Shape(render_shape, kwargs.get("enclosed", None)), color
+        self.render_shape, self.color = Shape(render_shape, kwargs.get("enclosed", None)), color
 
         if color is None:
             self.color = (0, 0, 0)

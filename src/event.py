@@ -21,10 +21,10 @@ from heapq import merge
 
 import pygame
 
-import util
+from util import Event, TimeComparable
 from game import game
 
-class _KeyEvent(util.Event):
+class _KeyEvent(Event):
     """
     A KeyEvent object can be directly registered to for any key (will be passed as first parameter),
     or a specific key can be registered to, which will not pass the key as a parameter.
@@ -35,7 +35,7 @@ class _KeyEvent(util.Event):
         """Get Event for the specified key."""
         if key not in self.__events:
             # None exist, create new one
-            self.__events[key] = util.Event()
+            self.__events[key] = Event()
         
         return self.__events[key]
         
@@ -49,7 +49,7 @@ KeyPressEvent = _KeyEvent()
 KeyReleaseEvent = _KeyEvent()
 KeyToggleEvent = _KeyEvent()
 
-class _KeyPress(util.TimeComparable):
+class _KeyPress(TimeComparable):
     """
     Event used to indicate a key was pressed.  Key Press/Release events are automatically
     generated when CurrentState does not match the next key state.
@@ -69,7 +69,7 @@ class _KeyPress(util.TimeComparable):
         self.time = time
         self.invalid = False
 
-class _KeyRelease(util.TimeComparable):
+class _KeyRelease(TimeComparable):
     """
     Event used to indicate a key was released.  Key Press/Release events are automatically
     generated when CurrentState does not match the next key state.

@@ -39,6 +39,7 @@ from collections import deque
 from heapq import merge
 
 import util
+from util import Vector, Position
 import entity
 from game import game
 
@@ -133,8 +134,8 @@ def ParabolaLineCollision(pos, vel, acc, line):
     
     p, q = line.p, line.q
     
-    if acc == util.Vector(0, 0):
-        if vel == util.Vector(0, 0):
+    if acc == Vector(0, 0):
+        if vel == Vector(0, 0):
             return []
         else:
             b = (vel.cross(q) - vel.cross(p))
@@ -156,11 +157,11 @@ def ParabolaLineCollision(pos, vel, acc, line):
         time = roots[0]
         
         # Intersection position
-        relative_position = util.Position(pos, vel, acc, time)
+        relative_position = Position(pos, vel, acc, time)
         return [Intersection(time * 1000, relative_position, line)]
         
     # Intersection positions
-    relative_positions = [util.Position(pos, vel, acc, time) for time in roots]
+    relative_positions = [Position(pos, vel, acc, time) for time in roots]
     
     return [Intersection(time * 1000, position, line) for time, position in zip(roots, relative_positions)]
 
@@ -202,6 +203,7 @@ def update_intersections_pair(ent, collidable):
     queue and each entity's intersection list.
     
     """
+    # import pdb; pdb.set_trace()
     # Get all intersections between ent and collidable
     intersections = entity_intersections(ent, collidable)
     

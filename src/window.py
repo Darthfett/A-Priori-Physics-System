@@ -14,7 +14,7 @@ classes:
 
 import pygame
 
-import util
+from util import Vector, Rect
 import entity
 from game import game
 
@@ -65,25 +65,25 @@ class Window:
         
             +x is right, +y is up, (0, 0) is bottom left of screen into:
             +x is right, +y is down, (0, 0) is top left of screen"""
-        coords = util.Vector(coords)
+        coords = Vector(coords)
         if Window.FollowPlayer:
             # offset coords by screen center
             coords = coords + (self.size * .5)
             # offset coords by centered_obj
-            center_point = game.current_level.player.position + util.Vector(game.current_level.player.image.get_size()) * .5
+            center_point = game.current_level.player.position + Vector(game.current_level.player.image.get_size()) * .5
             coords = coords - center_point
         
-        coords = util.Vector(0, self.size.y) + util.Vector(coords.x, -coords.y)
+        coords = Vector(0, self.size.y) + Vector(coords.x, -coords.y)
         return coords
 
     def to_pygame(self, blitable):
         """Converts object coordinates into pygame coordinates, given lower left coordinates of an
         object and the object's height."""
         # Get top left corner, and convert to pygame coordinates
-        rect = util.Rect(blitable.image.get_rect())
+        rect = Rect(blitable.image.get_rect())
         rect.offset(blitable.position)
         new_position = self.to_pygame_coords(rect.bottom_left)
-        new_position = new_position + util.Vector(0, -blitable.image.get_height())
+        new_position = new_position + Vector(0, -blitable.image.get_height())
         return new_position
 
     def draw_line(self, color, start_pos, end_pos, width=1):
@@ -127,5 +127,5 @@ class Window:
             # pygame.RESIZABLE     display window should be sizeable
             # pygame.NOFRAME       display window will have no border or controls
             
-        self.size = util.Vector(self.screen.get_size())
+        self.size = Vector(self.screen.get_size())
         pygame.display.set_caption(self.title)
