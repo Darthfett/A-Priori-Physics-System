@@ -33,7 +33,7 @@ def regenerate_ground():
             
 def flip_pause_state():
     """Pause/unpause the game."""
-    game.Game().pause()
+    game.pause()
             
 def reset_player():
     """
