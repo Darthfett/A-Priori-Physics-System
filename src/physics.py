@@ -140,7 +140,10 @@ def ParabolaLineCollision(pos, vel, acc, line):
         else:
             b = (vel.cross(q) - vel.cross(p))
             c = (pos.cross(q) - pos.cross(p) - p.cross(q))
-            roots = [-c / b]
+            if b == 0:
+                roots = []
+            else:
+                roots = [-c / b]
     else:
         a = .5 * (acc.cross(q) - acc.cross(p))
         b = (vel.cross(q) - vel.cross(p))

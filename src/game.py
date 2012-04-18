@@ -272,3 +272,6 @@ def init():
 
     # Load First Level
     game.current_level = Level("level_1.todo", resources_path)
+    
+    # Init Controls
+    controls.init()

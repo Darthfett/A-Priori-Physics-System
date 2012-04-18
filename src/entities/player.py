@@ -15,34 +15,28 @@ import event
 class Player(entity.Blitable, entity.Projectile):
     """The Player class, which is controlled by the physical player through keyboard/mouse events."""
     
-    def a_pressed(self):
+    def _jetpack_up(self, on):
         self.velocity = self.velocity
-        self.acceleration += Vector(-200, 0)
-        self.recalculate_intersections()
-        
-    def a_released(self):
-        self.velocity = self.velocity
-        self.acceleration -= Vector(-200, 0)
+        if on:
+            self.acceleration += Vector(0, 300)
+        else:
+            self.acceleration -= Vector(0, 300)
         self.recalculate_intersections()
     
-    def d_pressed(self):
+    def _jetpack_left(self, on):
         self.velocity = self.velocity
-        self.acceleration += Vector(200, 0)
-        self.recalculate_intersections()
-        
-    def d_released(self):
-        self.velocity = self.velocity
-        self.acceleration -= Vector(200, 0)
+        if on:
+            self.acceleration += Vector(-200, 0)
+        else:
+            self.acceleration -= Vector(-200, 0)
         self.recalculate_intersections()
     
-    def w_pressed(self):
+    def _jetpack_right(self, on):
         self.velocity = self.velocity
-        self.acceleration += Vector(0, 300)
-        self.recalculate_intersections()
-        
-    def w_released(self):
-        self.velocity = self.velocity
-        self.acceleration -= Vector(0, 300)
+        if on:
+            self.acceleration += Vector(200, 0)
+        else:
+            self.acceleration -= Vector(200, 0)
         self.recalculate_intersections()
     
     def __init__(self, **kwargs):
@@ -51,10 +45,4 @@ class Player(entity.Blitable, entity.Projectile):
             image - A str or pygame Surface
             shape - A list of line segments
         """
-        event.KeyPressEvent[pygame.K_a].register(self.a_pressed)
-        event.KeyReleaseEvent[pygame.K_a].register(self.a_released)
-        event.KeyPressEvent[pygame.K_d].register(self.d_pressed)
-        event.KeyReleaseEvent[pygame.K_d].register(self.d_released)
-        event.KeyPressEvent[pygame.K_w].register(self.w_pressed)
-        event.KeyReleaseEvent[pygame.K_w].register(self.w_released)
         super().__init__(**kwargs)

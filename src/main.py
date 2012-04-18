@@ -29,7 +29,7 @@ def main(speed=1, fps=Game.fps, bounciness=Game.bounciness, debug_mode=False, dr
     Initialize and run the game.
     
     keyword arguments:
-      speed=1           Speed multiplier for the game (speed=2 is twice as
+      speed=1           Speed multiplier for the game (e.g. speed=2 is twice as
                         fast)
       fps=60            Max FPS limiter (does not affect game speed)
       bounciness=0.9    Bounciness of objects (1: 100% elastic, 0: 0% elastic)
