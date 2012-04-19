@@ -116,12 +116,12 @@ class Vector:
 
     def __len__(self):
         return 2
+    
+    def __str__(self):
+        return "Vector({0}, {1})".format(format(self.x, '.2f'), format(self.y, '.2f'))
 
     def __repr__(self):
-        if debug.Debug:
-            return "Vector({0}, {1})".format(self.x, self.y)
-        else:
-            return "Vector({0}, {1})".format(format(self.x, '.2f'), format(self.y, '.2f'))
+        return "Vector({0}, {1})".format(self.x, self.y)
 
     def __getitem__(self, index):
         """Access the coordinates of this vector by index."""

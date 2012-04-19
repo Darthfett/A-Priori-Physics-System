@@ -83,8 +83,6 @@ class Intersection(util.TimeComparable):
                         occurred.
     
     """
-
-    __slots__ = ['time', 'pos', 'line', 'invalid', 'e1', 'e2']
     
     def __call__(self):
         """Handle resolving the intersection."""
@@ -113,12 +111,16 @@ class Intersection(util.TimeComparable):
         self.e1.recalculate_intersections()
         self.e2.recalculate_intersections(self.e1)
         
+    def __str__(self):
+        return "Intersection({0}, {1})".format(format(self.time, '.2f'), self.pos)
+        
     def __repr__(self):
-        return "Intersection({0}, {1}, {2})".format(format(self.time, '.2f'), self.pos, self.invalid)
+        return "Intersection({0}, {1})".format(self.time, self.pos)
 
-    def __init__(self, time = util.INFINITY, pos = None, line = None, invalid = False):
+    def __init__(self, time = util.INFINITY, pos = None, line = None, invalid = False, del_time = None):
         self.time, self.pos, self.line, self.invalid = time, pos, line, invalid
         self.e1 = self.e2 = None
+        self.del_time = time
 
 def ParabolaLineCollision(pos, vel, acc, line):
     """
@@ -128,7 +130,6 @@ def ParabolaLineCollision(pos, vel, acc, line):
     Returns intersections with both positive and negative time.
     
     """
-
     # time of intersection is defined by the equation
     # a*time^2 + b*time + c = 0
     

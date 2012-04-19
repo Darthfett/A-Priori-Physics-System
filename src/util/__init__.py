@@ -39,7 +39,7 @@ EPSILON = 1e-8
 
 def Position(position, velocity, acceleration, delta_time):
     """Get a new position given velocity/acceleration and some time in ms."""
-    return position + velocity * delta_time + .5 * acceleration * (delta_time ** 2)
+    return position + velocity * delta_time + acceleration * (.5 * delta_time ** 2)
 
 def FloatEqual(a, b):
     """Returns if difference between a and b is below EPSILON."""
