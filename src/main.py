@@ -42,7 +42,7 @@ def main(speed=1, fps=Game.fps, bounciness=Game.bounciness, debug_mode=False, dr
     """
 
     debug._DebugMode = debug_mode
-    debug.Debug.DrawOutlines = draw_outlines
+    debug.debug.DrawOutlines = draw_outlines
     Game.fps = min(max(fps, 10), 120)
     Game.bounciness = min(max(bounciness, 0), 1)
     Game._speed = min(max(speed, .01), 10)

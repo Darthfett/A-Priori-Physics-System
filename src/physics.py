@@ -39,7 +39,7 @@ from collections import deque
 from heapq import merge
 
 import util
-from util import Vector, Position
+from util import Vector, Position, GameEvent
 import entity
 from game import game
 
@@ -65,7 +65,7 @@ def _resolve_entities(ent, other, line):
         # For component of ent's velocity in 'line' direction: v_ent = v_ent * (1 - Bounciness)
         pass
 
-class Intersection(util.TimeComparable):
+class Intersection(util.GameEvent):
     """
     Represents an intersection between two objects.
     

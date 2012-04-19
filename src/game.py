@@ -34,7 +34,7 @@ class _Game:
       fps               The rate at which the game state is being updated.
       bounciness        The bounciness of objects in a collision.
       current_level     The current level.
-      current_time      The current time of the game.  Used for real events.
+      real_time         The current time of the game.  Used for real events.
       game_time         The current game time.  Used for game events.
       game_events       A sorted list of game events in the order they occur.
       real_events       A sorted list of real events in the order they occur.
@@ -83,9 +83,9 @@ class _Game:
         else:
             self.paused = bool(paused)
 
-    def _next_event(self, frame_delta):
+    def _next_event(self):
         """
-        Get the next game/real event that happens within the next frame_delta ms.
+        Get the next game/real event that happens before _next_frame_time.
         
         The caller is responsible for removing events from the proper queue, if
         they are handled.  The returned event is guaranteed to be one of these:
@@ -100,53 +100,23 @@ class _Game:
             game_event = self.game_events[0]
         except IndexError:
             # No events in queue, create a dummy event that will never happen
-            game_event = util.Event()
-            game_event.time = util.INFINITY
+            game_event = GameEvent(INFINITY)
         # Get the next real event:
         try:
             real_event = self.real_events[0]
         except IndexError:
             # No events in queue, create a dummy event that will never happen
-            real_event = util.Event()
-            real_event.time = util.INFINITY
+            real_event = RealEvent(INFINITY)
 
-        # Get time-to-event
-        game_delta_time = game_event.time - self.game_time
-        real_delta_time = real_event.time - self.current_time
-
-        # Ensure that event's timestamp is valid
-        if game_event.time < self.game_time - util.EPSILON:
-            raise Exception("Event must occur at a future time (%s > %s)" % (game_event.time, self.game_time))
-        elif real_event.time < self.current_time:
-            raise Exception("Event %s must occur at a future time." % real_event)
-
-        # Normalize the next game event's time-to-event to be directly comparable with
-        # the next real event's time-to-event.
-        # This will allow a direct comparison of game_delta_time and real_delta_time
-        # to be indicative of which event occurs first.
-        game_delta_time = util.ZeroDivide(abs(game_delta_time), self._speed)
-
-        if game_delta_time > frame_delta or math.isnan(game_delta_time):
-            # The next game event's time is not within this frame
-            if real_delta_time > frame_delta:
-                # And neither is the next real event
-                return None
-            else:
-                # The next real event is within this frame and valid
-                return real_event
-        else:
-            # The next game event's time is within this frame
-            if real_delta_time > frame_delta:
-                # The next real event's time is not within this frame
-                return game_event
-            else:
-                # Both events' have times within this frame; find which happens first:
-                if game_delta_time < real_delta_time:
-                    # The next game event happens first
-                    return game_event
-                else:
-                    # The next real event happens first
-                    return real_event
+        assert(game_event.delta_time > -EPSILON)
+        assert(real_event.delta_time > -EPSILON)
+        
+        next_event = sorted((game_event, real_event))[0]
+        
+        if next_event.real_time > self._next_frame_time or math.isnan(next_event.real_time):
+            return None
+            
+        return next_event
 
     def _calc_next_frame(self):
         """
@@ -155,34 +125,34 @@ class _Game:
         _next_frame_time.
         
         """
-        while self.current_time < self._next_frame_time:
-            ev = self._next_event(self._next_frame_time - self.current_time)
+        while self.real_time < self._next_frame_time:
+            ev = self._next_event()
             if len(self.game_events) > 0 and ev is self.game_events[0]:
                 # Game time event
                 delta_time = (ev.time - self.game_time) / self._speed
 
                 # Put current time at the event time
                 self.game_time += delta_time * self._speed
-                self.current_time += delta_time
+                self.real_time += delta_time
 
                 # Handle event
                 ev()
                 self.game_events.remove(ev)
             elif len(self.real_events) > 0 and ev is self.real_events[0]:
                 # Real time event
-                delta_time = ev.time - self.current_time
+                delta_time = ev.time - self.real_time
 
                 # Put current time at the event time
                 self.game_time += delta_time * self._speed
-                self.current_time += delta_time
+                self.real_time += delta_time
 
                 # Handle event
                 ev()
                 self.real_events.remove(ev)
             elif ev is None:
                 # Move time up to current time, this will end the while loop.
-                self.game_time += (self._next_frame_time - self.current_time) * self._speed
-                self.current_time = self._next_frame_time
+                self.game_time += (self._next_frame_time - self.real_time) * self._speed
+                self.real_time = self._next_frame_time
             else:
                 raise Exception("Invalid event %s from next_event, does not match next GameEvent %s or next RealEvent %s." % (ev, self.game_events[0], self.real_events[0]))
             # Handle mouse and keyboard events after every event
@@ -217,7 +187,7 @@ class _Game:
                 # Set timestamp for mouse and keyboard events and put them in the event queue.
                 event.update(self._next_frame_time)
                 
-                delta_time = (self._next_frame_time - self.current_time)
+                delta_time = (self._next_frame_time - self.real_time)
                 if delta_time >= delta_frame_time:
                     # It's time (or past time) to update the screen.
                     #
@@ -245,7 +215,7 @@ class _Game:
         
         self._next_frame_time = 0
         self._delay_time = 0
-        self.current_time = 0
+        self.real_time = 0
         self.game_time = 0
         
         self.game_events = deque()
@@ -257,7 +227,7 @@ class _Game:
 game = _Game()
 
 # library-specific modules
-import util
+from util import INFINITY, EPSILON, GameEvent, RealEvent
 import event
 import controls
 from window import Window

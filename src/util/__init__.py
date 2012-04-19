@@ -26,6 +26,10 @@ classes:
 """
 
 import math
+import functools
+
+from game import game
+from debug import debug
 
 # These packages are all flattened to provide a nicer namespace.
 from util.vector import Vector
@@ -177,23 +181,63 @@ class Event:
 
     def __init__(self):
         self.__handlers = []
-    
-class TimeComparable:
-    """All TimeComparable objects can be compared according to their 'time' property."""
-    def __lt__(self, other):
-        return self.time < other.time
 
-    def __le__(self, other):
-        return self.time <= other.time
+@functools.total_ordering
+class GameEvent:
+
+    @property
+    def game_time(self):
+        return self.time
+    
+    @property
+    def real_time(self):
+        try:
+            return self._real_time
+        except AttributeError:
+            return game.real_time + ZeroDivide(self.time - game.game_time, game._speed)
+            
+    @property
+    def delta_time(self):
+        return self.time - game.game_time
+        
+    def __call__(self):
+        self._real_time = game.real_time
+
+    def __lt__(self, other):
+        return self.time < other.game_time
 
     def __eq__(self, other):
-        return self.time == other.time
+        return self.time == other.game_time
 
-    def __ne__(self, other):
-        return self.time != other.time
+    def __init__(self, time=INFINITY):
+        self.time = time
 
-    def __gt__(self, other):
-        return self.time > other.time
+@functools.total_ordering
+class RealEvent:
 
-    def __ge__(self, other):
-        return self.time >= other.time
+    @property
+    def real_time(self):
+        return self.time
+    
+    @property
+    def game_time(self):
+        try:
+            return self._game_time
+        except AttributeError:
+            return game.game_time + (self.time - game.real_time) * game._speed
+            
+    @property
+    def delta_time(self):
+        return self.time - game.real_time
+        
+    def __call__(self):
+        self._game_time = game.game_time
+
+    def __lt__(self, other):
+        return self.time < other.real_time
+
+    def __eq__(self, other):
+        return self.time == other.real_time
+
+    def __init__(self, time=INFINITY):
+        self.time = time

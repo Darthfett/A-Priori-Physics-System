@@ -40,7 +40,7 @@ import util
 from util import Vector, Shape
 from game import game
 import physics
-from debug import Debug
+from debug import debug
 
 # Gravity acceleration is the default acceleration used for an entity.
 Gravity = Vector(0, -200)
@@ -161,7 +161,7 @@ class Blitable:
 
     def draw(self, surface):
         """Blits the blitable to the specified surface."""
-        if Debug.DrawOutlines and hasattr(self, "shape"):
+        if debug.DrawOutlines and hasattr(self, "shape"):
             for line in self.shape.lines:
                 try:
                     surface.draw_aaline((0, 0, 0), line.p + self.position, line.q + self.position)

@@ -21,7 +21,7 @@ from heapq import merge
 
 import pygame
 
-from util import Event, TimeComparable
+from util import Event, RealEvent
 from game import game
 
 class _KeyEvent(Event):
@@ -49,7 +49,7 @@ KeyPressEvent = _KeyEvent()
 KeyReleaseEvent = _KeyEvent()
 KeyToggleEvent = _KeyEvent()
 
-class _KeyPress(TimeComparable):
+class _KeyPress(RealEvent):
     """
     Event used to indicate a key was pressed.  Key Press/Release events are automatically
     generated when CurrentState does not match the next key state.
@@ -69,7 +69,7 @@ class _KeyPress(TimeComparable):
         self.time = time
         self.invalid = False
 
-class _KeyRelease(TimeComparable):
+class _KeyRelease(RealEvent):
     """
     Event used to indicate a key was released.  Key Press/Release events are automatically
     generated when CurrentState does not match the next key state.

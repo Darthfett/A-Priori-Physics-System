@@ -29,4 +29,4 @@ class _Debug:
     def __init__(self):
         self.DrawOutlines = True
 
-Debug = _Debug()
+debug = _Debug()

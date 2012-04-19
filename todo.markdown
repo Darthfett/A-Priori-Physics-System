@@ -4,12 +4,9 @@
     - Support find intersections with another object
     - Color?
     
- * Move mapping of keyboard keys to controls into a config file
  * Move level definition into a file
  * Investigate different cases for collision
     - Multiple collisions
-    - Movement up a ramp
-    - Standing on ground
     - Worst case scenarios
     - Impossible to solve scenarios
 
