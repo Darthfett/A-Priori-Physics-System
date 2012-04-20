@@ -21,6 +21,8 @@ class _Debug:
     """
     
     def write(self, text, file=None):
+        if not self:
+            return
         if file is not None:
             if file not in self._files:
                 with open(file, 'w') as f:
@@ -34,12 +36,6 @@ class _Debug:
     
     def __bool__(self):
         return _DebugMode
-    
-    def __getattribute__(self, name):
-        if isinstance(object.__getattribute__(self, name), bool):
-            return object.__getattribute__(self, name) and _DebugMode
-        else:
-            return object.__getattribute__(self, name)
 
     def __init__(self):
         self.DrawOutlines = True
