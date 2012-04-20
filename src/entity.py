@@ -56,7 +56,7 @@ LineRenderables = []
 class Entity:
     """Entity objects are things that have a position in the world."""
     
-    def position_update(self):
+    def position_update(self, old, new):
         """Override to be notified of a position update."""
         pass
 
@@ -75,12 +75,13 @@ class Shaped(Entity):
     @property
     def shape(self):
         #if isinstance(self, Movable):   
-            #self._update_shape()
+        #self._update_shape()
         return self._shape
         
-    def position_update(self):
+    def position_update(self, old, new):
         self._update_shape()
-        super().position_update()
+        self._shape.offset(new - old)
+        super().position_update(old, new)
         
     def _update_shape(self):
         if game.game_time != self._shape_time:
@@ -94,7 +95,7 @@ class Shaped(Entity):
             self._shape = Shape(shape, enclosed)
         if 'position' in kwargs:
             self._shape.offset(kwargs['position'])
-            self._shape_time = game.game_time
+        self._shape_time = game.game_time
         super().__init__(**kwargs)
 
 class Collidable(Shaped, Entity):
@@ -137,9 +138,10 @@ class Movable(Entity):
     @position.setter
     def position(self, position):
         """Updating position inherently invalidates all collisions, but does not take care of doing this."""
+        old = self.position
         self._position = position
         self._valid_time = game.game_time
-        super().position_update()
+        super().position_update(old, position)
         
     @property
     def velocity(self):
@@ -151,7 +153,6 @@ class Movable(Entity):
         """Updating velocity inherently invalidates all collisions, but does not take care of doing this."""
         self.position = self.position
         self._velocity = velocity
-        super().position_update()
         
     @property
     def acceleration(self):
@@ -167,6 +168,8 @@ class Movable(Entity):
         Velocity defaults to (0, 0), and acceleration to Gravity.
         
         """
+        self._position = kwargs.get('position') or Vector()
+        self._valid_time = game.game_time
         self._velocity, self._acceleration = velocity, acceleration
         if velocity is None:
             self._velocity = Vector(0, 0)

@@ -26,10 +26,10 @@ class Shape:
     def __init__(self, points, enclosed=None):
         if isinstance(points, Shape):
             self.points = points.points
-            if enclosed is None or type(enclosed) is not bool:
+            if enclosed is None:
                 self.enclosed = points.enclosed
             else:
-                self.enclosed = enclosed
+                self.enclosed = bool(enclosed)
         else:
             self.points = [Vector(point) for point in points]
             if enclosed is None:
