@@ -32,6 +32,8 @@ class _Debug:
                 with open(file, 'a') as f:
                     f.write(text)
         else:
+            if self._file is None:
+                self._file = open('dbg.txt', 'w')
             self._file.write(text)
     
     def __bool__(self):
@@ -39,7 +41,6 @@ class _Debug:
 
     def __init__(self):
         self.DrawOutlines = True
-        self._file = open('dbg.txt', 'w')
         self._files = set()
 
 debug = _Debug()

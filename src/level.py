@@ -75,7 +75,7 @@ class Level:
         width, height = 640, 480
         self.boundary = Rect(size=(width, height))
         
-        image = pygame.image.load(os.path.join(resources_path, "jetpack_guy.PNG"))
+        image = pygame.image.load(os.path.join(resources_path, "guy2.PNG"))
         shape = Rect(image.get_rect()).shape
         # shape = generate_circle(8, 50)
         self.player = entities.Player(image=image, shape=shape, position=Level._PlayerPosition, velocity=Level._PlayerVelocity)
