@@ -20,8 +20,17 @@ class _Debug:
     
     """
     
-    def write(self, text):
-        self._file.write(text)
+    def write(self, text, file=None):
+        if file is not None:
+            if file not in self._files:
+                with open(file, 'w') as f:
+                    f.write(text)
+                self._files.add(file)
+            else:
+                with open(file, 'a') as f:
+                    f.write(text)
+        else:
+            self._file.write(text)
     
     def __bool__(self):
         return _DebugMode
@@ -35,5 +44,6 @@ class _Debug:
     def __init__(self):
         self.DrawOutlines = True
         self._file = open('dbg.txt', 'w')
+        self._files = set()
 
 debug = _Debug()
