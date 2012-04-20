@@ -155,11 +155,15 @@ class Vector:
     def __bool__(self):
         return bool(self.x or self.y)
         
-    def __init__(self, x, y=None):
-        """Initialize a vector with an iterable of values, or two values."""
+    def __init__(self, x=None, y=None):
+        """Initialize a vector with an iterable of values, or two values, or defaults to (0,0)."""
         if y is None:
-            object.__setattr__(self, 'x', x[0])
-            object.__setattr__(self, 'y', x[1])
+            if x is None:
+                object.__setattr__(self, 'x', 0)
+                object.__setattr__(self, 'y', 0)
+            else:
+                object.__setattr__(self, 'x', x[0])
+                object.__setattr__(self, 'y', x[1])
         else:
             object.__setattr__(self, 'x', x)
             object.__setattr__(self, 'y', y)
