@@ -20,13 +20,20 @@ class _Debug:
     
     """
     
+    def write(self, text):
+        self._file.write(text)
+    
     def __bool__(self):
         return _DebugMode
     
     def __getattribute__(self, name):
-        return object.__getattribute__(self, name) and _DebugMode
+        if isinstance(object.__getattribute__(self, name), bool):
+            return object.__getattribute__(self, name) and _DebugMode
+        else:
+            return object.__getattribute__(self, name)
 
     def __init__(self):
         self.DrawOutlines = True
+        self._file = open('dbg.txt', 'w')
 
 debug = _Debug()
