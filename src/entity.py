@@ -91,7 +91,7 @@ class Collidable(Shaped, Entity):
         
     def recalculate_intersections(self, exclude = None):
         for intersection in self.intersections:
-            if intersection.e1 is not exclude and intersection.e2 is not exclude:
+            if intersection.ent is not exclude and intersection.oth is not exclude:
                 intersection.invalid = True
         self.intersections = [intersection for intersection in self.intersections if not intersection.invalid]
         physics.update_intersections(self, exclude)

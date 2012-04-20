@@ -53,21 +53,28 @@ class Vector:
         """
         
         return self.x * other[1] - self.y * other[0]
-
-    def __setattr__(self, name, value):
-        raise AttributeError("Cannot assign values to object {0} of type {1}".format(self, type(self)))
         
     def __hash__(self):
         return hash((self.x, self.y))
 
     def __eq__(self, vec):
-        return self.x == vec.x and self.y == vec.y
+        return self.x == vec[0] and self.y == vec[1]
 
     def __add__(self, vec):
         return Vector(self.x + vec[0], self.y + vec[1])
+        
+    def __iadd__(self, vec):
+        self.x += vec[0]
+        self.y += vec[1]
+        return self
 
     def __sub__(self, vec):
         return Vector(self.x - vec[0], self.y - vec[1])
+        
+    def __isub__(self, vec):
+        self.x -= vec[0]
+        self.y -= vec[1]
+        return self
 
     def __mul__(self, other):
         """Perform dot/scalar product with other."""        
@@ -86,6 +93,11 @@ class Vector:
         else:
             # scalar product
             return Vector(self.x * other, self.y * other)
+    
+    def __imul__(self, scalar):
+        self.x *= scalar
+        self.y *= scalar
+        return self
 
     def __div__(self, scalar):
         """Perform scalar division with scalar."""
@@ -94,6 +106,11 @@ class Vector:
     def __rdiv__(self, scalar):
         """Perform scalar division with scalar."""
         return Vector(self.x / scalar, self.y / scalar)
+    
+    def __idiv__(self, scalar):
+        self.x /= scalar
+        self.y /= scalar
+        return self
 
     def __neg__(self):
         return Vector(-self.x, -self.y)

@@ -39,15 +39,16 @@ from collections import deque
 from heapq import merge
 
 import util
-from util import Vector, Position, GameEvent
+from util import Vector, Position, GameEvent, FloatEqual
 import entity
 from game import game
 
 Intersections = []
+RESTING_TRESHOLD = 1e-2 # In pixels per second
         
 def _resolve_entity(ent, line):
     """Resolves an entity intersection by reflecting its velocity off a line."""
-    # Reflect e1's velocity off of line
+    # Reflect ent's velocity off of line
     try:
         ent.velocity = ent.velocity.reflected(~line.direction.normalized()) * game.bounciness
     except AttributeError:
@@ -65,7 +66,7 @@ def _resolve_entities(ent, other, line):
         # For component of ent's velocity in 'line' direction: v_ent = v_ent * (1 - Bounciness)
         pass
 
-class Intersection(util.GameEvent):
+class Intersection(GameEvent):
     """
     Represents an intersection between two objects.
     
@@ -77,9 +78,9 @@ class Intersection(util.GameEvent):
                         offset by the owning entity's position at the time of
                         the intersection's calculation.
       invalid           Whether this intersection is no longer valid.
-      e1                One of the entities between which the intersection
+      ent               One of the entities between which the intersection
                         occurred.
-      e2                One of the entities between which the intersection
+      oth               One of the entities between which the intersection
                         occurred.
     
     """
@@ -89,27 +90,23 @@ class Intersection(util.GameEvent):
         if self.invalid:
             # Intersection is invalid, just skip past it
             return
-        if not hasattr(self, "e1") or not hasattr(self, "e2"):
-            # Intersection somehow has no entities between which there was a collision
-            raise Exception("Intersection {0} occurs between nonexistent things".format(self))
-    
-        if util.FloatEqual(game.game_time, self.e1.last_collide_time):
+        if FloatEqual(game.game_time, self.ent.last_collide_time):
             # Collision already handled (this prevents an infinite loop upon collision)
-            self.e1.last_collide_time = self.e2.last_collide_time = game.game_time
+            self.ent.last_collide_time = self.oth.last_collide_time = game.game_time
             return
         
         # Valid Collision; handle it:
         # All future intersections for both objects will be invalidated and recalculated
         
         # Update collision time to prevent infinite loop
-        self.e1.last_collide_time = self.e2.last_collide_time = game.game_time
+        self.ent.last_collide_time = self.oth.last_collide_time = game.game_time
         
-        _resolve_entity(self.e1, self.line)
-        _resolve_entity(self.e2, self.line)
+        _resolve_entity(self.ent, self.line)
+        _resolve_entity(self.oth, self.line)
         
-        # Recalculate intersections (exclude e1 from e2, to avoid duplicate calculation)
-        self.e1.recalculate_intersections()
-        self.e2.recalculate_intersections(self.e1)
+        # Recalculate intersections (exclude ent from oth, to avoid duplicate calculation)
+        self.ent.recalculate_intersections()
+        self.oth.recalculate_intersections(self.ent)
         
     def __str__(self):
         return "Intersection({0}, {1})".format(format(self.time, '.2f'), self.pos)
@@ -119,7 +116,7 @@ class Intersection(util.GameEvent):
 
     def __init__(self, time = util.INFINITY, pos = None, line = None, invalid = False, del_time = None):
         self.time, self.pos, self.line, self.invalid = time, pos, line, invalid
-        self.e1 = self.e2 = None
+        self.ent = self.oth = None
         self.del_time = time
 
 def ParabolaLineCollision(pos, vel, acc, line):
@@ -213,8 +210,8 @@ def update_intersections_pair(ent, collidable):
     
     for intersection in intersections:
         intersection.time += game.game_time
-        intersection.e1 = ent
-        intersection.e2 = collidable
+        intersection.ent = ent
+        intersection.oth = collidable
             
     game.game_events = deque(merge(game.game_events, intersections))
     
