@@ -3,6 +3,11 @@ from util.vector import Vector
 
 class Shape:
     """A list of points that represents an object."""
+    
+    def offset(self, offset):
+        for point in self.points:
+            point += offset    
+    
     @property
     def lines(self):
         """

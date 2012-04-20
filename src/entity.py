@@ -37,7 +37,7 @@ Classes:
 import pygame
 
 import util
-from util import Vector, Shape
+from util import Vector, Shape, Position
 from game import game
 import physics
 from debug import debug
@@ -55,39 +55,58 @@ LineRenderables = []
 
 class Entity:
     """Entity objects are things that have a position in the world."""
+    
+    def position_update(self):
+        """Override to be notified of a position update."""
+        pass
 
     def __init__(self, position = None, **kwargs):
         """Instanciate an entity with position (defaults to (0, 0))."""
-        self.position = position
         if position is None:
             self.position = Vector(0, 0)
+        self.position = position
 
         Entities.append(self)
         super().__init__(**kwargs)
 
-class Shaped:
+class Shaped(Entity):
     """Shaped objects are things that occupy space."""
     
     @property
     def shape(self):
+        #if isinstance(self, Movable):   
+            #self._update_shape()
         return self._shape
+        
+    def position_update(self):
+        self._update_shape()
+        super().position_update()
+        
+    def _update_shape(self):
+        if game.game_time != self._shape_time:
+            self._shape.offset(Position(Vector(0, 0), self.velocity, self.acceleration, (game.game_time - self._shape_time) / 1000))
+            self._shape_time = game.game_time
 
     def __init__(self, shape, enclosed=True, **kwargs):
         if isinstance(shape, Shape):
             self._shape = shape
         else:
             self._shape = Shape(shape, enclosed)
+        if 'position' in kwargs:
+            self._shape.offset(kwargs['position'])
+            self._shape_time = game.game_time
         super().__init__(**kwargs)
 
 class Collidable(Shaped, Entity):
     """Collidable objects are objects that can be collided with."""
+        
+    @property
+    def velocity(self):
+        return Vector()
     
-    def __getattr__(self, name):
-        if name == "velocity":
-            return Vector(0, 0)
-        if name == "acceleration":
-            return Vector(0, 0)
-        raise AttributeError("%r object has no attribute %r" % (type(self).__name__, name))
+    @property
+    def acceleration(self):
+        return Vector()
         
     def recalculate_intersections(self, exclude = None):
         for intersection in self.intersections:
@@ -120,6 +139,7 @@ class Movable(Entity):
         """Updating position inherently invalidates all collisions, but does not take care of doing this."""
         self._position = position
         self._valid_time = game.game_time
+        super().position_update()
         
     @property
     def velocity(self):
@@ -131,6 +151,15 @@ class Movable(Entity):
         """Updating velocity inherently invalidates all collisions, but does not take care of doing this."""
         self.position = self.position
         self._velocity = velocity
+        super().position_update()
+        
+    @property
+    def acceleration(self):
+        return self._acceleration
+    
+    @acceleration.setter
+    def acceleration(self, acceleration):
+        self._acceleration = acceleration
 
     def __init__(self, velocity=None, acceleration=None, **kwargs):
         """
@@ -138,13 +167,13 @@ class Movable(Entity):
         Velocity defaults to (0, 0), and acceleration to Gravity.
         
         """
-        self._velocity, self.acceleration = velocity, acceleration
+        self._velocity, self._acceleration = velocity, acceleration
         if velocity is None:
             self._velocity = Vector(0, 0)
 
         if acceleration is None:
             # Copy of Gravity vector, so as not to modify it.
-            self.acceleration = Vector(Gravity)
+            self._acceleration = Vector(Gravity)
 
         Movables.append(self)
         super().__init__(**kwargs)
@@ -156,17 +185,14 @@ class Projectile(Movable, Collidable, Shaped):
         Projectiles.append(self)
         super().__init__(**kwargs)
 
-class Blitable:
+class Blitable(Entity):
     """Blitables are objects with an image."""
 
     def draw(self, surface):
         """Blits the blitable to the specified surface."""
         if debug.DrawOutlines and hasattr(self, "shape"):
             for line in self.shape.lines:
-                try:
-                    surface.draw_aaline((0, 0, 0), line.p + self.position, line.q + self.position)
-                except AttributeError:
-                    surface.draw_aaline((0, 0, 0), line.p, line.q)
+                surface.draw_aaline((0, 0, 0), line.p, line.q)
         else:
             surface.blit(self)
 
@@ -180,7 +206,7 @@ class Blitable:
         Blitables.append(self)
         super().__init__(**kwargs)
 
-class LineRenderable:
+class LineRenderable(Entity):
     """LineRenderables are objects that are drawn as a simple collection of lines."""
 
     def draw(self, surface):

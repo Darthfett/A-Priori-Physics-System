@@ -42,6 +42,7 @@ import util
 from util import Vector, Position, GameEvent, FloatEqual
 import entity
 from game import game
+from debug import debug
 
 Intersections = []
 RESTING_TRESHOLD = 1e-2 # In pixels per second
@@ -176,9 +177,11 @@ def ParabolaLineSegmentCollision(pos, vel, acc, line):
     """
 
     intersections = ParabolaLineCollision(pos, vel, acc, line)
-    intersections = [i for i in intersections if i.pos in i.line]
+        
+    valid = [i for i in intersections if i.pos in i.line]
+    
             
-    return intersections
+    return valid
 
 def _parabola_line_collision_wrapper(args):
     return [i for i in ParabolaLineSegmentCollision(*args) if i.time > -util.EPSILON]
@@ -192,9 +195,8 @@ def entity_intersections(ent, collidable):
     v21 = -v12
     a12 = ent.acceleration - collidable.acceleration
     a21 = -a12
-    
-    args = [(point + ent.position, v12, a12, line + collidable.position) for point, line in product(ent.shape.points, collidable.shape.lines)]
-    args += [(point + collidable.position, v21, a21, line + ent.position) for point, line in product(collidable.shape.points, ent.shape.lines)]
+    args = [(point, v12, a12, line) for point, line in product(ent.shape.points, collidable.shape.lines)]
+    args += [(point, v21, a21, line) for point, line in product(collidable.shape.points, ent.shape.lines)]
     
     return sorted([i for intersections in map(_parabola_line_collision_wrapper, args) for i in intersections])
 
@@ -204,7 +206,7 @@ def update_intersections_pair(ent, collidable):
     queue and each entity's intersection list.
     
     """
-    # import pdb; pdb.set_trace()
+    
     # Get all intersections between ent and collidable
     intersections = entity_intersections(ent, collidable)
     
