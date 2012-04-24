@@ -89,12 +89,14 @@ class _Game:
         
         The caller is responsible for removing events from the proper queue, if
         they are handled.  The returned event is guaranteed to be one of these:
-            game.game_events[0]
-            game.real_events[0]
-            None
+            game.game_events[0], game.game_events
+            game.real_events[0], game.real_events
+            None, None
+            
+        Returns a two-tuple, the first element being the next event, the second
+        being the queue from which it was in.
 
-        """
-        
+        """        
         # Get the next game event:        
         try:
             game_event = self.game_events[0]
@@ -108,15 +110,19 @@ class _Game:
             # No events in queue, create a dummy event that will never happen
             real_event = RealEvent(INFINITY)
 
+        # events are guaranteed to have current or future time.
         assert(game_event.delta_time > -EPSILON)
         assert(real_event.delta_time > -EPSILON)
         
         next_event = sorted((game_event, real_event))[0]
         
         if next_event.real_time > self._next_frame_time or math.isnan(next_event.real_time):
-            return None
-            
-        return next_event
+            return None, None
+        
+        if next_event is game_event:
+            return next_event, self.game_events
+        else:
+            return next_event, self.real_events
 
     def _calc_next_frame(self):
         """
@@ -126,38 +132,29 @@ class _Game:
         
         """
         while self.real_time < self._next_frame_time:
-            ev = self._next_event()
-            if len(self.game_events) > 0 and ev is self.game_events[0]:
-                # Game time event
-                delta_time = (ev.time - self.game_time) / self._speed
-
-                # Put current time at the event time
-                self.game_time += delta_time * self._speed
-                self.real_time += delta_time
-
-                # Handle event
-                ev()
-                self.game_events.remove(ev)
-            elif len(self.real_events) > 0 and ev is self.real_events[0]:
-                # Real time event
-                delta_time = ev.time - self.real_time
-
-                # Put current time at the event time
-                self.game_time += delta_time * self._speed
-                self.real_time += delta_time
-
-                # Handle event
-                ev()
-                self.real_events.remove(ev)
-            elif ev is None:
-                # Move time up to current time, this will end the while loop.
+            ev, ev_queue = self._next_event()
+            if ev is None:
+                # No events to handle this frame.
                 self.game_time += (self._next_frame_time - self.real_time) * self._speed
                 self.real_time = self._next_frame_time
-            else:
-                raise Exception("Invalid event %s from next_event, does not match next GameEvent %s or next RealEvent %s." % (ev, self.game_events[0], self.real_events[0]))
+                break
+            
+            # ev is guaranteed to be game_events[0] or real_events[0]
+            assert(ev is self.game_events[0] or ev is self.real_events[0])
+            
+            # Fast forward time to the event time
+            self.game_time = ev.game_time
+            self.real_time = ev.real_time
+            
+            # Handle and remove the event
+            ev()
+            ev_queue.remove(ev)
+            
             # Handle mouse and keyboard events after every event
             event.update(pygame.time.get_ticks() - self._delay_time)
-            
+        
+        # Remove all invalid events from the event queues.
+        # This avoids long-term events from wasting space in the queue.
         self.game_events = [ev for ev in self.game_events if not ev.invalid]
         self.real_events = [ev for ev in self.real_events if not ev.invalid]
 
