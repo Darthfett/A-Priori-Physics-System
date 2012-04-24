@@ -62,9 +62,7 @@ def ZeroDivide(a, b):
     if b == 0:
         if a == 0:
             return NAN
-        if a >= EPSILON:
-            return INFINITY
-        return -INFINITY
+        return math.copysign(INFINITY, a)
     return a / b
 
 def Within(a, b, c):

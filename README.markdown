@@ -24,7 +24,6 @@ Most of the control scheme and game is not yet implemented.
 
     w, a, d      Activate your Jetpack to accelerate up, left, or right.
     q or Escape  Quit the game
-    r            Press to randomly re-generate the ground terrain.
     p            Press to pause/unpause the game.
     Spacebar     Press to reset the player's position and velocity.
 

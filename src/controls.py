@@ -7,7 +7,6 @@ classes:
                                 
 functions:
   quit                          Quit the game.
-  regenerate_ground             Randomly regenerate the ground terrain.
   flip_pause_state              Pause/unpause the game.
   reset_player                  Move the player back to starting position, and
                                 reset the player's velocity.
@@ -28,8 +27,6 @@ Bindings to a list of keys in the KeyASCII column of Supported Keys.
       pause         Pause/Unpauses the game.
       reset         Resets the position of 
                     the player.
-      regen         Randomly regenerates a
-                    ground terrain.
       jetpack_up    Enables your jetpack
                     upward.
       jetpack_left  
@@ -203,10 +200,6 @@ class InvalidKeyError(Exception):
 def quit():
     """Quit the game."""
     raise Quit
-    
-def regenerate_ground():
-    """Randomly regenerate the ground terrain."""
-    game.current_level.regenerate_ground()
             
 def flip_pause_state():
     """Pause/unpause the game."""
@@ -226,8 +219,7 @@ def init():
     control_to_keypress_control = {
         "quit": quit,
         "pause": flip_pause_state,
-        "reset": reset_player,
-        "regen": regenerate_ground
+        "reset": reset_player
     }
     
     control_to_keytoggle_control = {

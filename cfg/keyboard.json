@@ -2,7 +2,6 @@
     "quit": ["K_ESCAPE", "K_q"],
     "pause": ["K_p"],
     "reset": ["K_SPACE"],
-    "regen": ["K_r"],
     "jetpack_up": ["K_w"],
     "jetpack_left": ["K_a"],
     "jetpack_right": ["K_d"]

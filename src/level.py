@@ -13,38 +13,13 @@ class Level:
 
     _PlayerPosition = Vector(10, 20)
     _PlayerVelocity = Vector(0, 0)
-
-    def regenerate_ground(self):
-        """Randomly generate something that looks like a rough ground terrain."""
-
-        # random height between 1 and 64, every 64 pixels
-        interval = 64
-        min_height, max_height = 1, 128
-        get_height = lambda min, max: random.randrange(min, max)
-
-        # generate vertices
-        vertices = [(i, get_height(min_height, max_height)) for i in range(0, self.boundary.width+1, interval)]
-        enclosed = False
-        
-        # Rectangle:
-        # vertices = []
-        # vertices.append(Vector(10, 10))
-        # vertices.append(Vector(self.width - 10, 10))
-        # vertices.append(Vector(self.width - 10, self.height - 10))
-        # vertices.append(Vector(10, self.height - 10))
-        # enclosed = True
-        
-        # set as the shape and render_shape for the ground
-        self.ground.render_shape = Shape(vertices, enclosed)
-        self.ground._shape = self.ground.render_shape
-        self.ground.recalculate_intersections()
     
     def reset_player(self):
         self.player.position = Level._PlayerPosition
         self.player.velocity = Level._PlayerVelocity
         self.player.recalculate_intersections()
     
-    def level_2(self):
+    def level_1(self):
         vertices = []
         vertices.extend([Vector(0, 0),
                          Vector(500, 0),
@@ -66,8 +41,6 @@ class Level:
                          Vector(1350, 250),
                          Vector(0, 250)])
         self.ground = entities.Ground(shape = vertices, render_shape = vertices)
-                        
-                        
 
     def __init__(self, path, resources_path):
         """Take a file at path, and extract level details."""
@@ -80,8 +53,7 @@ class Level:
         # shape = generate_circle(8, 50)
         self.player = entities.Player(image=image, shape=shape, position=Level._PlayerPosition, velocity=Level._PlayerVelocity)
         self.width, self.height = width, height
-        self.level_2()
+        self.level_1()
         #self.ground = entities.Ground(shape=[], render_shape=[])
-        #self.regenerate_ground()
         
         physics.update_intersections(self.ground)
