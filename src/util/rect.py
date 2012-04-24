@@ -213,6 +213,7 @@ class Rect:
             
             if size is None and bottom_left is None and shape is not None:
                 # Rect is Bound box for Shape
+                raise NotImplementedError("Creating a rect from a shape is not implemented.")
                 self.shape = shape
                 
             else:

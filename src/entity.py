@@ -205,7 +205,7 @@ class Blitable(Entity):
             self.image = image
         else:
             self.image = pygame.image.load(image)
-
+        self.flipped = False
         Blitables.append(self)
         super().__init__(**kwargs)
 

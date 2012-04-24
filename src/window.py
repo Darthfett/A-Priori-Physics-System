@@ -77,7 +77,8 @@ class Window:
             coords = coords - center_point
         
         coords = Vector(0, self.size.y) + Vector(coords.x, -coords.y)
-        return coords
+        
+        return Vector(round(coords.x), round(coords.y))
 
     def to_pygame(self, blitable):
         """Converts object coordinates into pygame coordinates, given lower left coordinates of an
@@ -105,7 +106,7 @@ class Window:
     def blit(self, blitable):
         """Draws an object to the screen."""
         # blit blitable to screen
-        self.screen.blit(blitable.image, self.to_pygame(blitable))
+        self.screen.blit(pygame.transform.flip(blitable.image, blitable.flipped, False), self.to_pygame(blitable))
     
     def clear(self):
         """Clear the screen."""
