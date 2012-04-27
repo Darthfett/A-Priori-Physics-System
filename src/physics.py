@@ -45,7 +45,7 @@ from game import game
 from debug import debug
 
 Intersections = []
-RESTING_TRESHOLD = 1e-2 # In pixels per second
+RESTING_TRESHOLD = 1e-8 # In pixels per ms
         
 def _resolve_entity(ent, line):
     """Resolves an entity intersection by reflecting its velocity off a line."""
@@ -155,17 +155,17 @@ def ParabolaLineCollision(pos, vel, acc, line):
     if len(roots) == 0:
         return []
     if len(roots) == 1:
-        # Intersection time in seconds
+        # Intersection time in ms
         time = roots[0]
         
         # Intersection position
         relative_position = Position(pos, vel, acc, time)
-        return [Intersection(time * 1000, relative_position, line)]
+        return [Intersection(time, relative_position, line)]
         
     # Intersection positions
     relative_positions = [Position(pos, vel, acc, time) for time in roots]
     
-    return [Intersection(time * 1000, position, line) for time, position in zip(roots, relative_positions)]
+    return [Intersection(time, position, line) for time, position in zip(roots, relative_positions)]
 
 def ParabolaLineSegmentCollision(pos, vel, acc, line):
     """

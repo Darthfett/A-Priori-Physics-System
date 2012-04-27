@@ -18,27 +18,27 @@ class Player(entity.Blitable, entity.Projectile):
     def _jetpack_up(self, on):
         self.velocity = self.velocity
         if on:
-            self.acceleration += Vector(0, 300)
+            self.acceleration += Vector(0, 3e-4)
         else:
-            self.acceleration -= Vector(0, 300)
+            self.acceleration -= Vector(0, 3e-4)
         self.recalculate_intersections()
     
     def _jetpack_left(self, on):
         self.flipped = True
         self.velocity = self.velocity
         if on:
-            self.acceleration += Vector(-200, 0)
+            self.acceleration += Vector(-2e-4, 0)
         else:
-            self.acceleration -= Vector(-200, 0)
+            self.acceleration -= Vector(-2e-4, 0)
         self.recalculate_intersections()
     
     def _jetpack_right(self, on):
         self.flipped = False
         self.velocity = self.velocity
         if on:
-            self.acceleration += Vector(200, 0)
+            self.acceleration += Vector(2e-4, 0)
         else:
-            self.acceleration -= Vector(200, 0)
+            self.acceleration -= Vector(2e-4, 0)
         self.recalculate_intersections()
     
     def __init__(self, **kwargs):

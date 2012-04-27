@@ -43,7 +43,7 @@ import physics
 from debug import debug
 
 # Gravity acceleration is the default acceleration used for an entity.
-Gravity = Vector(0, -200)
+Gravity = Vector(0, -2e-4)
 
 # Lists containing all objects of each type (use these to iterate)
 Entities = []
@@ -85,7 +85,7 @@ class Shaped(Entity):
         
     def _update_shape(self):
         if game.game_time != self._shape_time:
-            self._shape.offset(Position(Vector(0, 0), self.velocity, self.acceleration, (game.game_time - self._shape_time) / 1000))
+            self._shape.offset(Position(Vector(0, 0), self.velocity, self.acceleration, (game.game_time - self._shape_time)))
             self._shape_time = game.game_time
 
     def __init__(self, shape, enclosed=True, **kwargs):
@@ -132,8 +132,7 @@ class Movable(Entity):
     
     @property
     def position(self):
-        del_time_seconds = (game.game_time - self._valid_time) / 1000
-        return util.Position(self._position, self._velocity, self.acceleration, del_time_seconds)
+        return util.Position(self._position, self._velocity, self.acceleration, game.game_time - self._valid_time)
     
     @position.setter
     def position(self, position):
@@ -145,8 +144,7 @@ class Movable(Entity):
         
     @property
     def velocity(self):
-        del_time_seconds = (game.game_time - self._valid_time) / 1000
-        return self._velocity + del_time_seconds * self.acceleration
+        return self._velocity + (game.game_time - self._valid_time) * self.acceleration
     
     @velocity.setter
     def velocity(self, velocity):
