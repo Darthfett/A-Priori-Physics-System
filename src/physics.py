@@ -45,7 +45,7 @@ from game import game
 from debug import debug
 
 Intersections = []
-RESTING_THRESHOLD = 1.5e-2 # In pixels per ms
+RESTING_THRESHOLD = 200 # ms between next collision (?)
         
 def _resolve_entity(ent, line):
     """Resolves an entity intersection by reflecting its velocity off a line."""
@@ -101,12 +101,19 @@ class Intersection(GameEvent):
                 return
         except AttributeError: pass
 
-        # Get the velocity magnitude in the direction normal to the line
-        norm_vel_mag = abs(self.line.normal * self.ent.velocity)
+        norm = self.line.normal
+        if norm * self.ent.velocity > 0:
+            # normal must be in opposite direction
+            norm = -norm
         
-        if norm_vel_mag < RESTING_THRESHOLD:
-            # Enter resting state if velocity and acceleration are both toward the line.
-            if (self.line.normal * self.ent.velocity) * (self.line.normal * self.ent.acceleration) > 0:
+        # Get the magnitude in the direction normal to the line
+        norm_vel_mag = -(norm * self.ent.velocity)
+        norm_acc_mag = -(norm * self.ent.acceleration)
+        
+        if norm_vel_mag * norm_acc_mag > 0:
+            # Possible resting state if velocity and acceleration are both toward the line.
+            if (2 * (norm_vel_mag * game.bounciness )/ norm_acc_mag) < RESTING_THRESHOLD:
+                # Coming to rest due to small next-collision time
                 # acc and vel have same direction relative to line (both toward line)
                 # Get relative velocity in normal direction
                 if self.ent not in entity.Movables:
@@ -116,13 +123,13 @@ class Intersection(GameEvent):
                     ent = self.ent
                     oth = self.oth
                 
-                oth_vel = oth.velocity * self.line.normal
-                ent_vel = ent.velocity * self.line.normal
-                ent.velocity += (oth_vel - ent_vel) * self.line.normal
+                oth_vel = oth.velocity * norm
+                ent_vel = ent.velocity * norm
+                ent.velocity += (oth_vel - ent_vel) * norm
                 
-                oth_acc = oth.acceleration * self.line.normal
-                ent_acc = ent.acceleration * self.line.normal
-                ent.acceleration += (oth_acc - ent_acc) * self.line.normal
+                oth_acc = oth.acceleration * norm
+                ent_acc = ent.acceleration * norm
+                ent.acceleration += (oth_acc - ent_acc) * norm
                 
                 if not hasattr(ent, 'resters'):
                     ent.resters = []
