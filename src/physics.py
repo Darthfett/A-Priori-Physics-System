@@ -73,6 +73,8 @@ class Intersection(GameEvent):
     
     properties:
       time              The game time at which the intersection occurs.
+      del_time          The relative time from when the intersection was
+                        calculated.
       pos               Relative to the non-moving 'line', this is where the
                         intersection occurs.
       line              The line onto which the entities collided.  This is
@@ -91,17 +93,11 @@ class Intersection(GameEvent):
         if self.invalid:
             # Intersection is invalid, just skip past it
             return
-        if FloatEqual(game.game_time, self.ent.last_collide_time):
-            # Collision already handled (this prevents an infinite loop upon collision)
-            self.ent.last_collide_time = self.oth.last_collide_time = game.game_time
+        if FloatEqual(self.del_time, 0):
+            # This collision JUST happened
             return
-        
-        # Valid Collision; handle it:
-        # All future intersections for both objects will be invalidated and recalculated
-        
-        # Update collision time to prevent infinite loop
-        self.ent.last_collide_time = self.oth.last_collide_time = game.game_time
-        
+
+        # Valid Collision; handle it, and invalidate future intersections
         _resolve_entity(self.ent, self.line)
         _resolve_entity(self.oth, self.line)
         
@@ -110,17 +106,18 @@ class Intersection(GameEvent):
         self.oth.recalculate_intersections(self.ent)
         
     def __str__(self):
-        return "Intersection({0}, {1})".format(format(self.time, '.2f'), self.pos)
+        return "Intersection(time={time}, del_time={del_time}, pos={pos}, line={line}, ent={ent}, oth={oth}, invalid={invalid})".format(**self.__dict__)
         
     def __repr__(self):
-        return "Intersection({0}, {1})".format(self.time, self.pos)
+        return "Intersection(time={time}, del_time={del_time}, pos={pos}, line={line}, ent={ent}, oth={oth}, invalid={invalid})".format(**self.__dict__)
 
-    def __init__(self, time = util.INFINITY, pos = None, line = None, invalid = False, del_time = None):
-        self.time, self.pos, self.line, self.invalid = time, pos, line, invalid
-        self.ent = self.oth = None
+    def __init__(self, time=util.INFINITY, pos=None, line=None, ent=None, oth=None, invalid=False):
         self.del_time = time
+        self.time = time + game.game_time
+        self.pos, self.line, self.invalid = pos, line, invalid
+        self.ent, self.oth = ent, oth
 
-def ParabolaLineCollision(pos, vel, acc, line):
+def ParabolaLineCollision(pos, vel, acc, line, ent, oth):
     """
     Get all intersections between a point pos with velocity vel and
     acceleration acc, and a non-moving line line.
@@ -160,14 +157,14 @@ def ParabolaLineCollision(pos, vel, acc, line):
         
         # Intersection position
         relative_position = Position(pos, vel, acc, time)
-        return [Intersection(time, relative_position, line)]
+        return [Intersection(time, relative_position, line, ent=ent, oth=oth)]
         
     # Intersection positions
     relative_positions = [Position(pos, vel, acc, time) for time in roots]
     
-    return [Intersection(time, position, line) for time, position in zip(roots, relative_positions)]
+    return [Intersection(time, position, line, ent=ent, oth=oth) for time, position in zip(roots, relative_positions)]
 
-def ParabolaLineSegmentCollision(pos, vel, acc, line):
+def ParabolaLineSegmentCollision(pos, vel, acc, line, ent, oth):
     """
     Get all intersections between a point pos with velocity vel and
     acceleration acc, and a non-moving line-segment line.
@@ -176,7 +173,7 @@ def ParabolaLineSegmentCollision(pos, vel, acc, line):
     
     """
 
-    intersections = ParabolaLineCollision(pos, vel, acc, line)
+    intersections = ParabolaLineCollision(pos, vel, acc, line, ent, oth)
         
     valid = [i for i in intersections if i.pos in i.line]
     
@@ -184,42 +181,37 @@ def ParabolaLineSegmentCollision(pos, vel, acc, line):
     return valid
 
 def _parabola_line_collision_wrapper(args):
-    return [i for i in ParabolaLineSegmentCollision(*args) if i.time > -util.EPSILON]
+    return [i for i in ParabolaLineSegmentCollision(*args) if i.del_time > -util.EPSILON]
     
-def entity_intersections(ent, collidable):
+def entity_intersections(ent, oth):
     """Get all future intersections between two entities as a sorted list."""
     intersections = []
     
-    # Relative velocity and acceleration (v12: velocity of 'ent'(1) relative to 'collidable'(2))
-    v12 = ent.velocity - collidable.velocity
+    # Relative velocity and acceleration (v12: velocity of 'ent'(1) relative to 'oth'(2))
+    v12 = ent.velocity - oth.velocity
     v21 = -v12
-    a12 = ent.acceleration - collidable.acceleration
+    a12 = ent.acceleration - oth.acceleration
     a21 = -a12
-    args = [(point, v12, a12, line) for point, line in product(ent.shape.points, collidable.shape.lines)]
-    args += [(point, v21, a21, line) for point, line in product(collidable.shape.points, ent.shape.lines)]
+    args = [(point, v12, a12, line, ent, oth) for point, line in product(ent.shape.points, oth.shape.lines)]
+    args += [(point, v21, a21, line, oth, ent) for point, line in product(oth.shape.points, ent.shape.lines)]
     
     return sorted([i for intersections in map(_parabola_line_collision_wrapper, args) for i in intersections])
 
-def update_intersections_pair(ent, collidable):
+def update_intersections_pair(ent, oth):
     """
     Find all intersections between two entities, and update the game event
     queue and each entity's intersection list.
     
     """
     
-    # Get all intersections between ent and collidable
-    intersections = entity_intersections(ent, collidable)
-    
-    for intersection in intersections:
-        intersection.time += game.game_time
-        intersection.ent = ent
-        intersection.oth = collidable
+    # Get all intersections between ent and oth
+    intersections = entity_intersections(ent, oth)
             
     game.game_events = deque(merge(game.game_events, intersections))
     
     # Entities keep track of their intersections so they can mark them invalid.
     ent.intersections = list(merge(ent.intersections, intersections))
-    collidable.intersections = list(merge(collidable.intersections, intersections))
+    oth.intersections = list(merge(oth.intersections, intersections))
     
 def update_intersections(ent, exclude = None):
     """
@@ -228,8 +220,8 @@ def update_intersections(ent, exclude = None):
     
     """
     current_time = game.game_time
-    for collidable in entity.Collidables:
-        if ent is collidable or collidable is exclude:
+    for oth in entity.Collidables:
+        if ent is oth or oth is exclude:
             # don't collide with self
             continue
-        update_intersections_pair(ent, collidable)
+        update_intersections_pair(ent, oth)

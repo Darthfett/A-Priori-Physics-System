@@ -138,10 +138,7 @@ class _Game:
                 self.game_time += (self._next_frame_time - self.real_time) * self._speed
                 self.real_time = self._next_frame_time
                 break
-            
-            # ev is guaranteed to be game_events[0] or real_events[0]
-            assert(ev is self.game_events[0] or ev is self.real_events[0])
-            
+
             # Fast forward time to the event time
             self.game_time = ev.game_time
             self.real_time = ev.real_time
