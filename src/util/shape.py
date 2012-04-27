@@ -6,7 +6,7 @@ class Shape:
     
     def offset(self, offset):
         for point in self.points:
-            point += offset    
+            point += offset
     
     @property
     def lines(self):
@@ -25,7 +25,7 @@ class Shape:
 
     def __init__(self, points, enclosed=None):
         if isinstance(points, Shape):
-            self.points = points.points
+            self.points = [Vector(point) for point in points.points]
             if enclosed is None:
                 self.enclosed = points.enclosed
             else:

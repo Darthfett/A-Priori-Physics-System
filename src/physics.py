@@ -192,8 +192,8 @@ def entity_intersections(ent, oth):
     v21 = -v12
     a12 = ent.acceleration - oth.acceleration
     a21 = -a12
-    args = [(point, v12, a12, line, ent, oth) for point, line in product(ent.shape.points, oth.shape.lines)]
-    args += [(point, v21, a21, line, oth, ent) for point, line in product(oth.shape.points, ent.shape.lines)]
+    args = [(point, v12, a12, line, ent, oth) for point, line in product(ent.pos_shape.points, oth.pos_shape.lines)]
+    args += [(point, v21, a21, line, oth, ent) for point, line in product(oth.pos_shape.points, ent.pos_shape.lines)]
     
     return sorted([i for intersections in map(_parabola_line_collision_wrapper, args) for i in intersections])
 

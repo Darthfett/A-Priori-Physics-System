@@ -60,11 +60,12 @@ class Entity:
         """Override to be notified of a position update."""
         pass
 
-    def __init__(self, position = None, **kwargs):
+    def __init__(self, position=None, **kwargs):
         """Instanciate an entity with position (defaults to (0, 0))."""
         if position is None:
             self.position = Vector(0, 0)
-        self.position = position
+        else:
+            self.position = position
 
         Entities.append(self)
         super().__init__(**kwargs)
@@ -73,29 +74,16 @@ class Shaped(Entity):
     """Shaped objects are things that occupy space."""
     
     @property
-    def shape(self):
-        #if isinstance(self, Movable):   
-        #self._update_shape()
-        return self._shape
-        
-    def position_update(self, old, new):
-        self._update_shape()
-        self._shape.offset(new - old)
-        super().position_update(old, new)
-        
-    def _update_shape(self):
-        if game.game_time != self._shape_time:
-            self._shape.offset(Position(Vector(0, 0), self.velocity, self.acceleration, (game.game_time - self._shape_time)))
-            self._shape_time = game.game_time
+    def pos_shape(self):
+        shape = Shape(self.shape)
+        shape.offset(self.position)
+        return shape
 
     def __init__(self, shape, enclosed=True, **kwargs):
         if isinstance(shape, Shape):
-            self._shape = shape
+            self.shape = shape
         else:
-            self._shape = Shape(shape, enclosed)
-        if 'position' in kwargs:
-            self._shape.offset(kwargs['position'])
-        self._shape_time = game.game_time
+            self.shape = Shape(shape, enclosed)
         super().__init__(**kwargs)
 
 class Collidable(Shaped, Entity):
@@ -192,7 +180,7 @@ class Blitable(Entity):
     def draw(self, surface):
         """Blits the blitable to the specified surface."""
         if debug.DrawOutlines and hasattr(self, "shape"):
-            for line in self.shape.lines:
+            for line in self.pos_shape.lines:
                 surface.draw_aaline((0, 0, 0), line.p, line.q)
         else:
             surface.blit(self)
