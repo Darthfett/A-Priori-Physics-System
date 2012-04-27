@@ -78,6 +78,10 @@ def SegmentContainsPoint(a, b, c):
     return Collinear(a, b, c) and (Within(a.x, c.x, b.x) if not FloatEqual(a.x, b.x) else
                Within(a.y, c.y, b.y))
 
+class EquationIdentity(ValueError):
+    """An EquationIdentity occurs when 'find_roots' is called with the identity 0 = 0."""
+    pass
+
 class InequalityError(ValueError):
     """An InequalityError occurs when 'find_roots' is called with an inequality, e.g. 1 = 0."""
     pass
@@ -91,7 +95,7 @@ def find_roots(a, b, c):
             
                 # 0x^2 + 0x + 0 = 0
                 #             0 = 0
-                raise ValueError("Cannot find roots for equation 0 = 0")
+                raise EquationIdentity("Cannot find roots for equation 0 = 0")
                 return []
             else:
             

@@ -10,6 +10,7 @@ class Line:
       q                 The second point defining the line
       length            The length of the line
       direction         The vector direction of the line
+      normal            The normal of the line
 
     """
 
@@ -24,6 +25,11 @@ class Line:
     def length(self):
         """The length of the line segment, i.e. the distance between p and q."""
         return self.direction.length
+    
+    @property
+    def normal(self):
+        """The normal of the line."""
+        return ~self.direction.normalized()
         
     def __add__(self, other):
         """Get a new line by offsetting the line toward other."""

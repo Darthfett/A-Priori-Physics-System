@@ -39,19 +39,19 @@ from collections import deque
 from heapq import merge
 
 import util
-from util import Vector, Position, GameEvent, FloatEqual
+from util import Vector, Position, GameEvent, FloatEqual, EPSILON
 import entity
 from game import game
 from debug import debug
 
 Intersections = []
-RESTING_TRESHOLD = 1e-8 # In pixels per ms
+RESTING_THRESHOLD = 1.5e-2 # In pixels per ms
         
 def _resolve_entity(ent, line):
     """Resolves an entity intersection by reflecting its velocity off a line."""
     # Reflect ent's velocity off of line
     try:
-        ent.velocity = ent.velocity.reflected(~line.direction.normalized()) * game.bounciness
+        ent.velocity = ent.velocity.reflected(line.normal) * game.bounciness
     except AttributeError:
         pass
 
@@ -96,7 +96,43 @@ class Intersection(GameEvent):
         if FloatEqual(self.del_time, 0):
             # This collision JUST happened
             return
+        try:
+            if self.ent in self.oth.resters or self.oth in self.ent.resters:
+                return
+        except AttributeError: pass
 
+        # Get the velocity magnitude in the direction normal to the line
+        norm_vel_mag = abs(self.line.normal * self.ent.velocity)
+        
+        if norm_vel_mag < RESTING_THRESHOLD:
+            # Enter resting state if velocity and acceleration are both toward the line.
+            if (self.line.normal * self.ent.velocity) * (self.line.normal * self.ent.acceleration) > 0:
+                # acc and vel have same direction relative to line (both toward line)
+                # Get relative velocity in normal direction
+                if self.ent not in entity.Movables:
+                    ent = self.oth
+                    oth = self.ent
+                else:
+                    ent = self.ent
+                    oth = self.oth
+                
+                oth_vel = oth.velocity * self.line.normal
+                ent_vel = ent.velocity * self.line.normal
+                ent.velocity += (oth_vel - ent_vel) * self.line.normal
+                
+                oth_acc = oth.acceleration * self.line.normal
+                ent_acc = ent.acceleration * self.line.normal
+                ent.acceleration += (oth_acc - ent_acc) * self.line.normal
+                
+                if not hasattr(ent, 'resters'):
+                    ent.resters = []
+                if not hasattr(oth, 'resters'):
+                    oth.resters = []
+                
+                ent.resters.append(oth)
+                oth.resters.append(ent)
+                
+        
         # Valid Collision; handle it, and invalidate future intersections
         _resolve_entity(self.ent, self.line)
         _resolve_entity(self.oth, self.line)
@@ -148,6 +184,8 @@ def ParabolaLineCollision(pos, vel, acc, line, ent, oth):
             roots = util.find_roots(a, b, c)
         except util.InequalityError:
             roots = []
+        except util.EquationIdentity:
+            roots = [0]
 
     if len(roots) == 0:
         return []
