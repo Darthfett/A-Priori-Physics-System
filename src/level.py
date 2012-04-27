@@ -41,6 +41,9 @@ class Level:
                          Vector(1350, 250),
                          Vector(0, 250)])
         self.ground = entities.Ground(shape = vertices, render_shape = vertices)
+        sqr = Rect(size=(10, 10))
+        entities.Bouncy(render_shape=sqr.shape, shape=sqr.shape, position=Vector(50, 60), velocity=Vector(24e-2, 32e-2), acceleration=Vector())
+        entities.Bouncy(render_shape=sqr.shape, shape=sqr.shape, position=Vector(70, 60), velocity=Vector(32e-2, 32e-2))
 
     def __init__(self, path, resources_path):
         """Take a file at path, and extract level details."""

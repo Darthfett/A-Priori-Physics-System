@@ -202,9 +202,9 @@ class LineRenderable(Entity):
         """Draws the individual lines of the line renderable to the specified surface."""
         for line in self.render_shape.lines:
             if hasattr(line, "color"):
-                surface.draw_aaline(line.color, line.p, line.q)
+                surface.draw_line(line.color, line.p + self.position, line.q + self.position)
             else:
-                surface.draw_aaline(self.color, line.p, line.q)
+                surface.draw_line(self.color, line.p + self.position, line.q + self.position)
 
     def __init__(self, render_shape, color=None, **kwargs):
         """Instanciate a line renderable with a list of lines."""
