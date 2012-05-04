@@ -1,3 +1,5 @@
+import collections
+
 import util
 from util.vector import Vector
 
@@ -31,6 +33,12 @@ class Line:
         """The normal of the line."""
         return ~self.direction.normalized()
         
+    def __eq__(self, other):
+        if not isinstance(other, collections.Iterable):
+            return False
+        else:
+            return self.p == other[0] and self.q == other[1] and len(other) == 2
+        
     def __add__(self, other):
         """Get a new line by offsetting the line toward other."""
         return Line(self.p + other, self.q + other)
@@ -44,7 +52,18 @@ class Line:
 
     def __getitem__(self, index):
         """Access the points of this line by index."""
-        return [self.p, self.q][index]
+        if index == 0:
+            return self.p
+        elif index == 1:
+            return self.q
+        raise IndexError
+    
+    def __len__(self):
+        return 2
+    
+    def __iter__(self):
+        yield self.p
+        yield self.q
 
     def __contains__(self, c):
         """Get whether a point c lies on the line."""
