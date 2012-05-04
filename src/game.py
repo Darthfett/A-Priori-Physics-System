@@ -221,8 +221,9 @@ class _Game:
 game = _Game()
 
 # library-specific modules
-from util import INFINITY, EPSILON, GameEvent, RealEvent
+from util import INFINITY, EPSILON
 import event
+from event import GameEvent, RealEvent
 import controls
 from window import Window
 from level import Level

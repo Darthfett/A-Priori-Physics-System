@@ -39,7 +39,8 @@ from collections import deque
 from heapq import merge
 
 import util
-from util import Vector, Position, GameEvent, FloatEqual, EPSILON
+from util import Vector, Position, FloatEqual, EPSILON
+from event import GameEvent
 import entity
 from game import game
 from debug import debug

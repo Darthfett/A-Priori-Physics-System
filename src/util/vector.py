@@ -1,5 +1,5 @@
 import math
-from collections import Iterable
+import collections
 
 import util
 import debug
@@ -41,76 +41,120 @@ class Vector:
 
     def normalized(self):
         """Get a vector parallel to self with a length of 1."""
-        len = self.length
-        return Vector(self.x / len, self.y / len)
+        len_ = self.length
+        return Vector(self.x / len_, self.y / len_)
 
-    def cross(self, other):
+    def cross(self, vec):
         """
         Get the length of the cross-product between self and other.
         
         Equivalent to double the area of the triangle formed by the two vectors.
         
         """
-        
-        return self.x * other[1] - self.y * other[0]
+        if isinstance(vec, collections.Iterable):
+            if len(vec) != 2:
+                raise TypeError("cannot cross-product a {type} with a {type_vec} 'vec', where len(vec) != 2.".format(type=type(self).__name__, type_vec=type(vec).__name__))
+            try:
+                return self.x * vec[1] - self.y * vec[0]
+            except TypeError:
+                raise TypeError("cannot cross-product a {type} with a {type_vec} 'vec' with elements that do not support integer multiplication.".format(type=type(self).__name__, type_vec=type(vec).__name__))
+        else:
+            raise TypeError("cannot cross-product between {type} and {type_vec}".format(type=type(self).__name__, type_vec=type(vec).__name__))
+    
+    def __setattr__(self, name, value):
+        """Vectors are immutable."""
+        raise AttributeError('cannot set attribute {name}, {type} is immutable.'.format(name=name, type=type(self).__name__))
         
     def __hash__(self):
+        """Hash the vector."""
         return hash((self.x, self.y))
 
     def __eq__(self, vec):
-        return self.x == vec[0] and self.y == vec[1]
+        """Determine if self equals vec."""
+        if not isinstance(vec, collections.Iterable):
+            return False
+        else:
+            return self.x == vec[0] and self.y == vec[1] and len(vec) == 2
 
     def __add__(self, vec):
-        return Vector(self.x + vec[0], self.y + vec[1])
-        
-    def __iadd__(self, vec):
-        self.x += vec[0]
-        self.y += vec[1]
-        return self
+        """Perform element-wise addition with vec."""
+        if isinstance(vec, collections.Iterable) and len(vec) == 2:
+            try:
+                return Vector(self.x + vec[0], self.y + vec[1])
+            except TypeError:
+                return NotImplemented
+        else:
+            return NotImplemented
 
     def __sub__(self, vec):
-        return Vector(self.x - vec[0], self.y - vec[1])
-        
-    def __isub__(self, vec):
-        self.x -= vec[0]
-        self.y -= vec[1]
-        return self
+        """Perform element-wise subtraction with vec."""
+        if isinstance(vec, collections.Iterable) and len(vec) == 2:
+            try:
+                return Vector(self.x - vec[0], self.y - vec[1])
+            except TypeError:
+                return NotImplemented
+        else:
+            return NotImplemented
 
     def __mul__(self, other):
-        """Perform dot/scalar product with other."""        
-        if isinstance(other, Iterable):
-            # dot product
-            return self.x * other[0] + self.y * other[1]
+        """Perform dot/scalar product with other.""" 
+        if isinstance(other, collections.Iterable):
+            if len(other) != 2:
+                raise TypeError("cannot multiply a {type} with a {type_oth} 'other', where len(other) != 2.".format(type=type(self).__name__, type_oth=type(other).__name__))
+            try:
+                return self.x * other[0] + self.y * other[1]
+            except TypeError:
+                return NotImplemented
         else:
-            # scalar product
-            return Vector(self.x * other, self.y * other)
+            try:
+                return Vector(self.x * other, self.y * other)
+            except TypeError:
+                return NotImplemented
 
-    def __rmul__(self, other):
-        """Perform dot/scalar product with other."""        
-        if isinstance(other, Iterable):
-            # dot product
-            return self.x * other[0] + self.y * other[1]
+    def __truediv__(self, other):
+        """Perform dot/scalar division with other."""
+        if isinstance(other, collections.Iterable):
+            if len(other) != 2:
+                raise TypeError("cannot divide a {type} with a {type_oth} 'other', where len(other) != 2.".format(type=type(self).__name__, type_oth=type(other).__name__))
+            try:
+                return self.x / other[0] + self.y / other[1]
+            except TypeError:
+                return NotImplemented
         else:
-            # scalar product
-            return Vector(self.x * other, self.y * other)
+            try:
+                return Vector(self.x / other, self.y / other)
+            except TypeError:
+                return NotImplemented
+        
+        def __rsub__(self, vec):
+            """Perform element-wise subtraction with vec."""
+            if isinstance(other, collections.Iterable) and len(other) == 2:
+                try:
+                    return Vector(vec[0] - self.x, vec[1] - self.y)
+                except TypeError:
+                    return NotImplemented
+            else:
+                return NotImplemented
     
-    def __imul__(self, scalar):
-        self.x *= scalar
-        self.y *= scalar
-        return self
-
-    def __div__(self, scalar):
+    def __rtruediv__(self, other):
         """Perform scalar division with scalar."""
-        return Vector(self.x / scalar, self.y / scalar)
-
-    def __rdiv__(self, scalar):
-        """Perform scalar division with scalar."""
-        return Vector(self.x / scalar, self.y / scalar)
+        if isinstance(other, collections.Iterable):
+            if len(other) != 2:
+                raise TypeError("cannot divide a {type} with a {type_oth} 'other', where len(other) != 2.".format(type=type(self).__name__, type_oth=type(other).__name__))
+            try:
+                return other[0] / self.x + other[1] / self.y
+            except TypeError:
+                return NotImplemented
+        else:
+            try:
+                return Vector(other / self.x, other / self.y)
+            except TypeError:
+                return NotImplemented
     
-    def __idiv__(self, scalar):
-        self.x /= scalar
-        self.y /= scalar
-        return self
+    __radd__ = __iadd__ = __add__
+    __rmul__ = __imul__ = __mul__
+    __isub__ = __sub__
+    __itruediv__ = __truediv__
 
     def __neg__(self):
         return Vector(-self.x, -self.y)
@@ -128,7 +172,6 @@ class Vector:
         >>> ~Vector(3, 4) == Vector(-4, 3)
         
         """
-        
         return Vector(-self.y, self.x)
 
     def __len__(self):
