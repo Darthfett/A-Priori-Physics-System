@@ -51,5 +51,4 @@ class VectorTest(unittest.TestCase):
         self.assertIn(2, self.p)
         
 def load_tests(loader, tests, pattern):
-    tests.addTests(loader.loadTestsFromTestCase(VectorTest))
     return tests

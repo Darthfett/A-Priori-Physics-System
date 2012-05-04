@@ -149,19 +149,26 @@ class Intersection(GameEvent):
         self.ent.recalculate_intersections()
         self.oth.recalculate_intersections(self.ent)
         
+    def __eq__(self, oth):
+        return self.time == oth.time and self.del_time == oth.del_time and self.pos == oth.pos and self.line == oth.line and self.ent == oth.ent and self.oth == oth.oth and self.invalid == oth.invalid
+        
     def __str__(self):
         return "Intersection(time={time}, del_time={del_time}, pos={pos}, line={line}, ent={ent}, oth={oth}, invalid={invalid})".format(**self.__dict__)
         
     def __repr__(self):
         return "Intersection(time={time}, del_time={del_time}, pos={pos}, line={line}, ent={ent}, oth={oth}, invalid={invalid})".format(**self.__dict__)
 
-    def __init__(self, time=util.INFINITY, pos=None, line=None, ent=None, oth=None, invalid=False):
-        self.del_time = time
-        self.time = time + game.game_time
+    def __init__(self, time=util.INFINITY, pos=None, line=None, ent=None, oth=None, del_time=None, invalid=False):
+        if del_time is not None:
+            self.del_time = del_time
+            self.time = time
+        else:
+            self.del_time = time
+            self.time = time + game.game_time
         self.pos, self.line, self.invalid = pos, line, invalid
         self.ent, self.oth = ent, oth
 
-def ParabolaLineCollision(pos, vel, acc, line, ent, oth):
+def ParabolaLineCollision(pos, vel, acc, line, ent=None, oth=None):
     """
     Get all intersections between a point pos with velocity vel and
     acceleration acc, and a non-moving line line.
@@ -210,7 +217,7 @@ def ParabolaLineCollision(pos, vel, acc, line, ent, oth):
     
     return [Intersection(time, position, line, ent=ent, oth=oth) for time, position in zip(roots, relative_positions)]
 
-def ParabolaLineSegmentCollision(pos, vel, acc, line, ent, oth):
+def ParabolaLineSegmentCollision(pos, vel, acc, line, ent=None, oth=None):
     """
     Get all intersections between a point pos with velocity vel and
     acceleration acc, and a non-moving line-segment line.
