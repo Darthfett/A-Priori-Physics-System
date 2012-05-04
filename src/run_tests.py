@@ -1,0 +1,3 @@
+import tests
+
+tests.run()

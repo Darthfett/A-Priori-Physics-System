@@ -3,7 +3,7 @@ import collections
 
 from util import Vector
 
-class VecTest(unittest.TestCase):
+class VectorTest(unittest.TestCase):
     def setUp(self):
         self.p = Vector(1, 2)
         self.q = (3, 4)
@@ -49,6 +49,7 @@ class VecTest(unittest.TestCase):
         self.assertEqual(self.p[0], self.p.x)
         self.assertEqual(self.p[1], self.p.y)
         self.assertIn(2, self.p)
-
-if __name__ == "__main__":    
-    unittest.main()
+        
+def load_tests(loader, tests, pattern):
+    tests.addTests(loader.loadTestsFromTestCase(VectorTest))
+    return tests
