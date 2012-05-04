@@ -1,7 +1,7 @@
 import unittest
 import importlib
 
-__all__ = ["vector", "physics"]
+__all__ = ["test_vector", "test_physics"]
 
 def load_tests(loader, tests, pattern):
     modules = [importlib.import_module('.'.join(['tests', module])) for module in __all__]

@@ -37,7 +37,7 @@ class Vector:
         
     def reflected(self, normal):
         """Get the vector that is the reflection of self across normal."""
-        return self - (2 * normal * self) * normal
+        return self - (2 * (normal * self)) * normal
 
     def normalized(self):
         """Get a vector parallel to self with a length of 1."""

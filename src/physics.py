@@ -113,7 +113,7 @@ class Intersection(GameEvent):
         
         if norm_vel_mag * norm_acc_mag > 0:
             # Possible resting state if velocity and acceleration are both toward the line.
-            if (2 * (norm_vel_mag * game.bounciness )/ norm_acc_mag) < RESTING_THRESHOLD:
+            if (2 * (norm_vel_mag * game.bounciness) / norm_acc_mag) < RESTING_THRESHOLD:
                 # Coming to rest due to small next-collision time
                 # acc and vel have same direction relative to line (both toward line)
                 # Get relative velocity in normal direction
