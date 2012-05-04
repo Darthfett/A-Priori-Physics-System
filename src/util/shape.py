@@ -5,8 +5,8 @@ class Shape:
     """A list of points that represents an object."""
     
     def offset(self, offset):
-        for point in self.points:
-            point += offset
+        for i in range(len(self.points)):
+            self.points[i] = self.points[i] + offset
     
     @property
     def lines(self):
