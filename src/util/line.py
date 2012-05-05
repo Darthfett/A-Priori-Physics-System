@@ -32,6 +32,9 @@ class Line:
     def normal(self):
         """The normal of the line."""
         return ~self.direction.normalized()
+    
+    def __hash__(self):
+        return hash((self.p, self.q))
         
     def __eq__(self, other):
         if not isinstance(other, collections.Iterable):
