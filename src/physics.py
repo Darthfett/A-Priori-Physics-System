@@ -91,25 +91,35 @@ class Intersection(GameEvent):
     
     def __call__(self):
         """Handle resolving the intersection."""
+        
+        ## Collision Validation
+        
         if self.invalid:
             # Intersection is invalid, just skip past it
             return
         if FloatEqual(self.del_time, 0):
             # This collision JUST happened
             return
+        self.ent.last_collide_time = self.oth.last_collide_time = game.game_time
         try:
             if self.ent in self.oth.resters or self.oth in self.ent.resters:
                 return
         except AttributeError: pass
 
+        
+        ## Resting State
+        
+        # get normal to line (in the opposite direction that ent is striking oth)
         norm = self.line.normal
         if norm * self.ent.velocity > 0:
-            # normal must be in opposite direction
+            # normal is in same direction, reverse normal
             norm = -norm
         
-        # Get the magnitude in the direction normal to the line
+        # Get the magnitude of ent's velocity/acceleration in the direction normal to the line
         norm_vel_mag = -(norm * self.ent.velocity)
         norm_acc_mag = -(norm * self.ent.acceleration)
+        
+        # Check for resting state
         
         if norm_vel_mag * norm_acc_mag > 0:
             # Possible resting state if velocity and acceleration are both toward the line.
@@ -139,7 +149,8 @@ class Intersection(GameEvent):
                 
                 ent.resters.append(oth)
                 oth.resters.append(ent)
-                
+        
+        # TODO: Does resolving a collision make sense if entering the resting state?
         
         # Valid Collision; handle it, and invalidate future intersections
         _resolve_entity(self.ent, self.line)

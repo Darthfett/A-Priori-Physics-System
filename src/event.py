@@ -23,7 +23,7 @@ import functools
 import pygame
 
 from game import game
-from util import INFINITY, ZeroDivide
+from util import INFINITY, ZeroDivide, EPSILON
 
 class Event:
     """An event can have any number of handlers, which are called when the event is fired,
@@ -107,6 +107,9 @@ class RealEvent:
     @property
     def delta_time(self):
         return self.time - game.real_time
+    
+    def __repr__(self):
+        return "{class_}(time={time}, delta_time={delta_time}, game_time={game_time})".format(class_=type(self).__name__, time=self.time, delta_time=self.delta_time, game_time=self.game_time)
         
     def __call__(self):
         self._game_time = game.game_time
@@ -165,6 +168,7 @@ class _KeyPress(RealEvent):
         self.key = key
         self.time = time
         self.invalid = False
+        assert self.delta_time >= 0
 
 class _KeyRelease(RealEvent):
     """
@@ -185,6 +189,7 @@ class _KeyRelease(RealEvent):
         self.key = key
         self.time = time
         self.invalid = False
+        assert self.delta_time >= 0
 
 # Current Key State is not synced with the game's time.
 # If you wish to know the current key state, you should
@@ -197,7 +202,6 @@ def update(current_time):
     into the real event queue.
     
     """
-    
     pygame.event.pump()
 
     # Handle key press/release events
@@ -210,5 +214,7 @@ def update(current_time):
 
         if was_pressed and not next_state[key]:
             key_events.append(_KeyRelease(key, current_time))
+
     game.real_events = deque(merge(game.real_events, key_events))
+    
     _CurrentState = next_state

@@ -111,12 +111,16 @@ class _Game:
             real_event = RealEvent(INFINITY)
 
         # events are guaranteed to have current or future time.
-        assert(game_event.delta_time > -EPSILON)
-        assert(real_event.delta_time > -EPSILON)
+        assert game_event.delta_time > -EPSILON
+        assert real_event.delta_time > -EPSILON
         
-        next_event = sorted((game_event, real_event))[0]
+        # Find next event.
+        # because of pausing, game_event MUST be the second in this list (NAN is not sorted, and not handled for real_events).
+        next_event = sorted((real_event, game_event))[0]
         
-        if next_event.real_time > self._next_frame_time or math.isnan(next_event.real_time):
+        assert not math.isnan(next_event.real_time)
+        
+        if next_event.real_time > self._next_frame_time:
             return None, None
         
         if next_event is game_event:
@@ -131,7 +135,8 @@ class _Game:
         _next_frame_time.
         
         """
-        while self.real_time < self._next_frame_time:
+        assert self.real_time < self._next_frame_time
+        while self.real_time <= self._next_frame_time:
             ev, ev_queue = self._next_event()
             if ev is None:
                 # No events to handle this frame.
@@ -146,10 +151,6 @@ class _Game:
             # Handle and remove the event
             ev()
             ev_queue.remove(ev)
-            
-            # Handle mouse and keyboard events after every event
-            event.update(pygame.time.get_ticks() - self._delay_time)
-        
         # Remove all invalid events from the event queues.
         # This avoids long-term events from wasting space in the queue.
         self.game_events = [ev for ev in self.game_events if not ev.invalid]
@@ -178,6 +179,8 @@ class _Game:
                 # Update the time and ignore initialization time.
                 self._next_frame_time = pygame.time.get_ticks() - self._delay_time
 
+                # calculating the next frame 
+                
                 # Set timestamp for mouse and keyboard events and put them in the event queue.
                 event.update(self._next_frame_time)
                 
@@ -187,7 +190,10 @@ class _Game:
                     #
                     # Catch the simulation up to the current time by handling
                     # events in-order, and then draw the next frame.
+                    assert self.real_time < self._next_frame_time
                     self._calc_next_frame()
+                    assert self.real_time == self._next_frame_time
+                    
                     self.screen.draw_next_frame()
                     pygame.display.flip()
                     
