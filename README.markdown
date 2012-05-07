@@ -37,3 +37,24 @@ When objects are moved, or have their acceleration, velocity, or position change
 In addition to using a "game" event queue for handling object collisions according to game time, there is a "real" event queue, which handles events that occur in "real" time.  This event queue is currently only used to evaluate key press/release events, which are added to the event queue with a timestamp so that they occur at the exact time.
 
 Another objective of Jetpack-Man, other than creating an efficient physics engine, is to keep the game code 'pythonic'.  It should follow good coding practices, and the game itself should be fun to play, over keeping a high difficulty.
+
+
+## Contributing ##
+Probably the easiest way to begin contributing is just to play the game, and raise issues for any bugs you see, or features you want to see.
+
+If you're a developer, you can look at the todo or the active issues for things that need work.  If I see anyone contributing, I'll give them commit rights.
+
+## Running the test suite ##
+Jetpack-Man comes with a suite of tests in order to make testing easier, and prevent regressions from being introduced.
+
+While in the src/ directory:
+
+    usage: python -m tests [options]
+    
+    Runs the test suite
+    
+    optional arguments:
+      -h, --help  show this help message and exit
+      --v V       change the verbose-ness level
+
+The default verbose is 1.  A verbose level of 2 will explicitly output every test's result.

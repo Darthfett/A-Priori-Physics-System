@@ -162,6 +162,9 @@ class Intersection(GameEvent):
         
     def __eq__(self, oth):
         return self.time == oth.time and self.del_time == oth.del_time and self.pos == oth.pos and self.line == oth.line and self.ent == oth.ent and self.oth == oth.oth and self.invalid == oth.invalid
+    
+    def __hash__(self):
+        return hash((self.time, self.del_time, self.pos, self.line, self.ent, self.oth, self.invalid))
         
     def __str__(self):
         return "Intersection(time={time}, del_time={del_time}, pos={pos}, line={line}, ent={ent}, oth={oth}, invalid={invalid})".format(**self.__dict__)
