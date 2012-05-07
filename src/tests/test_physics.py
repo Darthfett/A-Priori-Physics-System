@@ -10,7 +10,6 @@ class PLCTest(unittest.TestCase):
     
     def setUp(self):
         self.maxDiff=None
-        pass
     
     def _test_case(self, iter_):
         return ParabolaLineCollision(*iter_)
@@ -79,15 +78,20 @@ class PLCTest(unittest.TestCase):
         self.assertEqual(case_1_result[0].time, 1, "line collision failing with time={time} (expected: 1)".format(time=case_1_result[0].time))
         self.assertEqual(case_2_result[0].time, 1, "parabola collision failing with time={time} (expected: 1)".format(time=case_2_result[0].time))
     
-    @unittest.expectedFailure
     def test_two_collisions(self):
         
         # case 1: real example (near zero)
-        case_1 = (Vector(10.0, 7.967966086381749e-21), Vector(-0.0, 8.033252840490174e-06), Vector(0, -200), Line(Vector(500.00, 0.00), Vector(0.00, 0.00)))
+        case_1 = (Vector(-2, -2), Vector(1, 4), Vector(0, -2), Line(Vector(-2, -1), Vector(2, -1)))
+        # times are 2 +/- sqrt(3)
+        case_1_expected = [Intersection(time=3.732050807568877, del_time=3.732050807568877, pos=Vector(1.73, -1.00), line=Line(Vector(-2.00, -1.00), Vector(2.00, -1.00)), ent=None, oth=None, invalid=False),
+                           Intersection(time=0.2679491924311227, del_time=0.2679491924311227, pos=Vector(-1.73, -1.00), line=Line(Vector(-2.00, -1.00), Vector(2.00, -1.00)), ent=None, oth=None, invalid=False)]
         
-        case_1_result = self._test_case(case_1)
+        case_1_results = self._test_case(case_1)
         
-        self.assertCountEqual(case_1_result, [Intersection(time=8.033252939677466e-08, del_time=8.033252939677466e-08, pos=Vector(10.00, 0.00), line=Line(Vector(500.00, 0.00), Vector(0.00, 0.00)), ent=None, oth=None, invalid=False), Intersection(time=-9.918729244820295e-16, del_time=-9.918729244820295e-16, pos=Vector(10.00, 0.00), line=Line(Vector(500.00, 0.00), Vector(0.00, 0.00)), ent=None, oth=None, invalid=False)])
+        e = map(repr, case_1_expected)
+        a = map(repr, case_1_results)
+        
+        self.assertCountEqual(e, a)
         
 def load_tests(loader, tests, pattern):
     return tests
