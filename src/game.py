@@ -134,8 +134,7 @@ class _Game:
         fast-forwarding to the time at which they occur until caught up with
         _next_frame_time.
         
-        """
-        assert self.real_time < self._next_frame_time
+        """        
         while self.real_time <= self._next_frame_time:
             ev, ev_queue = self._next_event()
             if ev is None:
@@ -155,6 +154,12 @@ class _Game:
         # This avoids long-term events from wasting space in the queue.
         self.game_events = [ev for ev in self.game_events if not ev.invalid]
         self.real_events = [ev for ev in self.real_events if not ev.invalid]
+        
+        # Post-conditions
+        ev, ev_queue = self._next_event()
+        assert ev is None
+        assert ev_queue is None
+        assert self.real_time == self._next_frame_time
 
     def run(self):
         """
@@ -165,32 +170,24 @@ class _Game:
         
         """
 
-        # Calculate the time in ms to wait in-between each frame.
         delta_frame_time = 1000 / self.fps
         
-        # Clear the screen and display it to avoid startup-flicker.
+        # avoid startup-flicker.
         self.screen.clear()
         pygame.display.flip()
         
-        # Get the time after initialization, to use as an offset.
-        self._delay_time = pygame.time.get_ticks()
+        self._init_time = pygame.time.get_ticks()
         try:
             while True:
                 # Update the time and ignore initialization time.
-                self._next_frame_time = pygame.time.get_ticks() - self._delay_time
-
-                # calculating the next frame 
+                self._next_frame_time = pygame.time.get_ticks() - self._init_time
                 
-                # Set timestamp for mouse and keyboard events and put them in the event queue.
-                event.update(self._next_frame_time)
+                event.check_for_new_events(self._next_frame_time)
                 
-                delta_time = (self._next_frame_time - self.real_time)
-                if delta_time >= delta_frame_time:
-                    # It's time (or past time) to update the screen.
-                    #
+                time_since_last_frame = (self._next_frame_time - self.real_time)
+                if time_since_last_frame >= delta_frame_time:
                     # Catch the simulation up to the current time by handling
                     # events in-order, and then draw the next frame.
-                    assert self.real_time < self._next_frame_time
                     self._calc_next_frame()
                     assert self.real_time == self._next_frame_time
                     
@@ -214,7 +211,7 @@ class _Game:
         self.current_level = None
         
         self._next_frame_time = 0
-        self._delay_time = 0
+        self._init_time = 0
         self.real_time = 0
         self.game_time = 0
         

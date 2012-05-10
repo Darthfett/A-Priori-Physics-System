@@ -11,7 +11,7 @@ globals:
                         a key is pressed or released (toggled).
 
 functions:
-  update                Run through all events currently in the pygame event
+  check_for_new_events  Run through all events currently in the pygame event
                         queue and put them into the real event queue.
 
 """
@@ -196,7 +196,7 @@ class _KeyRelease(RealEvent):
 # register a function with KeyPressEvent and KeyReleaseEvent.
 _CurrentState = []
 
-def update(current_time):
+def check_for_new_events(current_time):
     """
     Run through all events currently in the pygame event queue and put them
     into the real event queue.
