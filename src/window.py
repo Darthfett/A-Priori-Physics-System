@@ -16,7 +16,7 @@ import pygame
 
 from util import Vector, Rect
 import entity
-from game import game
+import game
 
 class OutOfBoundsError(Exception):
     """When something is out of bounds of pygame's drawing ability, this exception is raised."""
@@ -73,7 +73,7 @@ class Window:
             # offset coords by screen center
             coords = coords + (self.size * .5)
             # offset coords by centered_obj
-            center_point = game.current_level.player.position + Vector(game.current_level.player.image.get_size()) * .5
+            center_point = self.game.current_level.player.position + Vector(self.game.current_level.player.image.get_size()) * .5
             coords = coords - center_point
         
         coords = Vector(0, self.size.y) + Vector(coords.x, -coords.y)
@@ -121,10 +121,15 @@ class Window:
         for ent in ents:
             ent.draw(self)
     
-    def __init__(self, title="Jetpack Man", size=(DEFAULT_WIDTH, DEFAULT_HEIGHT)):
+    def __init__(self, title="Jetpack Man", size=(DEFAULT_WIDTH, DEFAULT_HEIGHT), game_state=None):
         """Initialize the screen, window size, and title."""
         self.title = title
         self.screen = pygame.display.set_mode(size) # Accept default flags:
+        
+        if game_state is None:
+            self.game = game.GameStateProvider()
+        else:
+            self.game = game_state
             
         # Flags (second argument, multiple separated by | ):
             # pygame.FULLSCREEN    create a fullscreen display

@@ -9,6 +9,7 @@ class PLCTest(unittest.TestCase):
     """Test ParabolaLineCollision(pos, vel, acc, line, ent=None, oth=None)"""
     
     def setUp(self):
+        game.GameStateProvider().update(game.GameState())
         self.maxDiff=None
     
     def _test_case(self, iter_):
