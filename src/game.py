@@ -14,10 +14,22 @@ functions:
 # standard modules
 import os
 import math
-from collections import deque
+from heapq import merge
 
 # 3rd party modules
 import pygame
+
+class GameProvider:
+    Provider = None
+    def __getattribute__(self, name):
+        return getattr(GameProvider.Provider, name)
+    
+    def __setattr__(self, name, value):
+        raise AttributeError('cannot set attribute {name}, {type} is immutable.'.format(name=name, type=type(self).__name__))
+    
+    def __init__(self, provider=None):
+        if provider is not None:
+            GameProvider.Provider = provider
 
 class _Game:
     """
@@ -111,9 +123,10 @@ class _Game:
             real_event = RealEvent(INFINITY)
 
         # events are guaranteed to have current or future time.
-        assert game_event.delta_time > -EPSILON
-        assert real_event.delta_time > -EPSILON
         
+        assert game_event.delta_time > -EPSILON        
+        assert real_event.delta_time > -EPSILON
+    
         # Find next event.
         # because of pausing, game_event MUST be the second in this list (NAN is not sorted, and not handled for real_events).
         next_event = sorted((real_event, game_event))[0]
@@ -148,8 +161,14 @@ class _Game:
             self.real_time = ev.real_time
             
             # Handle and remove the event
-            ev()
+            game_events, real_events = ev()
             ev_queue.remove(ev)
+            assert game_events == sorted(game_events)
+            assert real_events == sorted(real_events)
+            if game_events:
+                self.game_events = list(merge(self.game_events, game_events))
+            if real_events:
+                self.real_events = list(merge(self.real_events, real_events))
         # Remove all invalid events from the event queues.
         # This avoids long-term events from wasting space in the queue.
         self.game_events = [ev for ev in self.game_events if not ev.invalid]
@@ -182,7 +201,8 @@ class _Game:
                 # Update the time and ignore initialization time.
                 self._next_frame_time = pygame.time.get_ticks() - self._init_time
                 
-                event.check_for_new_events(self._next_frame_time)
+                key_events = event.check_for_new_events(self._next_frame_time)
+                self.real_events = list(merge(self.real_events, key_events))
                 
                 time_since_last_frame = (self._next_frame_time - self.real_time)
                 if time_since_last_frame >= delta_frame_time:
@@ -215,19 +235,22 @@ class _Game:
         self.real_time = 0
         self.game_time = 0
         
-        self.game_events = deque()
-        self.real_events = deque()
+        self.game_events = []
+        self.real_events = []
         
         self._speed = 1
         self._real_speed = None
 
 game = _Game()
+provider = GameProvider(game)
 
 # library-specific modules
 from util import INFINITY, EPSILON
 import event
+import entity
 from event import GameEvent, RealEvent
 import controls
+import physics
 from window import Window
 from level import Level
 
@@ -236,10 +259,19 @@ def init():
     resources_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "../resources")
 
     # Init Window
-    game.screen = Window() # Accept default size and title
+    game.screen = Window(provider) # Accept default size and title
 
     # Load First Level
-    game.current_level = Level("level_1.todo", resources_path)
+    game.current_level = Level(provider, "level_1.todo", resources_path)
     
     # Init Controls
     controls.init()
+    
+    intersections = []
+    
+    for ent in entity.Collidables:
+        for oth in entity.Collidables:
+            if ent is oth: continue
+            intersections.extend(physics.find_pair_intersections(ent, oth))
+    intersections.sort()
+    game.game_events = list(merge(intersections, game.game_events))

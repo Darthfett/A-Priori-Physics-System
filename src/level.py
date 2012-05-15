@@ -4,7 +4,6 @@ import pygame
 import random
 
 from util import Vector, Shape, Rect, generate_circle
-from game import game
 import physics
 import entity
 import entities
@@ -17,6 +16,10 @@ class Level:
     def reset_player(self):
         self.player.position = Level._PlayerPosition
         self.player.velocity = Level._PlayerVelocity
+        
+        # TODO: Recalculate intersections
+        
+        raise NotImplemented
         self.player.recalculate_intersections()
     
     def level_1(self):
@@ -40,23 +43,19 @@ class Level:
                          Vector(1000, 250),
                          Vector(1350, 250),
                          Vector(0, 250)])
-        self.ground = entities.Ground(shape = vertices, render_shape = vertices)
+        self.ground = entities.Ground(provider=self.provider, shape=vertices, render_shape=vertices)
         sqr = Rect(size=(10, 10))
-        entities.Bouncy(render_shape=sqr.shape, shape=sqr.shape, position=Vector(50, 60), velocity=Vector(24e-2, 32e-2), acceleration=Vector())
-        entities.Bouncy(render_shape=sqr.shape, shape=sqr.shape, position=Vector(70, 60), velocity=Vector(32e-2, 32e-2))
 
-    def __init__(self, path, resources_path):
+    def __init__(self, provider, path, resources_path):
         """Take a file at path, and extract level details."""
         # TODO: Load this in as a file
+        self.provider = provider
         width, height = 640, 480
         self.boundary = Rect(size=(width, height))
         
         image = pygame.image.load(os.path.join(resources_path, "guy2.PNG"))
         shape = Rect(image.get_rect()).shape
         # shape = generate_circle(8, 50)
-        self.player = entities.Player(image=image, shape=shape, position=Level._PlayerPosition, velocity=Level._PlayerVelocity)
+        self.player = entities.Player(provider=provider, image=image, shape=shape, position=Level._PlayerPosition, velocity=Level._PlayerVelocity)
         self.width, self.height = width, height
         self.level_1()
-        #self.ground = entities.Ground(shape=[], render_shape=[])
-        
-        physics.update_intersections(self.ground)

@@ -16,8 +16,6 @@ functions:
 
 """
 
-from collections import deque
-from heapq import merge
 import functools
 
 import pygame
@@ -215,6 +213,6 @@ def check_for_new_events(current_time):
         if was_pressed and not next_state[key]:
             key_events.append(_KeyRelease(key, current_time))
 
-    game.real_events = deque(merge(game.real_events, key_events))
+    return key_events
     
     _CurrentState = next_state

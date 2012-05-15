@@ -23,10 +23,10 @@ functions:
   entity_intersections
                         Find all intersections between two entities as a sorted
                         list.
-  update_intersections_pair
+  find_pair_intersections
                         Add all intersections between two entities to the event
                         queue, and update their respective intersection lists.
-  update_intersections
+  find_intersections
                         Add all intersections between all entities and a
                         specific entity to the event queue, and update their
                         respective intersection lists.
@@ -51,21 +51,10 @@ RESTING_THRESHOLD = 200 # ms between next collision (?)
 def _resolve_entity(ent, line):
     """Resolves an entity intersection by reflecting its velocity off a line."""
     # Reflect ent's velocity off of line
+    new_vel = ent.velocity.reflected(line.normal) * game.bounciness
     try:
-        ent.velocity = ent.velocity.reflected(line.normal) * game.bounciness
+        ent.velocity = new_vel
     except AttributeError:
-        pass
-
-def _resolve_entities(ent, other, line):
-    normal = ~line.direction.normalized()
-    if math.isinf(ent.mass):
-        if math.isinf(other.mass):
-            raise Exception("What happens when an unstoppable force hits an immovable object?  THIS happens! >:(")
-        # For component of other's velocity in 'normal' direction: v_other = 2*v_ent - v_other
-        # For component of other's velocity in 'line' direction: v_other = v_other * (1 - Bounciness)
-    elif math.isinf(other.mass):
-        # For component of ent's velocity in 'normal' direction: v_ent = 2*v_other - v_ent
-        # For component of ent's velocity in 'line' direction: v_ent = v_ent * (1 - Bounciness)
         pass
 
 class Intersection(GameEvent):
@@ -96,14 +85,14 @@ class Intersection(GameEvent):
         
         if self.invalid:
             # Intersection is invalid, just skip past it
-            return
+            return [], []
         if FloatEqual(self.del_time, 0):
             # This collision JUST happened
-            return
+            return [], []
         self.ent.last_collide_time = self.oth.last_collide_time = game.game_time
         try:
             if self.ent in self.oth.resters or self.oth in self.ent.resters:
-                return
+                return [], []
         except AttributeError: pass
 
         
@@ -151,17 +140,34 @@ class Intersection(GameEvent):
                 oth.resters.append(ent)
         
         # TODO: Does resolving a collision make sense if entering the resting state?
-        
-        # Valid Collision; handle it, and invalidate future intersections
+                
+        # Valid Collision; handle it
+        if self.ent in entity.Movables:
+            print(self.ent.velocity)
+        else:
+            print(self.oth.velocity)
+            
         _resolve_entity(self.ent, self.line)
         _resolve_entity(self.oth, self.line)
         
-        # Recalculate intersections (exclude ent from oth, to avoid duplicate calculation)
-        self.ent.recalculate_intersections()
-        self.oth.recalculate_intersections(self.ent)
+        if self.ent in entity.Movables:
+            print(self.ent.velocity)
+        else:
+            print(self.oth.velocity)
+        
+        #game.pause()
+        
+        # Handled collisions invalidate all intersections dealing with these objects
+        # Invalidate all intersections and return all the new ones
+        self.ent.invalidate_intersections()
+        self.oth.invalidate_intersections()
+        
+        intersections = self.ent.find_intersections()
+        intersections.extend(self.oth.find_intersections(exclude=self.ent)) # exclude re-calculating intersections for ent
+        return sorted(intersections), []
         
     def __eq__(self, oth):
-        return self.time == oth.time and self.del_time == oth.del_time and self.pos == oth.pos and self.line == oth.line and self.ent == oth.ent and self.oth == oth.oth and self.invalid == oth.invalid
+        return hash(self) == hash(oth)
     
     def __hash__(self):
         return hash((self.time, self.del_time, self.pos, self.line, self.ent, self.oth, self.invalid))
@@ -264,7 +270,7 @@ def entity_intersections(ent, oth):
     
     return sorted([i for intersections in map(_parabola_line_collision_wrapper, args) for i in intersections])
 
-def update_intersections_pair(ent, oth):
+def find_pair_intersections(ent, oth):
     """
     Find all intersections between two entities, and update the game event
     queue and each entity's intersection list.
@@ -273,22 +279,23 @@ def update_intersections_pair(ent, oth):
     
     # Get all intersections between ent and oth
     intersections = entity_intersections(ent, oth)
-            
-    game.game_events = deque(merge(game.game_events, intersections))
+    
+    return intersections
     
     # Entities keep track of their intersections so they can mark them invalid.
     ent.intersections = list(merge(ent.intersections, intersections))
     oth.intersections = list(merge(oth.intersections, intersections))
     
-def update_intersections(ent, exclude = None):
+def find_intersections(ent, exclude = None):
     """
     Find all intersections between all entities and ent, and update the game
     event queue and each entity's intersection list.
     
     """
-    current_time = game.game_time
+    intersections = []
     for oth in entity.Collidables:
         if ent is oth or oth is exclude:
             # don't collide with self
             continue
-        update_intersections_pair(ent, oth)
+        intersections.extend(find_pair_intersections(ent, oth))
+    return intersections
