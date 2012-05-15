@@ -184,7 +184,7 @@ import os
 
 import pygame
 
-import game
+from game import game
 import event
 
 class Quit(Exception):
@@ -197,25 +197,23 @@ class InvalidKeyError(Exception):
 
 # Control functions
     
-def quit(game_state):
+def quit():
     """Quit the game."""
     raise Quit
             
-def flip_pause_state(game_state):
+def flip_pause_state():
     """Pause/unpause the game."""
-    game_state = game.GameStateProvider()
-    game_state.update(game.GameState(game_state._CurrentState, paused=True))
+    game.pause()
             
-def reset_player(game_state):
+def reset_player():
     """
     Move the player back to starting position, and reset the player's velocity.
     
     """
-    game_state.current_level.reset_player()
-    return find_intersections(game_state.current_level.player)
+    game.current_level.reset_player()
 
     
-def init(game_state):
+def init():
     
     # map control names to their functions
     control_to_keypress_control = {
@@ -225,9 +223,9 @@ def init(game_state):
     }
     
     control_to_keytoggle_control = {
-        "jetpack_up": game_state.current_level.player._jetpack_up,
-        "jetpack_left": game_state.current_level.player._jetpack_left,
-        "jetpack_right": game_state.current_level.player._jetpack_right
+        "jetpack_up": game.current_level.player._jetpack_up,
+        "jetpack_left": game.current_level.player._jetpack_left,
+        "jetpack_right": game.current_level.player._jetpack_right
     }
 
     # open cfg/keyboards.json, and load in user's control mapping

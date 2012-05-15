@@ -21,10 +21,10 @@ import pygame
 
 import debug
 import game
-import game
+from game import game as Game
 
 # Initialize and run the game!
-def main(speed=1, fps=60, bounciness=.9, debug_mode=False, draw_outlines=False):
+def main(speed=1, fps=Game.fps, bounciness=Game.bounciness, debug_mode=False, draw_outlines=False):
     """
     Initialize and run the game.
     
@@ -41,17 +41,18 @@ def main(speed=1, fps=60, bounciness=.9, debug_mode=False, draw_outlines=False):
     
     """
 
-    game.GameStateProvider().update(game.GameState(fps=min(max(fps, 10), 120), bounciness=min(max(bounciness, 0), 1), speed=min(max(speed, .01), 10)))
-    
     debug._DebugMode = debug_mode
     debug.debug.DrawOutlines = draw_outlines
+    Game.fps = min(max(fps, 10), 120)
+    Game.bounciness = min(max(bounciness, 0), 1)
+    Game._speed = min(max(speed, .01), 10)
     
     # Set up an SDL environment video parameter, required for pygame.
     os.environ['SDL_VIDEO_CENTERED'] = '1'
     
     pygame.init()
-    game.init(game.GameStateProvider()._CurrentState)
-    game.run(game.GameStateProvider()._CurrentState)
+    game.init()
+    Game.run()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Runs the game Jetpack-Man', usage='python src/%(prog)s [options]')
@@ -62,13 +63,13 @@ if __name__ == "__main__":
                         dest='draw_outlines', default=False, action='store_true')
 
     parser.add_argument('--fps', help='Change max drawing FPS',
-                        dest='FPS', default=60, type=float)
+                        dest='FPS', default=Game.fps, type=float)
 
     parser.add_argument('--speed', help='Change the speed multiplier',
                         dest='speed', default=1, type=float)
 
     parser.add_argument('--bounciness', help='Change the bounciness (1 is elastic, 0 is sticky)',
-                        dest='bounciness', default=.9, type=float)
+                        dest='bounciness', default=Game.bounciness, type=float)
     
     # Parse arguments to the script
     args = parser.parse_args()

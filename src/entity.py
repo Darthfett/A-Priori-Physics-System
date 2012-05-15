@@ -38,7 +38,7 @@ import pygame
 
 import util
 from util import Vector, Shape, Position
-import game
+from game import game
 import physics
 from debug import debug
 
@@ -60,15 +60,8 @@ class Entity:
         """Override to be notified of a position update."""
         pass
 
-    def __init__(self, game_state, position=None, **kwargs):
-        """
-        Instanciate an entity with position (defaults to (0, 0)).
-        
-        Game is a GameStateProvider dependency, required in-order to get the
-        current time and other game information.
-        
-        """
-        self.game = game_state
+    def __init__(self, position=None, **kwargs):
+        """Instanciate an entity with position (defaults to (0, 0))."""
         if position is None:
             self.position = Vector(0, 0)
         else:
@@ -104,41 +97,42 @@ class Collidable(Shaped, Entity):
     def acceleration(self):
         return Vector()
         
-    # def recalculate_intersections(self, exclude=None):
-        # for intersection in self.intersections:
-            # if intersection.ent is not exclude and intersection.oth is not exclude:
-                # intersection.invalid = True
-        # self.intersections = [intersection for intersection in self.intersections if not intersection.invalid]
-        # physics.find_intersections(self, [exclude])
+    def recalculate_intersections(self, exclude = None):
+        for intersection in self.intersections:
+            if intersection.ent is not exclude and intersection.oth is not exclude:
+                intersection.invalid = True
+        self.intersections = [intersection for intersection in self.intersections if not intersection.invalid]
+        physics.update_intersections(self, exclude)
 
     def __init__(self, mass=None, **kwargs):
         """Instanciate a collidable with mass (defaults to INFINITY)."""
         self.intersections = []
         self.mass = mass
-        self.last_collide_time = kwargs['game_state'].game_time
+        self.last_collide_time = game.game_time
         if mass is None:
             self.mass = util.INFINITY
         Collidables.append(self)
         super().__init__(**kwargs)
+        physics.update_intersections(self)
 
 class Movable(Entity):
     """Movable objects are objects with velocity and acceleration."""
     
     @property
     def position(self):
-        return util.Position(self._position, self._velocity, self.acceleration, self.game.game_time - self._valid_time)
+        return util.Position(self._position, self._velocity, self.acceleration, game.game_time - self._valid_time)
     
     @position.setter
     def position(self, position):
         """Updating position inherently invalidates all collisions, but does not take care of doing this."""
         old = self.position
         self._position = position
-        self._valid_time = self.game.game_time
+        self._valid_time = game.game_time
         super().position_update(old, position)
         
     @property
     def velocity(self):
-        return self._velocity + (self.game.game_time - self._valid_time) * self.acceleration
+        return self._velocity + (game.game_time - self._valid_time) * self.acceleration
     
     @velocity.setter
     def velocity(self, velocity):
@@ -161,7 +155,7 @@ class Movable(Entity):
         
         """
         self._position = kwargs.get('position') or Vector()
-        self._valid_time = kwargs['game_state'].game_time
+        self._valid_time = game.game_time
         self._velocity, self._acceleration = velocity, acceleration
         if velocity is None:
             self._velocity = Vector(0, 0)

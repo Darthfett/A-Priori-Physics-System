@@ -19,11 +19,10 @@ functions:
 from collections import deque
 from heapq import merge
 import functools
-from itertools import chain
 
 import pygame
 
-import game
+from game import game
 from util import INFINITY, ZeroDivide, EPSILON
 
 class Event:
@@ -45,8 +44,9 @@ class Event:
         self.__handlers.remove(handler)
         return self
 
-    def __call__(self, game_state, *args, **kwargs):
-        return tuple(chain(*(handler(game_state, *args, **kwargs) for handler in self.__handlers)))
+    def __call__(self, *args, **kwargs):
+        for handler in self.__handlers:
+            handler(*args, **kwargs)
         
     register = __iadd__
     removeHandler = __isub__
@@ -57,13 +57,8 @@ class Event:
             if theHandler.im_self == inObject:
                 self -= theHandler
 
-    def __init__(self, game_state=None):
+    def __init__(self):
         self.__handlers = []
-        if game_state is None:
-            self.game = game.GameStateProvider()
-        else:
-            self.game = game_state
-        
 
 @functools.total_ordering
 class GameEvent:
@@ -74,11 +69,17 @@ class GameEvent:
     
     @property
     def real_time(self):
-        return self.game.real_time + ZeroDivide(self.time - self.game.game_time, self.game.speed)
+        try:
+            return self._real_time
+        except AttributeError:
+            return game.real_time + ZeroDivide(self.time - game.game_time, game._speed)
             
     @property
     def delta_time(self):
-        return self.time - self.game.game_time
+        return self.time - game.game_time
+        
+    def __call__(self):
+        self._real_time = game.real_time
 
     def __lt__(self, other):
         return self.time < other.game_time
@@ -86,12 +87,8 @@ class GameEvent:
     def __eq__(self, other):
         return self.time == other.game_time
 
-    def __init__(self, time=INFINITY, game_state=None):
+    def __init__(self, time=INFINITY):
         self.time = time
-        if game_state is None:
-            self.game = game.GameStateProvider()
-        else:
-            self.game = game_state
 
 @functools.total_ordering
 class RealEvent:
@@ -102,14 +99,20 @@ class RealEvent:
     
     @property
     def game_time(self):
-        return self.game.game_time + (self.time - self.game.real_time) * self.game.speed
+        try:
+            return self._game_time
+        except AttributeError:
+            return game.game_time + (self.time - game.real_time) * game._speed
             
     @property
     def delta_time(self):
-        return self.time - self.game.real_time
+        return self.time - game.real_time
     
     def __repr__(self):
         return "{class_}(time={time}, delta_time={delta_time}, game_time={game_time})".format(class_=type(self).__name__, time=self.time, delta_time=self.delta_time, game_time=self.game_time)
+        
+    def __call__(self):
+        self._game_time = game.game_time
 
     def __lt__(self, other):
         return self.time < other.real_time
@@ -117,12 +120,8 @@ class RealEvent:
     def __eq__(self, other):
         return self.time == other.real_time
 
-    def __init__(self, time=INFINITY, game_state=None):
+    def __init__(self, time=INFINITY):
         self.time = time
-        if game_state is None:
-            self.game = game.GameStateProvider()
-        else:
-            self.game = game_state
 
 
 class _KeyEvent(Event):
@@ -136,16 +135,12 @@ class _KeyEvent(Event):
         """Get Event for the specified key."""
         if key not in self.__events:
             # None exist, create new one
-            self.__events[key] = Event(self.game)
+            self.__events[key] = Event()
         
         return self.__events[key]
         
-    def __init__(self, game_state=None):
+    def __init__(self):
         self.__events = {}
-        if game_state is None:
-            self.game = game.GameStateProvider()
-        else:
-            self.game = game_state
         super().__init__()
         
         
@@ -163,27 +158,11 @@ class _KeyPress(RealEvent):
     
     def __call__(self):
         """Run all relevant events."""
+        KeyPressEvent[self.key]()
+        KeyToggleEvent[self.key](True)
         
-        game_events, real_events = KeyPressEvent[self.key]()
-        game_events = list(game_events)
-        real_events = list(real_events)
-        
-        g, r = KeyToggleEvent[self.key](True)
-        game_events.extend(g)
-        real_events.extend(r)
-        
-        g, r = KeyPressEvent(self.key)
-        game_events.extend(g)
-        real_events.extend(r)
-        
-        g, r = KeyToggleEvent(True)
-        game_events.extend(g)
-        real_events.extend(r)
-        
-        game_events.sort()
-        real_events.sort()
-        
-        return game_events, real_events
+        KeyPressEvent(self.key)
+        KeyToggleEvent(True)
 
     def __init__(self, key, time):
         self.key = key
@@ -200,27 +179,11 @@ class _KeyRelease(RealEvent):
     
     def __call__(self):
         """Run all relevant events."""
+        KeyReleaseEvent[self.key]()
+        KeyToggleEvent[self.key](False)
         
-        game_events, real_events = KeyReleaseEvent[self.key]()
-        game_events = list(game_events)
-        real_events = list(real_events)
-        
-        g, r = KeyToggleEvent[self.key](False)
-        game_events.extend(g)
-        real_events.extend(r)
-        
-        g, r = KeyReleaseEvent(self.key)
-        game_events.extend(g)
-        real_events.extend(r)
-        
-        g, r = KeyToggleEvent(False)
-        game_events.extend(g)
-        real_events.extend(r)
-        
-        game_events.sort()
-        real_events.sort()
-        
-        return game_events, real_events
+        KeyReleaseEvent(self.key)
+        KeyToggleEvent(False)
 
     def __init__(self, key, time):
         self.key = key
@@ -251,7 +214,7 @@ def check_for_new_events(current_time):
 
         if was_pressed and not next_state[key]:
             key_events.append(_KeyRelease(key, current_time))
+
+    game.real_events = deque(merge(game.real_events, key_events))
     
     _CurrentState = next_state
-
-    return key_events
