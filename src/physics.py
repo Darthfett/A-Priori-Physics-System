@@ -89,12 +89,10 @@ class Intersection(GameEvent):
         if FloatEqual(self.del_time, 0):
             # This collision JUST happened
             return [], []
-        self.ent.last_collide_time = self.oth.last_collide_time = game.game_time
         try:
             if self.ent in self.oth.resters or self.oth in self.ent.resters:
                 return [], []
         except AttributeError: pass
-
         
         ## Resting State
         
@@ -142,18 +140,9 @@ class Intersection(GameEvent):
         # TODO: Does resolving a collision make sense if entering the resting state?
                 
         # Valid Collision; handle it
-        if self.ent in entity.Movables:
-            print(self.ent.velocity)
-        else:
-            print(self.oth.velocity)
             
         _resolve_entity(self.ent, self.line)
         _resolve_entity(self.oth, self.line)
-        
-        if self.ent in entity.Movables:
-            print(self.ent.velocity)
-        else:
-            print(self.oth.velocity)
         
         #game.pause()
         
@@ -162,8 +151,19 @@ class Intersection(GameEvent):
         self.ent.invalidate_intersections()
         self.oth.invalidate_intersections()
         
-        intersections = self.ent.find_intersections()
-        intersections.extend(self.oth.find_intersections(exclude=self.ent)) # exclude re-calculating intersections for ent
+        intersections = find_pair_intersections(self.ent, self.oth)
+        self.ent.intersections.extend(intersections)
+        self.oth.intersections.extend(intersections)
+        
+        ent_intersections = find_intersections(self.ent, exclude=self.oth)
+        oth_intersections = find_intersections(self.oth, exclude=self.ent)
+        
+        self.ent.intersections.extend(ent_intersections)
+        self.oth.intersections.extend(oth_intersections)
+        
+        intersections.extend(ent_intersections)
+        intersections.extend(oth_intersections)
+        
         return sorted(intersections), []
         
     def __eq__(self, oth):

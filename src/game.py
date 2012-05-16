@@ -165,6 +165,8 @@ class _Game:
             ev_queue.remove(ev)
             assert game_events == sorted(game_events)
             assert real_events == sorted(real_events)
+            
+            
             if game_events:
                 self.game_events = list(merge(self.game_events, game_events))
             if real_events:

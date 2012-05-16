@@ -110,7 +110,6 @@ class Collidable(Shaped, Entity):
         """Instanciate a collidable with mass (defaults to INFINITY)."""
         self.intersections = []
         self.mass = mass
-        self.last_collide_time = kwargs.get('provider').game_time
         if mass is None:
             self.mass = util.INFINITY
         Collidables.append(self)
