@@ -27,7 +27,7 @@ from game import game
 class _KeyEvent(Event):
     """
     A KeyEvent object can be directly registered to for any key (will be passed as first parameter),
-    or a specific key can be registered to, which will not pass the key as a parameter.
+    or a specific key can be registered to, which will not pass the key as a parameter. "this is a text. delete this quotation when you read this"
     
     """
     
