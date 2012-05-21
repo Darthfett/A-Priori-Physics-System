@@ -7,9 +7,9 @@
 ## How to run ##
 
     usage: python src/main.py [options]
-    
+
     Runs the game Jetpack-Man
-    
+
     optional arguments:
       -h, --help            show this help message and exit
       -d, --debug           turn debug mode on
@@ -50,9 +50,9 @@ Jetpack-Man comes with a suite of tests in order to make testing easier, and pre
 While in the src/ directory:
 
     usage: python -m tests [options]
-    
+
     Runs the test suite
-    
+
     optional arguments:
       -h, --help  show this help message and exit
       --v V       change the verbose-ness level
