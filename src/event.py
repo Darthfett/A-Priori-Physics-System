@@ -98,41 +98,61 @@ class Event:
         """Add an event handler.  The handler must be callable."""
         if not callable(handler):
             raise ValueError("Cannot register non-callable %r object %r" % (type(handler).__name__, handler))
-        self.__handlers.append(handler)
+        self._handlers.append(handler)
         return self
 
     def __isub__(self, handler):
-        self.__handlers.remove(handler)
+        self._handlers.remove(handler)
         return self
 
     def __call__(self, *args, **kwargs):
-        for handler in self.__handlers:
+        for handler in self._handlers:
             handler(*args, **kwargs)
         
     register = __iadd__
     removeHandler = __isub__
     fire = __call__
 
-    def clearObjectHandlers(self, inObject):
-        for theHandler in self.__handlers:
-            if theHandler.im_self == inObject:
-                self -= theHandler
-
     def __init__(self):
-        self.__handlers = []
+        self._handlers = []
+        
 
-class _KeyEvent(Event):
+
+class EventProducerEvent(Event):
+    """    
+    Objects registered to a EventProducerEvent object must return two lists:
+    new game events, and new real events created by handling the event.
+    """
+    
+    def __call__(self, *args, **kwargs):
+        game_events, real_events = [], []
+        for handler in self._handlers:
+            g_events, r_events = handler(*args, **kwargs)
+            game_events.extend(g_events)
+            real_events.extend(r_events)
+        return game_events, real_events
+        
+    fire = __call__
+        
+    def __init__(self):
+        self.__events = {}
+        super().__init__()
+        
+class _KeyEvent(EventProducerEvent):
     """
     A KeyEvent object can be directly registered to for any key (will be passed as first parameter),
     or a specific key can be registered to, which will not pass the key as a parameter.
     
+    KeyToggleEvents are a specific instance of this object, and will also pass
+    a True/False value signifying whether it was a Press (True) or Release (False)
+    event.
     """
     
     def __getitem__(self, key):
         """Get Event for the specified key."""
         if key not in self.__events:
             # None exist, create new one
-            self.__events[key] = Event()
+            self.__events[key] = EventProducerEvent()
         
         return self.__events[key]
         

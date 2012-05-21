@@ -25,7 +25,7 @@ class Player(entity.Blitable, entity.Projectile):
         self.invalidate_intersections()
         ints = physics.find_intersections(self)
         self.intersections.extend(ints)
-        return intersections, []
+        return ints, []
     
     def _jetpack_left(self, on):
         self.flipped = True
@@ -37,7 +37,7 @@ class Player(entity.Blitable, entity.Projectile):
         self.invalidate_intersections()
         ints = physics.find_intersections(self)
         self.intersections.extend(ints)
-        return intersections, []
+        return ints, []
     
     def _jetpack_right(self, on):
         self.flipped = False
@@ -49,7 +49,7 @@ class Player(entity.Blitable, entity.Projectile):
         self.invalidate_intersections()
         ints = physics.find_intersections(self)
         self.intersections.extend(ints)
-        return intersections, []
+        return ints, []
     
     def __init__(self, **kwargs):
         """

@@ -186,6 +186,7 @@ import pygame
 
 from game import game
 import event
+import physics
 
 class Quit(Exception):
     """An Exception that is raised when the player quits."""
@@ -200,16 +201,26 @@ class InvalidKeyError(Exception):
 def quit():
     """Quit the game."""
     raise Quit
+    return [], []
             
 def flip_pause_state():
     """Pause/unpause the game."""
     game.pause()
+    return [], []
             
 def reset_player():
     """
     Move the player back to starting position, and reset the player's velocity.
     
     """
+    game.current_level.player.position = game.current_level._PlayerPosition
+    game.current_level.player.velocity = game.current_level._PlayerVelocity
+    game.current_level.player.invalidate_intersections()
+    ints = physics.find_intersections(game.current_level.player)
+    game.current_level.player.intersections.extend(ints)
+    
+    return ints, []
+    
     game.current_level.reset_player()
 
     

@@ -13,15 +13,6 @@ class Level:
     _PlayerPosition = Vector(10, 20)
     _PlayerVelocity = Vector(0, 0)
     
-    def reset_player(self):
-        self.player.position = Level._PlayerPosition
-        self.player.velocity = Level._PlayerVelocity
-        
-        # TODO: Recalculate intersections
-        
-        raise NotImplemented
-        self.player.recalculate_intersections()
-    
     def level_1(self):
         vertices = []
         vertices.extend([Vector(0, 0),
