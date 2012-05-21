@@ -11,6 +11,7 @@ import pygame
 from util import Vector
 import entity
 import event
+import physics
 
 class Player(entity.Blitable, entity.Projectile):
     """The Player class, which is controlled by the physical player through keyboard/mouse events."""
@@ -21,7 +22,10 @@ class Player(entity.Blitable, entity.Projectile):
             self.acceleration += Vector(0, 3e-4)
         else:
             self.acceleration -= Vector(0, 3e-4)
-        self.recalculate_intersections()
+        self.invalidate_intersections()
+        ints = physics.find_intersections(self)
+        self.intersections.extend(ints)
+        return intersections, []
     
     def _jetpack_left(self, on):
         self.flipped = True
@@ -30,7 +34,10 @@ class Player(entity.Blitable, entity.Projectile):
             self.acceleration += Vector(-2e-4, 0)
         else:
             self.acceleration -= Vector(-2e-4, 0)
-        self.recalculate_intersections()
+        self.invalidate_intersections()
+        ints = physics.find_intersections(self)
+        self.intersections.extend(ints)
+        return intersections, []
     
     def _jetpack_right(self, on):
         self.flipped = False
@@ -39,7 +46,10 @@ class Player(entity.Blitable, entity.Projectile):
             self.acceleration += Vector(2e-4, 0)
         else:
             self.acceleration -= Vector(2e-4, 0)
-        self.recalculate_intersections()
+        self.invalidate_intersections()
+        ints = physics.find_intersections(self)
+        self.intersections.extend(ints)
+        return intersections, []
     
     def __init__(self, **kwargs):
         """

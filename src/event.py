@@ -23,41 +23,6 @@ import pygame
 from game import game
 from util import INFINITY, ZeroDivide, EPSILON
 
-class Event:
-    """An event can have any number of handlers, which are called when the event is fired,
-    along with any arguments passed.
-     * Add to an event's handlers with the += operator or register method.
-     * Remove a handler with the -= operator or removeHandler method.
-     * Fire an event by calling it, or calling the fire method.
-     * Clear all handlers with the clearObjectHandlers method."""
-    
-    def __iadd__(self, handler):
-        """Add an event handler.  The handler must be callable."""
-        if not callable(handler):
-            raise ValueError("Cannot register non-callable %r object %r" % (type(handler).__name__, handler))
-        self.__handlers.append(handler)
-        return self
-
-    def __isub__(self, handler):
-        self.__handlers.remove(handler)
-        return self
-
-    def __call__(self, *args, **kwargs):
-        for handler in self.__handlers:
-            handler(*args, **kwargs)
-        
-    register = __iadd__
-    removeHandler = __isub__
-    fire = __call__
-
-    def clearObjectHandlers(self, inObject):
-        for theHandler in self.__handlers:
-            if theHandler.im_self == inObject:
-                self -= theHandler
-
-    def __init__(self):
-        self.__handlers = []
-
 @functools.total_ordering
 class GameEvent:
 
@@ -121,6 +86,40 @@ class RealEvent:
     def __init__(self, time=INFINITY):
         self.time = time
 
+class Event:
+    """An event can have any number of handlers, which are called when the event is fired,
+    along with any arguments passed.
+     * Add to an event's handlers with the += operator or register method.
+     * Remove a handler with the -= operator or removeHandler method.
+     * Fire an event by calling it, or calling the fire method.
+     * Clear all handlers with the clearObjectHandlers method."""
+    
+    def __iadd__(self, handler):
+        """Add an event handler.  The handler must be callable."""
+        if not callable(handler):
+            raise ValueError("Cannot register non-callable %r object %r" % (type(handler).__name__, handler))
+        self.__handlers.append(handler)
+        return self
+
+    def __isub__(self, handler):
+        self.__handlers.remove(handler)
+        return self
+
+    def __call__(self, *args, **kwargs):
+        for handler in self.__handlers:
+            handler(*args, **kwargs)
+        
+    register = __iadd__
+    removeHandler = __isub__
+    fire = __call__
+
+    def clearObjectHandlers(self, inObject):
+        for theHandler in self.__handlers:
+            if theHandler.im_self == inObject:
+                self -= theHandler
+
+    def __init__(self):
+        self.__handlers = []
 
 class _KeyEvent(Event):
     """
@@ -156,11 +155,26 @@ class _KeyPress(RealEvent):
     
     def __call__(self):
         """Run all relevant events."""
-        KeyPressEvent[self.key]()
-        KeyToggleEvent[self.key](True)
         
-        KeyPressEvent(self.key)
-        KeyToggleEvent(True)
+        # Run key-specific key release events
+        game_events, real_events = KeyPressEvent[self.key]()
+        
+        # Run key-specific key toggle events
+        g_events, r_events = KeyToggleEvent[self.key](True)
+        game_events.extend(g_events)
+        real_events.extend(r_events)
+        
+        # Run generic key release events
+        g_events, r_events = KeyPressEvent(self.key)
+        game_events.extend(g_events)
+        real_events.extend(r_events)
+        
+        # Run generic key toggle events
+        g_events, r_events = KeyToggleEvent(self.key, True)
+        game_events.extend(g_events)
+        real_events.extend(r_events)
+        
+        return game_events, real_events
 
     def __init__(self, key, time):
         self.key = key
@@ -227,7 +241,7 @@ def check_for_new_events(current_time):
 
         if was_pressed and not next_state[key]:
             key_events.append(_KeyRelease(key, current_time))
-
-    return key_events
     
     _CurrentState = next_state
+
+    return key_events

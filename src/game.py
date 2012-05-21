@@ -201,6 +201,7 @@ class _Game:
                 self._next_frame_time = pygame.time.get_ticks() - self._init_time
                 
                 key_events = event.check_for_new_events(self._next_frame_time)
+                
                 self.real_events = list(merge(self.real_events, key_events))
                 
                 time_since_last_frame = (self._next_frame_time - self.real_time)
