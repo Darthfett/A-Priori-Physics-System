@@ -205,6 +205,7 @@ def ParabolaLineCollision(pos, vel, acc, line, ent=None, oth=None):
         if vel == Vector(0, 0):
             return []
         else:
+            # If acceleration is zero, there can only be one or zero roots.
             b = (vel.cross(q) - vel.cross(p))
             c = (pos.cross(q) - pos.cross(p) - p.cross(q))
             if b == 0:
@@ -212,6 +213,7 @@ def ParabolaLineCollision(pos, vel, acc, line, ent=None, oth=None):
             else:
                 roots = [-c / b]
     else:
+        # non-zero acceleration, possibly 2 roots.
         a = .5 * (acc.cross(q) - acc.cross(p))
         b = (vel.cross(q) - vel.cross(p))
         c = (pos.cross(q) - pos.cross(p) - p.cross(q))

@@ -39,6 +39,16 @@ NAN = float("nan")
 INFINITY = float("inf")
 EPSILON = 1e-8
 
+def merge_into(*args, into=None):
+    """Merge iterables into into, maintaining into's sorted-ness."""
+    if into is None:
+        into = []
+    for list_ in args:
+        into.extend(sorted(list_))
+
+    into.sort() # Take advantage of timsort working well with partially sorted lists
+    return into
+
 def Position(position, velocity, acceleration, delta_time):
     """Get a new position given velocity/acceleration and some time in ms."""
     return position + velocity * delta_time + acceleration * (.5 * delta_time ** 2)

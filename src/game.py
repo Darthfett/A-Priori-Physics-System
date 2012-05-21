@@ -162,15 +162,12 @@ class _Game:
             
             # Handle and remove the event
             game_events, real_events = ev()
-            ev_queue.remove(ev)
-            assert game_events == sorted(game_events)
-            assert real_events == sorted(real_events)
-            
+            ev_queue.remove(ev)            
             
             if game_events:
-                self.game_events = list(merge(self.game_events, game_events))
+                merge_into(game_events, into=self.game_events)
             if real_events:
-                self.real_events = list(merge(self.real_events, real_events))
+                merge_into(game_events, into=self.game_events)
         # Remove all invalid events from the event queues.
         # This avoids long-term events from wasting space in the queue.
         self.game_events = [ev for ev in self.game_events if not ev.invalid]
@@ -247,7 +244,7 @@ game = _Game()
 provider = GameProvider(game)
 
 # library-specific modules
-from util import INFINITY, EPSILON
+from util import INFINITY, EPSILON, merge_into
 import event
 import entity
 from event import GameEvent, RealEvent
@@ -274,6 +271,9 @@ def init():
     for ent in entity.Collidables:
         for oth in entity.Collidables:
             if ent is oth: continue
-            intersections.extend(physics.find_pair_intersections(ent, oth))
+            pair_ints = physics.find_pair_intersections(ent, oth)
+            ent.intersections.extend(pair_ints)
+            oth.intersections.extend(pair_ints)
+            intersections.extend(pair_ints)
     intersections.sort()
     game.game_events = list(merge(intersections, game.game_events))

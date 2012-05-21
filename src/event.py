@@ -177,11 +177,26 @@ class _KeyRelease(RealEvent):
     
     def __call__(self):
         """Run all relevant events."""
-        KeyReleaseEvent[self.key]()
-        KeyToggleEvent[self.key](False)
         
-        KeyReleaseEvent(self.key)
-        KeyToggleEvent(False)
+        # Run key-specific key release events
+        game_events, real_events = KeyReleaseEvent[self.key]()
+        
+        # Run key-specific key toggle events
+        g_events, r_events = KeyToggleEvent[self.key](False)
+        game_events.extend(g_events)
+        real_events.extend(r_events)
+        
+        # Run generic key release events
+        g_events, r_events = KeyReleaseEvent(self.key)
+        game_events.extend(g_events)
+        real_events.extend(r_events)
+        
+        # Run generic key toggle events
+        g_events, r_events = KeyToggleEvent(self.key, False)
+        game_events.extend(g_events)
+        real_events.extend(r_events)
+        
+        return game_events, real_events
 
     def __init__(self, key, time):
         self.key = key
