@@ -4,19 +4,19 @@ The controls module maps the player's keyboard keys to their controls.
 classes:
   Quit                          An Exception that is raised when the player quits
                                 the game.
-                                
+
 functions:
   quit                          Quit the game.
   flip_pause_state              Pause/unpause the game.
   reset_player                  Move the player back to starting position, and
                                 reset the player's velocity.
-                                
+
               JSON __doc__
-                                
+
          Keyboard Key Configuration
-         
-Supported Keys 
-In the JSON database, map each entry in the KeyBinding column of Supported Key 
+
+Supported Keys
+In the JSON database, map each entry in the KeyBinding column of Supported Key
 Bindings to a list of keys in the KeyASCII column of Supported Keys.
 
            Supported Key Bindings
@@ -25,19 +25,19 @@ Bindings to a list of keys in the KeyASCII column of Supported Keys.
       ==========    ===========
       quit          Quits the game.
       pause         Pause/Unpauses the game.
-      reset         Resets the position of 
+      reset         Resets the position of
                     the player.
       jetpack_up    Enables your jetpack
                     upward.
-      jetpack_left  
+      jetpack_left
                     Enables your jetpack
                     leftward.
-      jetpack_right 
-                    Enables your jetpack 
+      jetpack_right
+                    Enables your jetpack
                     rightward.
-      
-      
-    
+
+
+
                Supported Keys
 (taken from http://www.pygame.org/docs/ref/key.html)
 =============================================
@@ -191,48 +191,48 @@ import physics
 class Quit(Exception):
     """An Exception that is raised when the player quits."""
     pass
-    
+
 class InvalidKeyError(Exception):
     """Raised when there is an invalid key mapping in the keyboard.json config."""
     pass
 
 # Control functions
-    
+
 def quit():
     """Quit the game."""
     raise Quit
     return [], []
-            
+
 def flip_pause_state():
     """Pause/unpause the game."""
     game.pause()
     return [], []
-            
+
 def reset_player():
     """
     Move the player back to starting position, and reset the player's velocity.
-    
+
     """
     game.current_level.player.position = game.current_level._PlayerPosition
     game.current_level.player.velocity = game.current_level._PlayerVelocity
     game.current_level.player.invalidate_intersections()
     ints = physics.find_intersections(game.current_level.player)
     game.current_level.player.intersections.extend(ints)
-    
+
     return ints, []
-    
+
     game.current_level.reset_player()
 
-    
+
 def init():
-    
+
     # map control names to their functions
     control_to_keypress_control = {
         "quit": quit,
         "pause": flip_pause_state,
         "reset": reset_player
     }
-    
+
     control_to_keytoggle_control = {
         "jetpack_up": game.current_level.player._jetpack_up,
         "jetpack_left": game.current_level.player._jetpack_left,
@@ -245,7 +245,7 @@ def init():
     with open(os.path.join(config_path, "keyboard.json")) as config:
         control_to_keys = json.load(config)
 
-        
+
     # decode controls and associate keyboard keys with the controls
     for control in control_to_keys:
         if control in control_to_keypress_control:

@@ -3,23 +3,23 @@ from util.vector import Vector
 
 class Shape:
     """A list of points that represents an object."""
-    
+
     def offset(self, offset):
         for i in range(len(self.points)):
             self.points[i] = self.points[i] + offset
-    
+
     @property
     def lines(self):
         """
         A list of lines that connect each adjacent point.
-        
+
         If the shape is enclosed, the last point will also be connected to the
         first point.
-        
+
         """
-        
+
         return [Line(self.points[i-1], self.points[i]) for i in range((1-int(self.enclosed)), len(self.points))]
-        
+
     def __repr__(self):
         return 'Shape(' + str(self.points) + ', ' + str(enclosed) + ')'
 

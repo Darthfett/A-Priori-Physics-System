@@ -8,51 +8,51 @@ class Rect:
     def clamp(self, rect):
         if self.left < rect.left:
             self.left = rect.left
-        
+
         if self.right > rect.right:
             self.right = rect.right
-        
+
         if self.top > rect.top:
             self.top = rect.top
-        
+
         if self.bottom < rect.bottom:
             self.bottom = rect.bottom
-        
+
         if self.width > rect.width:
             self.center.x = rect.center[0]
-        
+
         if self.height > rect.height:
             self.center.y = rect.center[1]
-    
+
     def clamped(self, rect):
         clamped = Rect(self)
         if clamped.left < rect.left:
             clamped.left = rect.left
-        
+
         if clamped.right > rect.right:
             clamped.right = rect.right
-        
+
         if clamped.top > rect.top:
             clamped.top = rect.top
-        
+
         if clamped.bottom < rect.bottom:
             clamped.bottom = rect.bottom
-        
+
         if clamped.width > rect.width:
             clamped.center = Vector(rect.center[0], clamped.center.y)
-        
+
         if clamped.height > rect.height:
             clamped.center = Vector(clamped.center.x, rect.center[1])
         return clamped
 
     def offset(self, offset):
         self._bottom_left += offset
-    
+
     def offsetted(self, offset):
         offsetted = Rect(self)
         offsetted._bottom_left += offset
         return offsetted
-    
+
     @property
     def shape(self):
         """Returns a rectangle composed of four lines."""
@@ -60,7 +60,7 @@ class Rect:
                 Vector(self.bottom_right),
                 Vector(self.top_right),
                 Vector(self.top_left)]
-             
+
     @property
     def top(self):
         return self._bottom_left.y + self.height
@@ -196,7 +196,7 @@ class Rect:
 
     def __init__(self, rect=None, **k):
         """Instanciate a rect by copying another, or with a bottom_left and size, or with a shape."""
-        
+
         if rect is not None:
             # Rect is a copy
             if isinstance(rect, pygame.Rect):
@@ -208,14 +208,14 @@ class Rect:
             # New rect
             size = k.get("size")
             bottom_left = k.get("bottom_left")
-            
+
             shape = k.get("shape")
-            
+
             if size is None and bottom_left is None and shape is not None:
                 # Rect is Bound box for Shape
                 raise NotImplementedError("Creating a rect from a shape is not implemented.")
                 self.shape = shape
-                
+
             else:
                 # Rect is bottom_left and size
                 if bottom_left is None:

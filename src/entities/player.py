@@ -15,7 +15,7 @@ import physics
 
 class Player(entity.Blitable, entity.Projectile):
     """The Player class, which is controlled by the physical player through keyboard/mouse events."""
-    
+
     def _jetpack_up(self, on):
         self.velocity = self.velocity
         if on:
@@ -26,7 +26,7 @@ class Player(entity.Blitable, entity.Projectile):
         ints = physics.find_intersections(self)
         self.intersections.extend(ints)
         return ints, []
-    
+
     def _jetpack_left(self, on):
         self.flipped = True
         self.velocity = self.velocity
@@ -38,7 +38,7 @@ class Player(entity.Blitable, entity.Projectile):
         ints = physics.find_intersections(self)
         self.intersections.extend(ints)
         return ints, []
-    
+
     def _jetpack_right(self, on):
         self.flipped = False
         self.velocity = self.velocity
@@ -50,7 +50,7 @@ class Player(entity.Blitable, entity.Projectile):
         ints = physics.find_intersections(self)
         self.intersections.extend(ints)
         return ints, []
-    
+
     def __init__(self, **kwargs):
         """
         Instanciate the Player class.  Required keyword arguments:

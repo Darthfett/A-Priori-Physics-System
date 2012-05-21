@@ -55,7 +55,7 @@ LineRenderables = []
 
 class Entity:
     """Entity objects are things that have a position in the world."""
-    
+
     def position_update(self, old, new):
         """Override to be notified of a position update."""
         pass
@@ -73,7 +73,7 @@ class Entity:
 
 class Shaped(Entity):
     """Shaped objects are things that occupy space."""
-    
+
     @property
     def pos_shape(self):
         shape = Shape(self.shape)
@@ -89,20 +89,20 @@ class Shaped(Entity):
 
 class Collidable(Shaped, Entity):
     """Collidable objects are objects that can be collided with."""
-        
+
     @property
     def velocity(self):
         return Vector()
-    
+
     @property
     def acceleration(self):
         return Vector()
-    
+
     def invalidate_intersections(self):
         for intersection in self.intersections:
             intersection.invalid = True
         self.intersections = [intersection for intersection in self.intersections if not intersection.invalid]
-        
+
     def find_intersections(self, exclude=None):
         return physics.find_intersections(self, exclude=exclude)
 
@@ -117,11 +117,11 @@ class Collidable(Shaped, Entity):
 
 class Movable(Entity):
     """Movable objects are objects with velocity and acceleration."""
-    
+
     @property
     def position(self):
         return util.Position(self._position, self._velocity, self.acceleration, self.provider.game_time - self._valid_time)
-    
+
     @position.setter
     def position(self, position):
         """Updating position inherently invalidates all collisions, but does not take care of doing this."""
@@ -129,21 +129,21 @@ class Movable(Entity):
         self._position = position
         self._valid_time = self.provider.game_time
         super().position_update(old, position)
-        
+
     @property
     def velocity(self):
         return self._velocity + (self.provider.game_time - self._valid_time) * self.acceleration
-    
+
     @velocity.setter
     def velocity(self, velocity):
         """Updating velocity inherently invalidates all collisions, but does not take care of doing this."""
         self.position = self.position
         self._velocity = velocity
-        
+
     @property
     def acceleration(self):
         return self._acceleration
-    
+
     @acceleration.setter
     def acceleration(self, acceleration):
         self._acceleration = acceleration
@@ -152,7 +152,7 @@ class Movable(Entity):
         """
         Instanciate a movable with velocity and acceleration (and then indirectly with position).
         Velocity defaults to (0, 0), and acceleration to Gravity.
-        
+
         """
         self._position = kwargs.get('position') or Vector()
         self._valid_time = kwargs.get('provider').game_time

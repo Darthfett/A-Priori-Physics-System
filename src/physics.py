@@ -30,7 +30,7 @@ functions:
                         Add all intersections between all entities and a
                         specific entity to the event queue, and update their
                         respective intersection lists.
-    
+
 """
 
 import math
@@ -47,7 +47,7 @@ from debug import debug
 
 Intersections = []
 RESTING_THRESHOLD = 200 # ms between next collision (?)
-        
+
 def _resolve_entity(ent, line):
     """Resolves an entity intersection by reflecting its velocity off a line."""
     # Reflect ent's velocity off of line
@@ -60,7 +60,7 @@ def _resolve_entity(ent, line):
 class Intersection(GameEvent):
     """
     Represents an intersection between two objects.
-    
+
     properties:
       time              The game time at which the intersection occurs.
       del_time          The relative time from when the intersection was
@@ -75,14 +75,14 @@ class Intersection(GameEvent):
                         occurred.
       oth               One of the entities between which the intersection
                         occurred.
-    
+
     """
-    
+
     def __call__(self):
         """Handle resolving the intersection."""
-        
+
         ## Collision Validation
-        
+
         if self.invalid:
             # Intersection is invalid, just skip past it
             return [], []
@@ -93,21 +93,21 @@ class Intersection(GameEvent):
             if self.ent in self.oth.resters or self.oth in self.ent.resters:
                 return [], []
         except AttributeError: pass
-        
+
         ## Resting State
-        
+
         # get normal to line (in the opposite direction that ent is striking oth)
         norm = self.line.normal
         if norm * self.ent.velocity > 0:
             # normal is in same direction, reverse normal
             norm = -norm
-        
+
         # Get the magnitude of ent's velocity/acceleration in the direction normal to the line
         norm_vel_mag = -(norm * self.ent.velocity)
         norm_acc_mag = -(norm * self.ent.acceleration)
-        
+
         # Check for resting state
-        
+
         if norm_vel_mag * norm_acc_mag > 0:
             # Possible resting state if velocity and acceleration are both toward the line.
             if (2 * (norm_vel_mag * game.bounciness) / norm_acc_mag) < RESTING_THRESHOLD:
@@ -120,61 +120,61 @@ class Intersection(GameEvent):
                 else:
                     ent = self.ent
                     oth = self.oth
-                
+
                 oth_vel = oth.velocity * norm
                 ent_vel = ent.velocity * norm
                 ent.velocity += (oth_vel - ent_vel) * norm
-                
+
                 oth_acc = oth.acceleration * norm
                 ent_acc = ent.acceleration * norm
                 ent.acceleration += (oth_acc - ent_acc) * norm
-                
+
                 if not hasattr(ent, 'resters'):
                     ent.resters = []
                 if not hasattr(oth, 'resters'):
                     oth.resters = []
-                
+
                 ent.resters.append(oth)
                 oth.resters.append(ent)
-        
+
         # TODO: Does resolving a collision make sense if entering the resting state?
-                
+
         # Valid Collision; handle it
-            
+
         _resolve_entity(self.ent, self.line)
         _resolve_entity(self.oth, self.line)
-        
+
         #game.pause()
-        
+
         # Handled collisions invalidate all intersections dealing with these objects
         # Invalidate all intersections and return all the new ones
         self.ent.invalidate_intersections()
         self.oth.invalidate_intersections()
-        
+
         intersections = find_pair_intersections(self.ent, self.oth)
         self.ent.intersections.extend(intersections)
         self.oth.intersections.extend(intersections)
-        
+
         ent_intersections = find_intersections(self.ent, exclude=self.oth)
         oth_intersections = find_intersections(self.oth, exclude=self.ent)
-        
+
         self.ent.intersections.extend(ent_intersections)
         self.oth.intersections.extend(oth_intersections)
-        
+
         intersections.extend(ent_intersections)
         intersections.extend(oth_intersections)
-        
+
         return sorted(intersections), []
-        
+
     def __eq__(self, oth):
         return hash(self) == hash(oth)
-    
+
     def __hash__(self):
         return hash((self.time, self.del_time, self.pos, self.line, self.ent, self.oth, self.invalid))
-        
+
     def __str__(self):
         return "Intersection(time={time}, del_time={del_time}, pos={pos}, line={line}, ent={ent}, oth={oth}, invalid={invalid})".format(**self.__dict__)
-        
+
     def __repr__(self):
         return "Intersection(time={time}, del_time={del_time}, pos={pos}, line={line}, ent={ent}, oth={oth}, invalid={invalid})".format(**self.__dict__)
 
@@ -192,15 +192,15 @@ def ParabolaLineCollision(pos, vel, acc, line, ent=None, oth=None):
     """
     Get all intersections between a point pos with velocity vel and
     acceleration acc, and a non-moving line line.
-    
+
     Returns intersections with both positive and negative time.
-    
+
     """
     # time of intersection is defined by the equation
     # a*time^2 + b*time + c = 0
-    
+
     p, q = line.p, line.q
-    
+
     if acc == Vector(0, 0):
         if vel == Vector(0, 0):
             return []
@@ -229,39 +229,39 @@ def ParabolaLineCollision(pos, vel, acc, line, ent=None, oth=None):
     if len(roots) == 1:
         # Intersection time in ms
         time = roots[0]
-        
+
         # Intersection position
         relative_position = Position(pos, vel, acc, time)
         return [Intersection(time, relative_position, line, ent=ent, oth=oth)]
-        
+
     # Intersection positions
     relative_positions = [Position(pos, vel, acc, time) for time in roots]
-    
+
     return [Intersection(time, position, line, ent=ent, oth=oth) for time, position in zip(roots, relative_positions)]
 
 def ParabolaLineSegmentCollision(pos, vel, acc, line, ent=None, oth=None):
     """
     Get all intersections between a point pos with velocity vel and
     acceleration acc, and a non-moving line-segment line.
-    
+
     Returns intersections with both positive and negative time.
-    
+
     """
 
     intersections = ParabolaLineCollision(pos, vel, acc, line, ent, oth)
-        
+
     valid = [i for i in intersections if i.pos in i.line]
-    
-            
+
+
     return valid
 
 def _parabola_line_collision_wrapper(args):
     return [i for i in ParabolaLineSegmentCollision(*args) if i.del_time > -util.EPSILON]
-    
+
 def entity_intersections(ent, oth):
     """Get all future intersections between two entities as a sorted list."""
     intersections = []
-    
+
     # Relative velocity and acceleration (v12: velocity of 'ent'(1) relative to 'oth'(2))
     v12 = ent.velocity - oth.velocity
     v21 = -v12
@@ -269,30 +269,30 @@ def entity_intersections(ent, oth):
     a21 = -a12
     args = [(point, v12, a12, line, ent, oth) for point, line in product(ent.pos_shape.points, oth.pos_shape.lines)]
     args += [(point, v21, a21, line, oth, ent) for point, line in product(oth.pos_shape.points, ent.pos_shape.lines)]
-    
+
     return sorted([i for intersections in map(_parabola_line_collision_wrapper, args) for i in intersections])
 
 def find_pair_intersections(ent, oth):
     """
     Find all intersections between two entities, and update the game event
     queue and each entity's intersection list.
-    
+
     """
-    
+
     # Get all intersections between ent and oth
     intersections = entity_intersections(ent, oth)
-    
+
     return intersections
-    
+
     # Entities keep track of their intersections so they can mark them invalid.
     ent.intersections = list(merge(ent.intersections, intersections))
     oth.intersections = list(merge(oth.intersections, intersections))
-    
+
 def find_intersections(ent, exclude = None):
     """
     Find all intersections between all entities and ent, and update the game
     event queue and each entity's intersection list.
-    
+
     """
     intersections = []
     for oth in entity.Collidables:

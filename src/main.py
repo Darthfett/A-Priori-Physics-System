@@ -27,18 +27,18 @@ from game import game as Game
 def main(speed=1, fps=Game.fps, bounciness=Game.bounciness, debug_mode=False, draw_outlines=False):
     """
     Initialize and run the game.
-    
+
     keyword arguments:
       speed=1           Speed multiplier for the game (e.g. speed=2 is twice as
                         fast)
       fps=60            Max FPS limiter (does not affect game speed)
       bounciness=0.9    Bounciness of objects (1: 100% elastic, 0: 0% elastic)
-      debug_mode=False  
+      debug_mode=False
                         Flag to indicate 'debug mode' state
       draw_outlines=False
                         If in debug_mode, draw collision outlines of objects
                         instead of blitting an image
-    
+
     """
 
     debug._DebugMode = debug_mode
@@ -46,10 +46,10 @@ def main(speed=1, fps=Game.fps, bounciness=Game.bounciness, debug_mode=False, dr
     Game.fps = min(max(fps, 10), 120)
     Game.bounciness = min(max(bounciness, 0), 1)
     Game._speed = min(max(speed, .01), 10)
-    
+
     # Set up an SDL environment video parameter, required for pygame.
     os.environ['SDL_VIDEO_CENTERED'] = '1'
-    
+
     pygame.init()
     game.init()
     Game.run()
@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--bounciness', help='Change the bounciness (1 is elastic, 0 is sticky)',
                         dest='bounciness', default=Game.bounciness, type=float)
-    
+
     # Parse arguments to the script
     args = parser.parse_args()
 

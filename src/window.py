@@ -26,7 +26,7 @@ class Window:
     A wrapper to the pygame display, with some additional functionality for
     translating coordinates, clearing the screen, drawing the next frame, and
     centering on the player.
-    
+
     members:
       DEFAULT_WIDTH     The default width of the game window.
       DEFAULT_HEIGHT    The default height of the game window.
@@ -39,9 +39,9 @@ class Window:
       screen            The actual pygame screen onto which everything is
                         drawn.
       size              A Vector that determines the size of the window.
-      
+
     methods:
-      to_pygame_coords  
+      to_pygame_coords
                         Given normal coordinates, translate them into the
                         pygame equivalent.
       to_pyame          Given a blitable object, get the coordinates at which
@@ -53,18 +53,18 @@ class Window:
       clear             Clear the screen with the default background color.
       draw_next_frame   Clear the screen, and draw all objects at their current
                         position.
-    
+
     """
-    
+
     DEFAULT_WIDTH = 640
     DEFAULT_HEIGHT = 480
     FollowPlayer = True
-    
+
     def to_pygame_coords(self, coords):
         """
         Converts coordinates into pygame coordinates
-        
-        
+
+
             +x is right, +y is up, (0, 0) is bottom left of screen into:
             +x is right, +y is down, (0, 0) is top left of screen"""
         coords = Vector(coords)
@@ -74,9 +74,9 @@ class Window:
             # offset coords by centered_obj
             center_point = self.provider.current_level.player.position + Vector(self.provider.current_level.player.image.get_size()) * .5
             coords = coords - center_point
-        
+
         coords = Vector(0, self.size.y) + Vector(coords.x, -coords.y)
-        
+
         return Vector(round(coords.x), round(coords.y))
 
     def to_pygame(self, blitable):
@@ -106,11 +106,11 @@ class Window:
         """Draws an object to the screen."""
         # blit blitable to screen
         self.screen.blit(pygame.transform.flip(blitable.image, blitable.flipped, False), self.to_pygame(blitable))
-    
+
     def clear(self):
         """Clear the screen."""
         self.screen.fill((255, 255, 255))
-        
+
 
     def draw_next_frame(self):
         """Draws all objects."""
@@ -119,13 +119,13 @@ class Window:
         ents = ents.union(entity.LineRenderables)
         for ent in ents:
             ent.draw(self)
-    
+
     def __init__(self, provider, title="Jetpack Man", size=(DEFAULT_WIDTH, DEFAULT_HEIGHT)):
         """Initialize the screen, window size, and title."""
         self.provider = provider
         self.title = title
         self.screen = pygame.display.set_mode(size) # Accept default flags:
-            
+
         # Flags (second argument, multiple separated by | ):
             # pygame.FULLSCREEN    create a fullscreen display
             # pygame.DOUBLEBUF     recommended for HWSURFACE or OPENGL
@@ -133,6 +133,6 @@ class Window:
             # pygame.OPENGL        create an opengl renderable display
             # pygame.RESIZABLE     display window should be sizeable
             # pygame.NOFRAME       display window will have no border or controls
-            
+
         self.size = Vector(self.screen.get_size())
         pygame.display.set_caption(self.title)

@@ -23,10 +23,10 @@ class GameProvider:
     Provider = None
     def __getattribute__(self, name):
         return getattr(GameProvider.Provider, name)
-    
+
     def __setattr__(self, name, value):
         raise AttributeError('cannot set attribute {name}, {type} is immutable.'.format(name=name, type=type(self).__name__))
-    
+
     def __init__(self, provider=None):
         if provider is not None:
             GameProvider.Provider = provider
@@ -34,13 +34,13 @@ class GameProvider:
 class _Game:
     """
     Represents the state of the game.
-    
+
     methods:
       pause             Pause or unpause the game.
       run               Runs the game.
-    
+
     properties:
-      speed             The (positive) speed multiplier for the game.  
+      speed             The (positive) speed multiplier for the game.
       paused            The paused state of the game.
       screen            The Window object for the game.
       fps               The rate at which the game state is being updated.
@@ -50,7 +50,7 @@ class _Game:
       game_time         The current game time.  Used for game events.
       game_events       A sorted list of game events in the order they occur.
       real_events       A sorted list of real events in the order they occur.
-    
+
     """
 
     @property
@@ -98,18 +98,18 @@ class _Game:
     def _next_event(self):
         """
         Get the next game/real event that happens before _next_frame_time.
-        
+
         The caller is responsible for removing events from the proper queue, if
         they are handled.  The returned event is guaranteed to be one of these:
             game.game_events[0], game.game_events
             game.real_events[0], game.real_events
             None, None
-            
+
         Returns a two-tuple, the first element being the next event, the second
         being the queue from which it was in.
 
-        """        
-        # Get the next game event:        
+        """
+        # Get the next game event:
         try:
             game_event = self.game_events[0]
         except IndexError:
@@ -123,19 +123,19 @@ class _Game:
             real_event = RealEvent(INFINITY)
 
         # events are guaranteed to have current or future time.
-        
-        assert game_event.delta_time > -EPSILON        
+
+        assert game_event.delta_time > -EPSILON
         assert real_event.delta_time > -EPSILON
-    
+
         # Find next event.
         # because of pausing, game_event MUST be the second in this list (NAN is not sorted, and not handled for real_events).
         next_event = sorted((real_event, game_event))[0]
-        
+
         assert not math.isnan(next_event.real_time)
-        
+
         if next_event.real_time > self._next_frame_time:
             return None, None
-        
+
         if next_event is game_event:
             return next_event, self.game_events
         else:
@@ -146,8 +146,8 @@ class _Game:
         Update the game state by repeatedly handling game/real events,
         fast-forwarding to the time at which they occur until caught up with
         _next_frame_time.
-        
-        """        
+
+        """
         while self.real_time <= self._next_frame_time:
             ev, ev_queue = self._next_event()
             if ev is None:
@@ -159,11 +159,11 @@ class _Game:
             # Fast forward time to the event time
             self.game_time = ev.game_time
             self.real_time = ev.real_time
-            
+
             # Handle and remove the event
             game_events, real_events = ev()
-            ev_queue.remove(ev)            
-            
+            ev_queue.remove(ev)
+
             if game_events:
                 merge_into(game_events, into=self.game_events)
             if real_events:
@@ -172,7 +172,7 @@ class _Game:
         # This avoids long-term events from wasting space in the queue.
         self.game_events = [ev for ev in self.game_events if not ev.invalid]
         self.real_events = [ev for ev in self.real_events if not ev.invalid]
-        
+
         # Post-conditions
         ev, ev_queue = self._next_event()
         assert ev is None
@@ -182,38 +182,38 @@ class _Game:
     def run(self):
         """
         Start the main event loop.
-        
+
         This handles delegation of tasks to check for user-input, update the
         game state, and draw the game to the screen.
-        
+
         """
 
         delta_frame_time = 1000 / self.fps
-        
+
         # avoid startup-flicker.
         self.screen.clear()
         pygame.display.flip()
-        
+
         self._init_time = pygame.time.get_ticks()
         try:
             while True:
                 # Update the time and ignore initialization time.
                 self._next_frame_time = pygame.time.get_ticks() - self._init_time
-                
+
                 key_events = event.check_for_new_events(self._next_frame_time)
-                
+
                 self.real_events = list(merge(self.real_events, key_events))
-                
+
                 time_since_last_frame = (self._next_frame_time - self.real_time)
                 if time_since_last_frame >= delta_frame_time:
                     # Catch the simulation up to the current time by handling
                     # events in-order, and then draw the next frame.
                     self._calc_next_frame()
                     assert self.real_time == self._next_frame_time
-                    
+
                     self.screen.draw_next_frame()
                     pygame.display.flip()
-                    
+
                 pygame.time.delay(1)  # Sleep 1 ms
 
         except controls.Quit:
@@ -229,15 +229,15 @@ class _Game:
         self.fps = 60
         self.bounciness = 0.9
         self.current_level = None
-        
+
         self._next_frame_time = 0
         self._init_time = 0
         self.real_time = 0
         self.game_time = 0
-        
+
         self.game_events = []
         self.real_events = []
-        
+
         self._speed = 1
         self._real_speed = None
 
@@ -263,12 +263,12 @@ def init():
 
     # Load First Level
     game.current_level = Level(provider, "level_1.todo", resources_path)
-    
+
     # Init Controls
     controls.init()
-    
+
     intersections = []
-    
+
     for ent in entity.Collidables:
         for oth in entity.Collidables:
             if ent is oth: continue

@@ -29,18 +29,18 @@ class GameEvent:
     @property
     def game_time(self):
         return self.time
-    
+
     @property
     def real_time(self):
         try:
             return self._real_time
         except AttributeError:
             return game.real_time + ZeroDivide(self.time - game.game_time, game._speed)
-            
+
     @property
     def delta_time(self):
         return self.time - game.game_time
-        
+
     def __call__(self):
         self._real_time = game.real_time
 
@@ -59,21 +59,21 @@ class RealEvent:
     @property
     def real_time(self):
         return self.time
-    
+
     @property
     def game_time(self):
         try:
             return self._game_time
         except AttributeError:
             return game.game_time + (self.time - game.real_time) * game._speed
-            
+
     @property
     def delta_time(self):
         return self.time - game.real_time
-    
+
     def __repr__(self):
         return "{class_}(time={time}, delta_time={delta_time}, game_time={game_time})".format(class_=type(self).__name__, time=self.time, delta_time=self.delta_time, game_time=self.game_time)
-        
+
     def __call__(self):
         self._game_time = game.game_time
 
@@ -93,7 +93,7 @@ class Event:
      * Remove a handler with the -= operator or removeHandler method.
      * Fire an event by calling it, or calling the fire method.
      * Clear all handlers with the clearObjectHandlers method."""
-    
+
     def __iadd__(self, handler):
         """Add an event handler.  The handler must be callable."""
         if not callable(handler):
@@ -108,22 +108,20 @@ class Event:
     def __call__(self, *args, **kwargs):
         for handler in self._handlers:
             handler(*args, **kwargs)
-        
+
     register = __iadd__
     removeHandler = __isub__
     fire = __call__
 
     def __init__(self):
         self._handlers = []
-        
-
 
 class EventProducerEvent(Event):
-    """    
+    """
     Objects registered to a EventProducerEvent object must return two lists:
     new game events, and new real events created by handling the event.
     """
-    
+
     def __call__(self, *args, **kwargs):
         game_events, real_events = [], []
         for handler in self._handlers:
@@ -131,36 +129,36 @@ class EventProducerEvent(Event):
             game_events.extend(g_events)
             real_events.extend(r_events)
         return game_events, real_events
-        
+
     fire = __call__
-        
+
     def __init__(self):
         self.__events = {}
         super().__init__()
-        
+
 class _KeyEvent(EventProducerEvent):
     """
     A KeyEvent object can be directly registered to for any key (will be passed as first parameter),
     or a specific key can be registered to, which will not pass the key as a parameter.
-    
+
     KeyToggleEvents are a specific instance of this object, and will also pass
     a True/False value signifying whether it was a Press (True) or Release (False)
     event.
     """
-    
+
     def __getitem__(self, key):
         """Get Event for the specified key."""
         if key not in self.__events:
             # None exist, create new one
             self.__events[key] = EventProducerEvent()
-        
+
         return self.__events[key]
-        
+
     def __init__(self):
         self.__events = {}
         super().__init__()
-        
-        
+
+
 # Information about these in the module docstring.
 KeyPressEvent = _KeyEvent()
 KeyReleaseEvent = _KeyEvent()
@@ -170,30 +168,30 @@ class _KeyPress(RealEvent):
     """
     Event used to indicate a key was pressed.  Key Press/Release events are automatically
     generated when CurrentState does not match the next key state.
-    
+
     """
-    
+
     def __call__(self):
         """Run all relevant events."""
-        
+
         # Run key-specific key release events
         game_events, real_events = KeyPressEvent[self.key]()
-        
+
         # Run key-specific key toggle events
         g_events, r_events = KeyToggleEvent[self.key](True)
         game_events.extend(g_events)
         real_events.extend(r_events)
-        
+
         # Run generic key release events
         g_events, r_events = KeyPressEvent(self.key)
         game_events.extend(g_events)
         real_events.extend(r_events)
-        
+
         # Run generic key toggle events
         g_events, r_events = KeyToggleEvent(self.key, True)
         game_events.extend(g_events)
         real_events.extend(r_events)
-        
+
         return game_events, real_events
 
     def __init__(self, key, time):
@@ -206,30 +204,30 @@ class _KeyRelease(RealEvent):
     """
     Event used to indicate a key was released.  Key Press/Release events are automatically
     generated when CurrentState does not match the next key state.
-    
+
     """
-    
+
     def __call__(self):
         """Run all relevant events."""
-        
+
         # Run key-specific key release events
         game_events, real_events = KeyReleaseEvent[self.key]()
-        
+
         # Run key-specific key toggle events
         g_events, r_events = KeyToggleEvent[self.key](False)
         game_events.extend(g_events)
         real_events.extend(r_events)
-        
+
         # Run generic key release events
         g_events, r_events = KeyReleaseEvent(self.key)
         game_events.extend(g_events)
         real_events.extend(r_events)
-        
+
         # Run generic key toggle events
         g_events, r_events = KeyToggleEvent(self.key, False)
         game_events.extend(g_events)
         real_events.extend(r_events)
-        
+
         return game_events, real_events
 
     def __init__(self, key, time):
@@ -247,12 +245,12 @@ def check_for_new_events(current_time):
     """
     Run through all events currently in the pygame event queue and put them
     into the real event queue.
-    
+
     """
     pygame.event.pump()
 
     # Handle key press/release events
-    global _CurrentState    
+    global _CurrentState
     next_state = pygame.key.get_pressed()
     key_events = []
     for key, was_pressed in enumerate(_CurrentState):
@@ -261,7 +259,7 @@ def check_for_new_events(current_time):
 
         if was_pressed and not next_state[key]:
             key_events.append(_KeyRelease(key, current_time))
-    
+
     _CurrentState = next_state
 
     return key_events

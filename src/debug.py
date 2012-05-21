@@ -12,14 +12,14 @@ _DebugMode = False
 class _Debug:
     """
     Represents the debugging state of the game.
-    
+
     properties:
       DrawOutlines              If in a debugging state, returns whether the game
                                 should draw outlines of Drawables instead of
                                 blitting them to the screen.
-    
+
     """
-    
+
     def write(self, text, file=None):
         if not self:
             return
@@ -35,7 +35,7 @@ class _Debug:
             if self._file is None:
                 self._file = open('dbg.txt', 'w')
             self._file.write(text)
-    
+
     def __bool__(self):
         return _DebugMode
 

@@ -12,7 +12,7 @@ class Level:
 
     _PlayerPosition = Vector(10, 20)
     _PlayerVelocity = Vector(0, 0)
-    
+
     def level_1(self):
         vertices = []
         vertices.extend([Vector(0, 0),
@@ -27,7 +27,7 @@ class Level:
                          Vector(150, 1000),
                          Vector(500, 1000),
                          Vector(1000, 950),
-                        
+
                          Vector(1000, 1150),
                          Vector(0, 1150),
                          Vector(0, 500),
@@ -43,7 +43,7 @@ class Level:
         self.provider = provider
         width, height = 640, 480
         self.boundary = Rect(size=(width, height))
-        
+
         image = pygame.image.load(os.path.join(resources_path, "guy2.PNG"))
         shape = Rect(image.get_rect()).shape
         # shape = generate_circle(8, 50)

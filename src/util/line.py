@@ -27,25 +27,25 @@ class Line:
     def length(self):
         """The length of the line segment, i.e. the distance between p and q."""
         return self.direction.length
-    
+
     @property
     def normal(self):
         """The normal of the line."""
         return ~self.direction.normalized()
-    
+
     def __hash__(self):
         return hash((self.p, self.q))
-        
+
     def __eq__(self, other):
         if not isinstance(other, collections.Iterable):
             return False
         else:
             return self.p == other[0] and self.q == other[1] and len(other) == 2
-        
+
     def __add__(self, other):
         """Get a new line by offsetting the line toward other."""
         return Line(self.p + other, self.q + other)
-        
+
     def __sub__(self, other):
         """Get a new line by offsetting the line away from other."""
         return Line(self.p - other, self.q - other)
@@ -60,10 +60,10 @@ class Line:
         elif index == 1:
             return self.q
         raise IndexError
-    
+
     def __len__(self):
         return 2
-    
+
     def __iter__(self):
         yield self.p
         yield self.q

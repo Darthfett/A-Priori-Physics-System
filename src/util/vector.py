@@ -7,18 +7,18 @@ import debug
 class Vector:
     """
     Represents a 2d value with magnitude and direction
-    
+
     properties:
       x                 The length of the vector in the x-direction
       y                 The length of the vector in the y-direction
       length            The length of the vector
       sqr_length        The square of the length of the vector (faster
                         calculation than than vec.length ** 2)
-    
+
     methods:
       reflected         Returns a vector reflected across the specified normal
       normalized        Returns a vector in the same direction with length 1
-      cross             Returns the length of the cross-product between this 
+      cross             Returns the length of the cross-product between this
                         vector and the specified vector
 
     """
@@ -34,7 +34,7 @@ class Vector:
     def sqr_length(self):
         """The squared length of the vector."""
         return self.x * self.x + self.y * self.y
-        
+
     def reflected(self, normal):
         """Get the vector that is the reflection of self across normal."""
         return self - (2 * (normal * self)) * normal
@@ -47,9 +47,9 @@ class Vector:
     def cross(self, vec):
         """
         Get the length of the cross-product between self and other.
-        
+
         Equivalent to double the area of the triangle formed by the two vectors.
-        
+
         """
         if isinstance(vec, collections.Iterable):
             if len(vec) != 2:
@@ -60,11 +60,11 @@ class Vector:
                 raise TypeError("cannot cross-product a {type} with a {type_vec} 'vec' with elements that do not support integer multiplication.".format(type=type(self).__name__, type_vec=type(vec).__name__))
         else:
             raise TypeError("cannot cross-product between {type} and {type_vec}".format(type=type(self).__name__, type_vec=type(vec).__name__))
-    
+
     def __setattr__(self, name, value):
         """Vectors are immutable."""
         raise AttributeError('cannot set attribute {name}, {type} is immutable.'.format(name=name, type=type(self).__name__))
-        
+
     def __hash__(self):
         """Hash the vector."""
         return hash((self.x, self.y))
@@ -97,7 +97,7 @@ class Vector:
             return NotImplemented
 
     def __mul__(self, other):
-        """Perform dot/scalar product with other.""" 
+        """Perform dot/scalar product with other."""
         if isinstance(other, collections.Iterable):
             if len(other) != 2:
                 raise TypeError("cannot multiply a {type} with a {type_oth} 'other', where len(other) != 2.".format(type=type(self).__name__, type_oth=type(other).__name__))
@@ -125,7 +125,7 @@ class Vector:
                 return Vector(self.x / other, self.y / other)
             except TypeError:
                 return NotImplemented
-        
+
         def __rsub__(self, vec):
             """Perform element-wise subtraction with vec."""
             if isinstance(other, collections.Iterable) and len(other) == 2:
@@ -135,7 +135,7 @@ class Vector:
                     return NotImplemented
             else:
                 return NotImplemented
-    
+
     def __rtruediv__(self, other):
         """Perform scalar division with scalar."""
         if isinstance(other, collections.Iterable):
@@ -150,7 +150,7 @@ class Vector:
                 return Vector(other / self.x, other / self.y)
             except TypeError:
                 return NotImplemented
-    
+
     __radd__ = __iadd__ = __add__
     __rmul__ = __imul__ = __mul__
     __isub__ = __sub__
@@ -168,15 +168,15 @@ class Vector:
     def __invert__(self):
         """
         Get the inverted/perpendicular vector, rotated counter-clockwise.
-        
+
         >>> ~Vector(3, 4) == Vector(-4, 3)
-        
+
         """
         return Vector(-self.y, self.x)
 
     def __len__(self):
         return 2
-    
+
     def __str__(self):
         return "Vector({0}, {1})".format(format(self.x, '.2f'), format(self.y, '.2f'))
 
@@ -190,14 +190,14 @@ class Vector:
         elif index == 1:
             return self.y
         raise IndexError
-    
+
     def __iter__(self):
         yield self.x
         yield self.y
 
     def __bool__(self):
         return bool(self.x or self.y)
-        
+
     def __init__(self, x=None, y=None):
         """Initialize a vector with an iterable of values, or two values, or defaults to (0,0)."""
         if y is None:

@@ -56,9 +56,9 @@ def Position(position, velocity, acceleration, delta_time):
 def FloatEqual(a, b):
     """Returns if difference between a and b is below EPSILON."""
     #return -EPSILON < a-b < EPSILON
-    
-    
-    
+
+
+
     largest = max(abs(a), abs(b))
     diff = EPSILON * largest
     if largest < EPSILON:
@@ -93,31 +93,31 @@ class EquationIdentity(ValueError):
 class InequalityError(ValueError):
     """An InequalityError occurs when 'find_roots' is called with an inequality, e.g. 1 = 0."""
     pass
-    
+
 def find_roots(a, b, c):
     """Find the roots to a quadratic equation, i.e. find x | ax^2 + bx + c = 0."""
-    
+
     if a == 0:
         if b == 0:
             if c == 0:
-            
+
                 # 0x^2 + 0x + 0 = 0
                 #             0 = 0
                 raise EquationIdentity("Cannot find roots for equation 0 = 0")
                 return []
             else:
-            
+
                 # 0x^2 + 0x + c = 0, c != 0
                 #             c = 0, c != 0
                 # Undefined root
                 raise InequalityError("Cannot find roots for equation {0} = 0.".format(c))
                 return []
-                
+
         # 0x^2 + bx + c = 0
         #        bx     = -c
         #         x     = -c / b
         return [-c / b]
-    
+
     # discriminant reveals information about how many solutions there are
     tmp = not (c == 0)
     if tmp:
@@ -126,7 +126,7 @@ def find_roots(a, b, c):
         if b == 0:
             return [0]
         discriminant = abs(b)
-    
+
     if discriminant < 0:
         # No real solution
         return []
