@@ -21,7 +21,7 @@ import functools
 import pygame
 
 from game import game
-from util import INFINITY, ZeroDivide, EPSILON
+from util import INFINITY, ZeroDivide, EPSILON, zip_extend
 
 @functools.total_ordering
 class GameEvent:
@@ -214,19 +214,13 @@ class _KeyRelease(RealEvent):
         game_events, real_events = KeyReleaseEvent[self.key]()
 
         # Run key-specific key toggle events
-        g_events, r_events = KeyToggleEvent[self.key](False)
-        game_events.extend(g_events)
-        real_events.extend(r_events)
+        zip_extend(game_events, real_events, from_lists=KeyToggleEvent[self.key](False))
 
         # Run generic key release events
-        g_events, r_events = KeyReleaseEvent(self.key)
-        game_events.extend(g_events)
-        real_events.extend(r_events)
+        zip_extend(game_events, real_events, from_lists=KeyReleaseEvent(self.key))
 
         # Run generic key toggle events
-        g_events, r_events = KeyToggleEvent(self.key, False)
-        game_events.extend(g_events)
-        real_events.extend(r_events)
+        zip_extend(game_events, real_events, from_lists=KeyToggleEvent(self.key, False))
 
         return game_events, real_events
 

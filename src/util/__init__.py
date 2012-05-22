@@ -39,6 +39,13 @@ NAN = float("nan")
 INFINITY = float("inf")
 EPSILON = 1e-8
 
+
+
+def zip_extend(*into_lists, from_lists):
+    for into_list, from_list in zip(into_lists, from_lists):
+        into_list.extend(from_list)
+
+
 def merge_into(*args, into=None):
     """Merge iterables into into, maintaining into's sorted-ness."""
     if into is None:
