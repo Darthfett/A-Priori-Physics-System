@@ -38,7 +38,6 @@ import pygame
 
 import util
 from util import Vector, Shape, Position
-from game import game
 import physics
 from debug import debug
 

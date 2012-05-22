@@ -42,20 +42,11 @@ import util
 from util import Vector, Position, FloatEqual, EPSILON
 from event import GameEvent
 import entity
-from game import game
+import game
 from debug import debug
 
 Intersections = []
 RESTING_THRESHOLD = 200 # ms between next collision (?)
-
-def _resolve_entity(ent, line):
-    """Resolves an entity intersection by reflecting its velocity off a line."""
-    # Reflect ent's velocity off of line
-    new_vel = ent.velocity.reflected(line.normal) * game.bounciness
-    try:
-        ent.velocity = new_vel
-    except AttributeError:
-        pass
 
 class Intersection(GameEvent):
     """
@@ -75,32 +66,43 @@ class Intersection(GameEvent):
 
     """
 
+    provider = game.provider
+
     @property
     def line(self):
         if hasattr(self, '_line'):
-            if self._line_game_time == game.game_time:
+            if self._line_game_time == self.provider.game_time:
                 return self._line
         self._line = self.oth.pos_shape.lines[self.line_index]
-        self._line_game_time = game.game_time
+        self._line_game_time = self.provider.game_time
         return self._line
 
     @property
     def point(self):
         if hasattr(self, '_point'):
-            if self._point_game_time == game.game_time:
+            if self._point_game_time == self.provider.game_time:
                 return self._point
         self._point = self.ent.pos_shape.points[self.point_index]
-        self._point_game_time = game.game_time
+        self._point_game_time = self.provider.game_time
         return self._point
 
     @property
     def pos(self):
         if hasattr(self, '_pos'):
-            if self._pos_game_time == game.game_time:
+            if self._pos_game_time == self.provider.game_time:
                 return self._pos
-        self._pos = Position(self.ent.pos_shape.points[self.point_index], self.ent.velocity - self.oth.velocity, self.ent.acceleration - self.oth.acceleration, self.time - game.game_time)
-        self._pos_game_time = game.game_time
+        self._pos = Position(self.ent.pos_shape.points[self.point_index], self.ent.velocity - self.oth.velocity, self.ent.acceleration - self.oth.acceleration, self.time - self.provider.game_time)
+        self._pos_game_time = self.provider.game_time
         return self._pos
+
+    def _resolve_entity(self, ent, line):
+        """Resolves an entity intersection by reflecting its velocity off a line."""
+        # Reflect ent's velocity off of line
+        new_vel = ent.velocity.reflected(line.normal) * self.provider.bounciness
+        try:
+            ent.velocity = new_vel
+        except AttributeError:
+            pass
 
     def __call__(self):
         """Handle resolving the intersection."""
@@ -134,7 +136,7 @@ class Intersection(GameEvent):
 
         if norm_vel_mag * norm_acc_mag > 0:
             # Possible resting state if velocity and acceleration are both toward the line.
-            if (2 * (norm_vel_mag * game.bounciness) / norm_acc_mag) < RESTING_THRESHOLD:
+            if (2 * (norm_vel_mag * self.provider.bounciness) / norm_acc_mag) < RESTING_THRESHOLD:
                 # Coming to rest due to small next-collision time
                 # acc and vel have same direction relative to line (both toward line)
                 # Get relative velocity in normal direction
@@ -165,10 +167,8 @@ class Intersection(GameEvent):
 
         # Valid Collision; handle it
 
-        _resolve_entity(self.ent, self.line)
-        _resolve_entity(self.oth, self.line)
-
-        #game.pause()
+        self._resolve_entity(self.ent, self.line)
+        self._resolve_entity(self.oth, self.line)
 
         # Handled collisions invalidate all intersections dealing with these objects
         # Invalidate all intersections and return all the new ones
@@ -208,7 +208,7 @@ class Intersection(GameEvent):
             self.time = time
         else:
             self.del_time = time
-            self.time = time + game.game_time
+            self.time = time + self.provider.game_time
         self.point_index, self.line_index, self.invalid = point_index, line_index, invalid
         self.ent, self.oth = ent, oth
 

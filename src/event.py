@@ -20,11 +20,13 @@ import functools
 
 import pygame
 
-from game import game
+import game
 from util import INFINITY, ZeroDivide, EPSILON, zip_extend
 
 @functools.total_ordering
 class GameEvent:
+
+    provider = game.provider
 
     @property
     def game_time(self):
@@ -35,14 +37,14 @@ class GameEvent:
         try:
             return self._real_time
         except AttributeError:
-            return game.real_time + ZeroDivide(self.time - game.game_time, game._speed)
+            return self.provider.real_time + ZeroDivide(self.time - self.provider.game_time, self.provider._speed)
 
     @property
     def delta_time(self):
-        return self.time - game.game_time
+        return self.time - self.provider.game_time
 
     def __call__(self):
-        self._real_time = game.real_time
+        self._real_time = self.provider.real_time
 
     def __lt__(self, other):
         return self.time < other.game_time
@@ -56,6 +58,8 @@ class GameEvent:
 @functools.total_ordering
 class RealEvent:
 
+    provider = game.provider
+
     @property
     def real_time(self):
         return self.time
@@ -65,17 +69,17 @@ class RealEvent:
         try:
             return self._game_time
         except AttributeError:
-            return game.game_time + (self.time - game.real_time) * game._speed
+            return self.provider.game_time + (self.time - self.provider.real_time) * self.provider._speed
 
     @property
     def delta_time(self):
-        return self.time - game.real_time
+        return self.time - self.provider.real_time
 
     def __repr__(self):
         return "{class_}(time={time}, delta_time={delta_time}, game_time={game_time})".format(class_=type(self).__name__, time=self.time, delta_time=self.delta_time, game_time=self.game_time)
 
     def __call__(self):
-        self._game_time = game.game_time
+        self._game_time = self.provider.game_time
 
     def __lt__(self, other):
         return self.time < other.real_time
