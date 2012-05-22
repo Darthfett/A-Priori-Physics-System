@@ -79,6 +79,7 @@ class Shaped(Entity):
             del self._pos_shape
         except AttributeError:
             pass
+        super().position_update(old, new)
 
     @property
     def pos_shape(self):
