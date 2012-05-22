@@ -63,20 +63,44 @@ class Intersection(GameEvent):
 
     properties:
       time              The game time at which the intersection occurs.
-      del_time          The relative time from when the intersection was
-                        calculated.
-      pos               Relative to the non-moving 'line', this is where the
-                        intersection occurs.
-      line              The line onto which the entities collided.  This is
-                        offset by the owning entity's position at the time of
-                        the intersection's calculation.
-      invalid           Whether this intersection is no longer valid.
+      point_index       Index of the point of ent which is colliding with oth.
+      line_index        Index of the line of oth which is colliding with ent.
       ent               One of the entities between which the intersection
                         occurred.
       oth               One of the entities between which the intersection
                         occurred.
+      del_time          The relative time from when the intersection was
+                        calculated.
+      invalid           Whether this intersection is no longer valid.
 
     """
+
+    @property
+    def line(self):
+        if hasattr(self, '_line'):
+            if self._line_game_time == game.game_time:
+                return self._line
+        self._line = self.oth.pos_shape.lines[self.line_index]
+        self._line_game_time = game.game_time
+        return self._line
+
+    @property
+    def point(self):
+        if hasattr(self, '_point'):
+            if self._point_game_time == game.game_time:
+                return self._point
+        self._point = self.ent.pos_shape.points[self.point_index]
+        self._point_game_time = game.game_time
+        return self._point
+
+    @property
+    def pos(self):
+        if hasattr(self, '_pos'):
+            if self._pos_game_time == game.game_time:
+                return self._pos
+        self._pos = Position(self.ent.pos_shape.points[self.point_index], self.ent.velocity - self.oth.velocity, self.ent.acceleration - self.oth.acceleration, self.time - game.game_time)
+        self._pos_game_time = game.game_time
+        return self._pos
 
     def __call__(self):
         """Handle resolving the intersection."""
@@ -164,31 +188,31 @@ class Intersection(GameEvent):
         intersections.extend(ent_intersections)
         intersections.extend(oth_intersections)
 
-        return sorted(intersections), []
+        return intersections, []
 
     def __eq__(self, oth):
         return hash(self) == hash(oth)
 
     def __hash__(self):
-        return hash((self.time, self.del_time, self.pos, self.line, self.ent, self.oth, self.invalid))
+        return hash((self.time, self.del_time, self.point_index, self.line_index, self.ent, self.oth, self.invalid))
 
     def __str__(self):
-        return "Intersection(time={time}, del_time={del_time}, pos={pos}, line={line}, ent={ent}, oth={oth}, invalid={invalid})".format(**self.__dict__)
+        return "Intersection(time={time}, del_time={del_time}, point_index={point_index}, line_index={line_index}, ent={ent}, oth={oth}, invalid={invalid})".format(**self.__dict__)
 
     def __repr__(self):
-        return "Intersection(time={time}, del_time={del_time}, pos={pos}, line={line}, ent={ent}, oth={oth}, invalid={invalid})".format(**self.__dict__)
+        return "Intersection(time={time}, del_time={del_time}, point_index={point_index}, line_index={line_index}, ent={ent}, oth={oth}, invalid={invalid})".format(**self.__dict__)
 
-    def __init__(self, time=util.INFINITY, pos=None, line=None, ent=None, oth=None, del_time=None, invalid=False):
+    def __init__(self, time=util.INFINITY, point_index=None, line_index=None, ent=None, oth=None, del_time=None, invalid=False):
         if del_time is not None:
             self.del_time = del_time
             self.time = time
         else:
             self.del_time = time
             self.time = time + game.game_time
-        self.pos, self.line, self.invalid = pos, line, invalid
+        self.point_index, self.line_index, self.invalid = point_index, line_index, invalid
         self.ent, self.oth = ent, oth
 
-def ParabolaLineCollision(pos, vel, acc, line, ent=None, oth=None):
+def ParabolaLineCollision(pos_index, vel, acc, line_index, ent, oth):
     """
     Get all intersections between a point pos with velocity vel and
     acceleration acc, and a non-moving line line.
@@ -196,6 +220,8 @@ def ParabolaLineCollision(pos, vel, acc, line, ent=None, oth=None):
     Returns intersections with both positive and negative time.
 
     """
+    pos = ent.pos_shape.points[pos_index]
+    line = oth.pos_shape.lines[line_index]
     # time of intersection is defined by the equation
     # a*time^2 + b*time + c = 0
 
@@ -224,22 +250,9 @@ def ParabolaLineCollision(pos, vel, acc, line, ent=None, oth=None):
         except util.EquationIdentity:
             roots = [0]
 
-    if len(roots) == 0:
-        return []
-    if len(roots) == 1:
-        # Intersection time in ms
-        time = roots[0]
+    return [Intersection(time, pos_index, line_index, ent=ent, oth=oth) for time in roots]
 
-        # Intersection position
-        relative_position = Position(pos, vel, acc, time)
-        return [Intersection(time, relative_position, line, ent=ent, oth=oth)]
-
-    # Intersection positions
-    relative_positions = [Position(pos, vel, acc, time) for time in roots]
-
-    return [Intersection(time, position, line, ent=ent, oth=oth) for time, position in zip(roots, relative_positions)]
-
-def ParabolaLineSegmentCollision(pos, vel, acc, line, ent=None, oth=None):
+def ParabolaLineSegmentCollision(pos_index, vel, acc, line_index, ent, oth):
     """
     Get all intersections between a point pos with velocity vel and
     acceleration acc, and a non-moving line-segment line.
@@ -248,7 +261,7 @@ def ParabolaLineSegmentCollision(pos, vel, acc, line, ent=None, oth=None):
 
     """
 
-    intersections = ParabolaLineCollision(pos, vel, acc, line, ent, oth)
+    intersections = ParabolaLineCollision(pos_index, vel, acc, line_index, ent, oth)
 
     valid = [i for i in intersections if i.pos in i.line]
 
@@ -267,10 +280,10 @@ def entity_intersections(ent, oth):
     v21 = -v12
     a12 = ent.acceleration - oth.acceleration
     a21 = -a12
-    args = [(point, v12, a12, line, ent, oth) for point, line in product(ent.pos_shape.points, oth.pos_shape.lines)]
-    args += [(point, v21, a21, line, oth, ent) for point, line in product(oth.pos_shape.points, ent.pos_shape.lines)]
+    args = [(point_index, v12, a12, line_index, ent, oth) for point_index, line_index in product(range(len(ent.pos_shape.points)), range(len(oth.pos_shape.lines)))]
+    args += [(point_index, v21, a21, line_index, oth, ent) for point_index, line_index in product(range(len(oth.pos_shape.points)), range(len(ent.pos_shape.lines)))]
 
-    return sorted([i for intersections in map(_parabola_line_collision_wrapper, args) for i in intersections])
+    return [i for intersections in map(_parabola_line_collision_wrapper, args) for i in intersections]
 
 def find_pair_intersections(ent, oth):
     """
@@ -283,10 +296,6 @@ def find_pair_intersections(ent, oth):
     intersections = entity_intersections(ent, oth)
 
     return intersections
-
-    # Entities keep track of their intersections so they can mark them invalid.
-    ent.intersections = list(merge(ent.intersections, intersections))
-    oth.intersections = list(merge(oth.intersections, intersections))
 
 def find_intersections(ent, exclude = None):
     """

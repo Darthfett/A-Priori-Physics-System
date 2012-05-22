@@ -74,11 +74,22 @@ class Entity:
 class Shaped(Entity):
     """Shaped objects are things that occupy space."""
 
+    def position_update(self, old, new):
+        try:
+            del self._pos_shape
+        except AttributeError:
+            pass
+
     @property
     def pos_shape(self):
-        shape = Shape(self.shape)
-        shape.offset(self.position)
-        return shape
+        if hasattr(self, '_pos_shape'):
+            if self.provider.game_time == self._pos_shape_time:
+                return self._pos_shape
+        self._pos_shape = Shape(self.shape)
+        self._pos_shape.offset(self.position)
+        self._pos_shape_time = self.provider.game_time
+
+        return self._pos_shape
 
     def __init__(self, shape, enclosed=True, **kwargs):
         if isinstance(shape, Shape):
