@@ -14,7 +14,7 @@ functions:
 # standard modules
 import os
 import math
-from heapq import merge
+import heapq
 
 # 3rd party modules
 import pygame
@@ -129,7 +129,7 @@ class _Game:
 
         # Find next event.
         # because of pausing, game_event MUST be the second in this list (NAN is not sorted, and not handled for real_events).
-        next_event = sorted((real_event, game_event))[0]
+        next_event = min((real_event, game_event))
 
         assert not math.isnan(next_event.real_time)
 
@@ -161,17 +161,19 @@ class _Game:
             self.real_time = ev.real_time
 
             # Handle and remove the event
-            game_events, real_events = ev()
-            ev_queue.remove(ev)
+            heapq.heappop(ev_queue)
+            g_events, r_events = ev()
+            if g_events or r_events:
+                zip_extend(self.game_events, self.real_events, from_lists=[g_events, r_events])
+                heapq.heapify(self.game_events)
+                heapq.heapify(self.real_events)
 
-            if game_events:
-                merge_into(game_events, into=self.game_events)
-            if real_events:
-                merge_into(game_events, into=self.game_events)
         # Remove all invalid events from the event queues.
         # This avoids long-term events from wasting space in the queue.
         self.game_events = [ev for ev in self.game_events if not ev.invalid]
         self.real_events = [ev for ev in self.real_events if not ev.invalid]
+        heapq.heapify(self.game_events)
+        heapq.heapify(self.real_events)
 
         # Post-conditions
         ev, ev_queue = self._next_event()
@@ -201,8 +203,8 @@ class _Game:
                 self._next_frame_time = pygame.time.get_ticks() - self._init_time
 
                 key_events = event.check_for_new_events(self._next_frame_time)
-
-                self.real_events = list(merge(self.real_events, key_events))
+                self.real_events.extend(key_events)
+                heapq.heapify(self.real_events)
 
                 time_since_last_frame = (self._next_frame_time - self.real_time)
                 if time_since_last_frame >= delta_frame_time:
@@ -245,7 +247,7 @@ game = _Game()
 provider = GameProvider(game)
 
 # library-specific modules
-from util import INFINITY, EPSILON, merge_into
+from util import INFINITY, EPSILON, zip_extend
 import event
 import entity
 from event import GameEvent, RealEvent
@@ -277,4 +279,5 @@ def init():
             oth.intersections.extend(pair_ints)
             intersections.extend(pair_ints)
     intersections.sort()
-    game.game_events = list(merge(intersections, game.game_events))
+    game.game_events.extend(intersections)
+    heapq.heapify(game.game_events)
