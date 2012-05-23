@@ -48,6 +48,33 @@ from debug import debug
 Intersections = []
 RESTING_THRESHOLD = 200 # ms between next collision (?)
 
+def check_resting_state(ent, oth, line_index, normal, bounciness):
+
+    # Resting state should be entered if relative acceleration is toward the line (opposite the normal)
+
+    rel_vel = ent.velocity - oth.velocity
+    rel_acc = ent.acceleration - oth.acceleration
+
+    # magnitude of relative velocity/acceleration in the direction of the normal vector
+    rel_vel_norm = rel_vel * normal
+    rel_acc_norm = rel_acc * normal
+
+    # case 1: Just about to bounce again
+    # acceleration must be toward line, and delta time to next bounce is less than RESTING_THRESHOLD
+    if rel_acc_norm != 0:
+        delta_bounce_time = 2 * (rel_vel_norm * bounciness) / rel_acc_norm
+
+        # acceleration is toward the line if dot product between rel_acc and normal is < 0.
+        case_1_satisfied = rel_acc_norm < 0 and delta_bounce_time < RESTING_THRESHOLD
+    else:
+        case_1_satisfied = False
+
+    # case 2: Both relative acceleration and relative velocity are zero
+    case_2_satisfied = (FloatEqual(rel_acc * normal, 0) and FloatEqual(rel_vel * normal, 0))
+
+    return any([case_1_satisfied, case_2_satisfied])
+
+
 class Intersection(GameEvent):
     """
     Represents an intersection between two objects.
@@ -67,6 +94,31 @@ class Intersection(GameEvent):
     """
 
     provider = game.provider
+
+    @property
+    def normal(self):
+        if hasattr(self, '_normal'):
+            return self._normal
+
+        if self.provider.game_time == self.time:
+            # at time of impact, use current velocity to calculate normal
+            self._normal = self.oth.shape.lines[self.line_index].normal
+            rel_vel = self.ent.velocity - self.oth.velocity
+
+            rel_vel_len = rel_vel * self._normal
+            if rel_vel_len > 0:
+                self._normal = -self._normal
+        else:
+            # Calculate normal at time of impact
+            self._normal = self.oth.shape.lines[self.line_index].normal
+            ent_vel = self.ent.velocity + self.ent.acceleration * (self.time - self.provider.game_time)
+            oth_vel = self.oth.velocity + self.oth.acceleration * (self.time - self.provider.game_time)
+
+            rel_vel = ent_vel - oth_vel
+            rel_vel_len = rel_vel * self._normal
+            if rel_vel_len > 0:
+                self._normal = -self._normal
+        return self._normal
 
     @property
     def line(self):
@@ -120,55 +172,35 @@ class Intersection(GameEvent):
                 return [], []
         except AttributeError: pass
 
-        ## Resting State
-
-        # get normal to line (in the opposite direction that ent is striking oth)
-        norm = self.line.normal
-        if norm * self.ent.velocity > 0:
-            # normal is in same direction, reverse normal
-            norm = -norm
-
-        # Get the magnitude of ent's velocity/acceleration in the direction normal to the line
-        norm_vel_mag = -(norm * self.ent.velocity)
-        norm_acc_mag = -(norm * self.ent.acceleration)
-
         # Check for resting state
+        if check_resting_state(self.ent, self.oth, self.line_index, self.normal, self.provider.bounciness):
+            # Enter the resting state
+            if self.ent not in entity.Movables:
+                ent = self.oth
+                oth = self.ent
+            else:
+                ent = self.ent
+                oth = self.oth
 
-        if norm_vel_mag * norm_acc_mag > 0:
-            # Possible resting state if velocity and acceleration are both toward the line.
-            if (2 * (norm_vel_mag * self.provider.bounciness) / norm_acc_mag) < RESTING_THRESHOLD:
-                # Coming to rest due to small next-collision time
-                # acc and vel have same direction relative to line (both toward line)
-                # Get relative velocity in normal direction
-                if self.ent not in entity.Movables:
-                    ent = self.oth
-                    oth = self.ent
-                else:
-                    ent = self.ent
-                    oth = self.oth
+            oth_vel = oth.velocity * self.normal
+            ent_vel = ent.velocity * self.normal
+            ent.velocity += (oth_vel - ent_vel) * self.normal
 
-                oth_vel = oth.velocity * norm
-                ent_vel = ent.velocity * norm
-                ent.velocity += (oth_vel - ent_vel) * norm
+            oth_acc = oth.acceleration * self.normal
+            ent_acc = ent.acceleration * self.normal
+            ent.acceleration += (oth_acc - ent_acc) * self.normal
 
-                oth_acc = oth.acceleration * norm
-                ent_acc = ent.acceleration * norm
-                ent.acceleration += (oth_acc - ent_acc) * norm
+            if not hasattr(ent, 'resters'):
+                ent.resters = []
+            if not hasattr(oth, 'resters'):
+                oth.resters = []
 
-                if not hasattr(ent, 'resters'):
-                    ent.resters = []
-                if not hasattr(oth, 'resters'):
-                    oth.resters = []
-
-                ent.resters.append(oth)
-                oth.resters.append(ent)
-
-        # TODO: Does resolving a collision make sense if entering the resting state?
-
-        # Valid Collision; handle it
-
-        self._resolve_entity(self.ent, self.line)
-        self._resolve_entity(self.oth, self.line)
+            ent.resters.append(oth)
+            oth.resters.append(ent)
+        else:
+            # Valid Collision; handle it
+            self._resolve_entity(self.ent, self.line)
+            self._resolve_entity(self.oth, self.line)
 
         # Handled collisions invalidate all intersections dealing with these objects
         # Invalidate all intersections and return all the new ones
