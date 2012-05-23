@@ -34,7 +34,7 @@ class Level:
                          Vector(1000, 250),
                          Vector(1350, 250),
                          Vector(0, 250)])
-        self.ground = entities.Ground(provider=self.provider, shape=vertices, render_shape=vertices)
+        self.ground = entities.Ground(provider=self.provider, shape=vertices)
         sqr = Rect(size=(10, 10))
 
     def __init__(self, provider, path, resources_path):

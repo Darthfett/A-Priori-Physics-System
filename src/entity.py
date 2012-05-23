@@ -218,8 +218,14 @@ class LineRenderable(Entity):
             else:
                 surface.draw_line(self.color, line.p + self.position, line.q + self.position)
 
-    def __init__(self, render_shape, color=None, **kwargs):
+    def __init__(self, render_shape=None, color=None, **kwargs):
         """Instanciate a line renderable with a list of lines."""
+        assert render_shape is not None or kwargs.get('shape', False)
+
+        if render_shape is None:
+            render_shape = kwargs.get('shape')
+
+
         self.render_shape, self.color = Shape(render_shape, kwargs.get("enclosed", None)), color
 
         if color is None:
