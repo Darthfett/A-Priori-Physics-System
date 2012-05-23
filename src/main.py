@@ -9,8 +9,6 @@ optional arguments:
   -g, --draw_outlines   draw outlines of images instead of the actual images
   --fps FPS             Change max drawing FPS
   --speed SPEED         Change the speed multiplier
-  --bounciness BOUNCINESS
-                        Change the bounciness (1 is elastic, 0 is sticky)
 
 """
 import sys
@@ -24,7 +22,7 @@ import game
 from game import game as Game
 
 # Initialize and run the game!
-def main(speed=1, fps=Game.fps, bounciness=Game.bounciness, debug_mode=False, draw_outlines=False):
+def main(speed=1, fps=Game.fps, debug_mode=False, draw_outlines=False):
     """
     Initialize and run the game.
 
@@ -32,7 +30,6 @@ def main(speed=1, fps=Game.fps, bounciness=Game.bounciness, debug_mode=False, dr
       speed=1           Speed multiplier for the game (e.g. speed=2 is twice as
                         fast)
       fps=60            Max FPS limiter (does not affect game speed)
-      bounciness=0.9    Bounciness of objects (1: 100% elastic, 0: 0% elastic)
       debug_mode=False
                         Flag to indicate 'debug mode' state
       draw_outlines=False
@@ -44,7 +41,6 @@ def main(speed=1, fps=Game.fps, bounciness=Game.bounciness, debug_mode=False, dr
     debug._DebugMode = debug_mode
     debug.debug.DrawOutlines = draw_outlines
     Game.fps = min(max(fps, 10), 120)
-    Game.bounciness = min(max(bounciness, 0), 1)
     Game._speed = min(max(speed, .01), 10)
 
     # Set up an SDL environment video parameter, required for pygame.
@@ -68,11 +64,8 @@ if __name__ == "__main__":
     parser.add_argument('--speed', help='Change the speed multiplier',
                         dest='speed', default=1, type=float)
 
-    parser.add_argument('--bounciness', help='Change the bounciness (1 is elastic, 0 is sticky)',
-                        dest='bounciness', default=Game.bounciness, type=float)
-
     # Parse arguments to the script
     args = parser.parse_args()
 
     # Initialize and run the game
-    main(args.speed, args.FPS, args.bounciness, args.debug, args.draw_outlines)
+    main(args.speed, args.FPS, args.debug, args.draw_outlines)

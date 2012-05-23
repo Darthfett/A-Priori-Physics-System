@@ -150,7 +150,7 @@ class Intersection(GameEvent):
     def _resolve_entity(self, ent, line):
         """Resolves an entity intersection by reflecting its velocity off a line."""
         # Reflect ent's velocity off of line
-        new_vel = ent.velocity.reflected(line.normal) * self.provider.bounciness
+        new_vel = ent.velocity.reflected(line.normal) * self.ent.restitution * self.oth.restitution
         try:
             ent.velocity = new_vel
         except AttributeError:
@@ -173,7 +173,7 @@ class Intersection(GameEvent):
         except AttributeError: pass
 
         # Check for resting state
-        if check_resting_state(self.ent, self.oth, self.line_index, self.normal, self.provider.bounciness):
+        if check_resting_state(self.ent, self.oth, self.line_index, self.normal, self.ent.restitution * self.oth.restitution):
             # Enter the resting state
             if self.ent not in entity.Movables:
                 ent = self.oth

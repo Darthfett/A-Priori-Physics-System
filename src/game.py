@@ -44,7 +44,6 @@ class _Game:
       paused            The paused state of the game.
       screen            The Window object for the game.
       fps               The rate at which the game state is being updated.
-      bounciness        The bounciness of objects in a collision.
       current_level     The current level.
       real_time         The current time of the game.  Used for real events.
       game_time         The current game time.  Used for game events.
@@ -229,7 +228,6 @@ class _Game:
         """Set the default state of the game."""
         self.screen = None
         self.fps = 60
-        self.bounciness = 0.9
         self.current_level = None
 
         self._next_frame_time = 0
