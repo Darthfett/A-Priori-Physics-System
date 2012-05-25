@@ -140,7 +140,7 @@ class _Game:
         else:
             return next_event, self.real_events
 
-    def _calc_next_frame(self):
+    def _next_frame(self):
         """
         Update the game state by repeatedly handling game/real events,
         fast-forwarding to the time at which they occur until caught up with
@@ -209,7 +209,7 @@ class _Game:
                 if time_since_last_frame >= delta_frame_time:
                     # Catch the simulation up to the current time by handling
                     # events in-order, and then draw the next frame.
-                    self._calc_next_frame()
+                    self._next_frame()
                     assert self.real_time == self._next_frame_time
 
                     self.screen.draw_next_frame()

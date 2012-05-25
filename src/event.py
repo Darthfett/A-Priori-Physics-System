@@ -165,9 +165,13 @@ class _KeyEvent(EventProducerEvent):
 
 
 # Information about these in the module docstring.
-KeyPressEvent = _KeyEvent()
-KeyReleaseEvent = _KeyEvent()
-KeyToggleEvent = _KeyEvent()
+KeyPressRealEvent = _KeyEvent()
+KeyReleaseRealEvent = _KeyEvent()
+KeyToggleRealEvent = _KeyEvent()
+
+KeyPressGameEvent = _KeyEvent()
+KeyReleaseGameEvent = _KeyEvent()
+KeyToggleGameEvent = _KeyEvent()
 
 class _KeyPress(RealEvent):
     """
@@ -179,17 +183,30 @@ class _KeyPress(RealEvent):
     def __call__(self):
         """Run all relevant events."""
 
-        # Run key-specific key release events
-        game_events, real_events = KeyPressEvent[self.key]()
+        # Run key-specific key press real events
+        game_events, real_events = KeyPressRealEvent[self.key]()
 
-        # Run key-specific key toggle events
-        zip_extend(game_events, real_events, from_lists=KeyToggleEvent[self.key](True))
+        # Run key-specific key toggle real events
+        zip_extend(game_events, real_events, from_lists=KeyToggleRealEvent[self.key](True))
 
-        # Run generic key press events
-        zip_extend(game_events, real_events, from_lists=KeyPressEvent(self.key))
+        # Run generic key press real events
+        zip_extend(game_events, real_events, from_lists=KeyPressRealEvent(self.key))
 
-        # Run generic key toggle events
-        zip_extend(game_events, real_events, from_lists=KeyToggleEvent(self.key, True))
+        # Run generic key toggle real events
+        zip_extend(game_events, real_events, from_lists=KeyToggleRealEvent(self.key, True))
+
+        if not self.provider.paused:
+            # Run key-specific key press game events
+            zip_extend(game_events, real_events, KeyPressGameEvent[self.key]())
+
+            # Run key-specific key toggle game events
+            zip_extend(game_events, real_events, from_lists=KeyToggleGameEvent[self.key](True))
+
+            # Run generic key press game events
+            zip_extend(game_events, real_events, from_lists=KeyPressGameEvent(self.key))
+
+            # Run generic key toggle game events
+            zip_extend(game_events, real_events, from_lists=KeyToggleGameEvent(self.key, True))
 
         return game_events, real_events
 
@@ -208,17 +225,30 @@ class _KeyRelease(RealEvent):
     def __call__(self):
         """Run all relevant events."""
 
-        # Run key-specific key release events
-        game_events, real_events = KeyReleaseEvent[self.key]()
+        # Run key-specific key release real events
+        game_events, real_events = KeyReleaseRealEvent[self.key]()
 
-        # Run key-specific key toggle events
-        zip_extend(game_events, real_events, from_lists=KeyToggleEvent[self.key](False))
+        # Run key-specific key toggle real events
+        zip_extend(game_events, real_events, from_lists=KeyToggleRealEvent[self.key](False))
 
-        # Run generic key release events
-        zip_extend(game_events, real_events, from_lists=KeyReleaseEvent(self.key))
+        # Run generic key release real events
+        zip_extend(game_events, real_events, from_lists=KeyReleaseRealEvent(self.key))
 
-        # Run generic key toggle events
-        zip_extend(game_events, real_events, from_lists=KeyToggleEvent(self.key, False))
+        # Run generic key toggle real events
+        zip_extend(game_events, real_events, from_lists=KeyToggleRealEvent(self.key, False))
+
+        if not self.provider.paused:
+            # Run key-specific key release game events
+            zip_extend(game_events, real_events, KeyReleaseGameEvent[self.key]())
+
+            # Run key-specific key toggle game events
+            zip_extend(game_events, real_events, from_lists=KeyToggleGameEvent[self.key](False))
+
+            # Run generic key release game events
+            zip_extend(game_events, real_events, from_lists=KeyReleaseGameEvent(self.key))
+
+            # Run generic key toggle game events
+            zip_extend(game_events, real_events, from_lists=KeyToggleGameEvent(self.key, False))
 
         return game_events, real_events
 
