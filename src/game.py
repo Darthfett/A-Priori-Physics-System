@@ -265,7 +265,7 @@ def init():
     game.current_level = Level(provider, "level_1.todo", resources_path)
 
     # Init Controls
-    controls.init()
+    controls.init(provider)
 
     intersections = []
 

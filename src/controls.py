@@ -184,9 +184,10 @@ import os
 
 import pygame
 
-from game import game
 import event
 import physics
+
+provider = None
 
 class Quit(Exception):
     """An Exception that is raised when the player quits."""
@@ -205,7 +206,7 @@ def quit():
 
 def flip_pause_state():
     """Pause/unpause the game."""
-    game.pause()
+    provider.pause()
     return [], []
 
 def reset_player():
@@ -213,19 +214,20 @@ def reset_player():
     Move the player back to starting position, and reset the player's velocity.
 
     """
-    game.current_level.player.position = game.current_level._PlayerPosition
-    game.current_level.player.velocity = game.current_level._PlayerVelocity
-    game.current_level.player.invalidate_intersections()
-    ints = physics.find_intersections(game.current_level.player)
-    game.current_level.player.intersections.extend(ints)
+    provider.current_level.player.position = provider.current_level._PlayerPosition
+    provider.current_level.player.velocity = provider.current_level._PlayerVelocity
+    provider.current_level.player.invalidate_intersections()
+    ints = physics.find_intersections(provider.current_level.player)
+    provider.current_level.player.intersections.extend(ints)
 
     return ints, []
 
-    game.current_level.reset_player()
+    provider.current_level.reset_player()
 
 
-def init():
-
+def init(provider_):
+    global provider
+    provider = provider_
     # map control names to their functions
     control_to_keypress_control = {
         "quit": quit,
@@ -234,9 +236,9 @@ def init():
     }
 
     control_to_keytoggle_control = {
-        "jetpack_up": game.current_level.player._jetpack_up,
-        "jetpack_left": game.current_level.player._jetpack_left,
-        "jetpack_right": game.current_level.player._jetpack_right
+        "jetpack_up": provider.current_level.player._jetpack_up,
+        "jetpack_left": provider.current_level.player._jetpack_left,
+        "jetpack_right": provider.current_level.player._jetpack_right
     }
 
     # open cfg/keyboards.json, and load in user's control mapping
