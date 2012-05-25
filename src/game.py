@@ -113,13 +113,13 @@ class _Game:
             game_event = self.game_events[0]
         except IndexError:
             # No events in queue, create a dummy event that will never happen
-            game_event = GameEvent(INFINITY)
+            game_event = GameEvent(provider=provider)
         # Get the next real event:
         try:
             real_event = self.real_events[0]
         except IndexError:
             # No events in queue, create a dummy event that will never happen
-            real_event = RealEvent(INFINITY)
+            real_event = RealEvent(provider=provider)
 
         # events are guaranteed to have current or future time.
 
@@ -201,7 +201,7 @@ class _Game:
                 # Update the time and ignore initialization time.
                 self._next_frame_time = pygame.time.get_ticks() - self._init_time
 
-                key_events = event.check_for_new_events(self._next_frame_time)
+                key_events = event.check_for_new_events(self._next_frame_time, provider)
                 self.real_events.extend(key_events)
                 heapq.heapify(self.real_events)
 
@@ -272,7 +272,7 @@ def init():
     for ent in entity.Collidables:
         for oth in entity.Collidables:
             if ent is oth: continue
-            pair_ints = physics.find_pair_intersections(ent, oth)
+            pair_ints = physics.find_pair_intersections(provider, ent, oth)
             ent.intersections.extend(pair_ints)
             oth.intersections.extend(pair_ints)
             intersections.extend(pair_ints)

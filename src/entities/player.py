@@ -23,7 +23,7 @@ class Player(entity.Blitable, entity.Projectile):
         else:
             self.acceleration -= Vector(0, 3e-4)
         self.invalidate_intersections()
-        ints = physics.find_intersections(self)
+        ints = physics.find_intersections(self.provider, self)
         self.intersections.extend(ints)
         return ints, []
 
@@ -35,7 +35,7 @@ class Player(entity.Blitable, entity.Projectile):
         else:
             self.acceleration -= Vector(-2e-4, 0)
         self.invalidate_intersections()
-        ints = physics.find_intersections(self)
+        ints = physics.find_intersections(self.provider, self)
         self.intersections.extend(ints)
         return ints, []
 
@@ -47,7 +47,7 @@ class Player(entity.Blitable, entity.Projectile):
         else:
             self.acceleration -= Vector(2e-4, 0)
         self.invalidate_intersections()
-        ints = physics.find_intersections(self)
+        ints = physics.find_intersections(self.provider, self)
         self.intersections.extend(ints)
         return ints, []
 

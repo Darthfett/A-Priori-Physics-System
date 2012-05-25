@@ -20,13 +20,10 @@ import functools
 
 import pygame
 
-import game
 from util import INFINITY, ZeroDivide, EPSILON, zip_extend
 
 @functools.total_ordering
 class GameEvent:
-
-    provider = game.provider
 
     @property
     def game_time(self):
@@ -52,13 +49,14 @@ class GameEvent:
     def __eq__(self, other):
         return self.time == other.game_time
 
-    def __init__(self, time=INFINITY):
+    def __init__(self, provider, time=INFINITY, invalid=False, **kwargs):
         self.time = time
+        self.provider = provider
+        self.invalid = invalid
+        super().__init__(**kwargs)
 
 @functools.total_ordering
 class RealEvent:
-
-    provider = game.provider
 
     @property
     def real_time(self):
@@ -87,8 +85,11 @@ class RealEvent:
     def __eq__(self, other):
         return self.time == other.real_time
 
-    def __init__(self, time=INFINITY):
+    def __init__(self, provider, time=INFINITY, invalid=False, **kwargs):
         self.time = time
+        self.provider = provider
+        self.invalid = invalid
+        super().__init__(**kwargs)
 
 class Event:
     """An event can have any number of handlers, which are called when the event is fired,
@@ -192,10 +193,9 @@ class _KeyPress(RealEvent):
 
         return game_events, real_events
 
-    def __init__(self, key, time):
+    def __init__(self, key, **kwargs):
         self.key = key
-        self.time = time
-        self.invalid = False
+        super().__init__(**kwargs)
         assert self.delta_time >= 0
 
 class _KeyRelease(RealEvent):
@@ -222,10 +222,9 @@ class _KeyRelease(RealEvent):
 
         return game_events, real_events
 
-    def __init__(self, key, time):
+    def __init__(self, key, **kwargs):
         self.key = key
-        self.time = time
-        self.invalid = False
+        super().__init__(**kwargs)
         assert self.delta_time >= 0
 
 # Current Key State is not synced with the game's time.
@@ -233,7 +232,7 @@ class _KeyRelease(RealEvent):
 # register a function with KeyPressEvent and KeyReleaseEvent.
 _CurrentState = []
 
-def check_for_new_events(current_time):
+def check_for_new_events(current_time, provider):
     """
     Run through all events currently in the pygame event queue and put them
     into the real event queue.
@@ -247,10 +246,10 @@ def check_for_new_events(current_time):
     key_events = []
     for key, was_pressed in enumerate(_CurrentState):
         if next_state[key] and not was_pressed:
-            key_events.append(_KeyPress(key, current_time))
+            key_events.append(_KeyPress(key=key, time=current_time, provider=provider))
 
         if was_pressed and not next_state[key]:
-            key_events.append(_KeyRelease(key, current_time))
+            key_events.append(_KeyRelease(key=key, time=current_time, provider=provider))
 
     _CurrentState = next_state
 

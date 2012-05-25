@@ -115,7 +115,7 @@ class Collidable(Shaped, Entity):
         self.intersections = [intersection for intersection in self.intersections if not intersection.invalid]
 
     def find_intersections(self, exclude=None):
-        return physics.find_intersections(self, exclude=exclude)
+        return physics.find_intersections(self.provider, self, exclude=exclude)
 
     def __init__(self, mass=None, restitution=.883, **kwargs):
         """Instanciate a collidable with mass (defaults to INFINITY)."""

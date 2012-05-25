@@ -217,7 +217,7 @@ def reset_player():
     provider.current_level.player.position = provider.current_level._PlayerPosition
     provider.current_level.player.velocity = provider.current_level._PlayerVelocity
     provider.current_level.player.invalidate_intersections()
-    ints = physics.find_intersections(provider.current_level.player)
+    ints = physics.find_intersections(provider, provider.current_level.player)
     provider.current_level.player.intersections.extend(ints)
 
     return ints, []

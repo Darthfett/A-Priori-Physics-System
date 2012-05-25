@@ -8,6 +8,18 @@ import physics
 import entity
 import entities
 
+import json
+
+DEFAULT_WIDTH = 640
+DEFAULT_HEIGHT = 480
+
+def load(level_path):
+    with open(level_path, 'r') as level_file:
+        level_json = json.load(level_file)
+    width = level_json.get('width', DEFAULT_WIDTH)
+    height = level_json.get('height', DEFAULT_HEIGHT)
+    entities = level_json.get('entities', [])
+
 class Level:
 
     _PlayerPosition = Vector(10, 20)
