@@ -242,7 +242,7 @@ class Intersection(event.GameEvent):
             self.del_time = self.time
             self.time += self.provider.game_time
 
-def ParabolaLineCollision(provider, point_index, vel, acc, line_index, ent, oth):
+def ParabolaLineCollision(provider, point_index, velocity, acceleration, line_index, ent, oth):
     """
     Get all intersections between a point pos with velocity vel and
     acceleration acc, and a non-moving line line.
@@ -257,12 +257,12 @@ def ParabolaLineCollision(provider, point_index, vel, acc, line_index, ent, oth)
 
     p, q = line.p, line.q
 
-    if acc == Vector(0, 0):
-        if vel == Vector(0, 0):
+    if acceleration == Vector(0, 0):
+        if velocity == Vector(0, 0):
             return []
         else:
             # If acceleration is zero, there can only be one or zero roots.
-            b = (vel.cross(q) - vel.cross(p))
+            b = (velocity.cross(q) - velocity.cross(p))
             c = (pos.cross(q) - pos.cross(p) - p.cross(q))
             if b == 0:
                 roots = []
@@ -270,8 +270,8 @@ def ParabolaLineCollision(provider, point_index, vel, acc, line_index, ent, oth)
                 roots = [-c / b]
     else:
         # non-zero acceleration, possibly 2 roots.
-        a = .5 * (acc.cross(q) - acc.cross(p))
-        b = (vel.cross(q) - vel.cross(p))
+        a = .5 * (acceleration.cross(q) - acceleration.cross(p))
+        b = (velocity.cross(q) - velocity.cross(p))
         c = (pos.cross(q) - pos.cross(p) - p.cross(q))
         try:
             roots = util.find_roots(a, b, c)
