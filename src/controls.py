@@ -259,7 +259,7 @@ def init(provider_):
                     pygame_key = getattr(pygame, key)
                 except AttributeError:
                     raise InvalidKeyError("Invalid key " + key + " mapped from control " + control + " in cfg/keyboard.json")
-                event.KeyPressEvent[pygame_key].register(control_to_keypress_control[control])
+                event.KeyPressRealEvent[pygame_key].register(control_to_keypress_control[control])
         elif control in control_to_keytoggle_control:
             for key in control_to_keys[control]:
                 if not key.startswith("K_"):
@@ -269,4 +269,4 @@ def init(provider_):
                     pygame_key = getattr(pygame, key)
                 except AttributeError:
                     raise InvalidKeyError("Invalid key " + key + " mapped from control " + control + " in cfg/keyboard.json")
-                event.KeyToggleEvent[pygame_key].register(control_to_keytoggle_control[control])
+                event.KeyToggleRealEvent[pygame_key].register(control_to_keytoggle_control[control])

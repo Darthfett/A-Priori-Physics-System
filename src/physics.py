@@ -75,6 +75,60 @@ def check_resting_state(ent, oth, line_index, normal, bounciness):
     return any([case_1_satisfied, case_2_satisfied])
 
 
+class StopResting(event.GameEvent):
+
+    def __call__(self):
+        print('end resting state')
+        return [], []
+
+    def __init__(self, point_index, line_index, ent, oth, **kwargs):
+
+        super().__init__(**kwargs)
+        self.point_index = point_index
+        self.line_index = line_index
+        self.ent = ent
+        self.oth = oth
+
+def find_stop_resting(ent, oth, point_index, line_index, provider):
+
+    rel_vel = ent.velocity - oth.velocity
+    rel_acc = ent.acceleration - oth.acceleration
+    cur_pos = ent.pos_shape.points[point_index]
+    cur_line = oth.pos_shape.lines[line_index]
+
+    if cur_pos not in cur_line:
+        raise ValueError("{cur_pos} must be in {cur_line}".format(cur_pos=cur_pos, cur_line=cur_line))
+
+    distance_vec1 = cur_line.q - cur_pos
+
+    if distance_vec1 * rel_vel > 0:
+        d1 = distance_vec1.length
+        line_dir = cur_line.direction.normalized()
+        vel_mag = rel_vel * line_dir
+        acc_mag = rel_acc * line_dir
+        times = util.find_roots(.5*acc_mag, vel_mag, -d1)
+        times = sorted(time for time in times if time > -EPSILON)
+        assert times
+        return StopResting(point_index, line_index, ent, oth, time=provider.game_time+times[0], provider=provider)
+    else:
+        distance_vec2 = cur_line.p - cur_pos
+        assert distance_vec2 * rel_vel > 0
+        d2 = distance_vec2.length
+        line_dir = -cur_line.direction.normalized()
+        vel_mag = rel_vel * line_dir
+        acc_mag = rel_acc * line_dir
+        times = util.find_roots(.5*acc_mag, vel_mag, -d2)
+        times = sorted(time for time in times if time > -EPSILON)
+        assert times
+        return StopResting(point_index, line_index, ent, oth, time=provider.game_time+times[0], provider=provider)
+
+class Resting:
+    def __init__(self, ent, oth, point_index, line_index):
+        self.ent = ent
+        self.oth = oth
+        self.point_index = point_index
+        self.line_index = line_index
+
 class Intersection(event.GameEvent):
     """
     Represents an intersection between two objects.
@@ -158,17 +212,22 @@ class Intersection(event.GameEvent):
         """Handle resolving the intersection."""
 
         ## Collision Validation
-
         if self.invalid:
             # Intersection is invalid, just skip past it
             return [], []
         if FloatEqual(self.del_time, 0):
             # This collision JUST happened
             return [], []
-        try:
-            if self.ent in self.oth.resters or self.oth in self.ent.resters:
+        for resting in self.ent.resting:
+            if (resting.ent == self.oth or resting.oth == self.oth) and resting.line_index == self.line_index and resting.point_index == self.point_index:
                 return [], []
-        except AttributeError: pass
+        for resting in self.oth.resting:
+            if (resting.ent == self.ent or resting.oth == self.ent) and resting.line_index == self.line_index and resting.point_index == self.point_index:
+                return [], []
+
+        # collision is valid
+        game_events = []
+        real_events = []
 
         # Check for resting state
         if check_resting_state(self.ent, self.oth, self.line_index, self.normal, self.ent.restitution * self.oth.restitution):
@@ -188,13 +247,13 @@ class Intersection(event.GameEvent):
             ent_acc = ent.acceleration * self.normal
             ent.acceleration += (oth_acc - ent_acc) * self.normal
 
-            if not hasattr(ent, 'resters'):
-                ent.resters = []
-            if not hasattr(oth, 'resters'):
-                oth.resters = []
+            resting = Resting(self.ent, self.oth, self.point_index, self.line_index)
 
-            ent.resters.append(oth)
-            oth.resters.append(ent)
+            ent.resting.append(resting)
+            oth.resting.append(resting)
+
+            game_events.append(find_stop_resting(self.ent, self.oth, self.point_index, self.line_index, self.provider))
+
         else:
             # Valid Collision; handle it
             self._resolve_entity(self.ent, self.line)
@@ -218,7 +277,9 @@ class Intersection(event.GameEvent):
         intersections.extend(ent_intersections)
         intersections.extend(oth_intersections)
 
-        return intersections, []
+        game_events.extend(intersections)
+
+        return game_events, real_events
 
     def __eq__(self, oth):
         return hash(self) == hash(oth)
@@ -232,7 +293,7 @@ class Intersection(event.GameEvent):
     def __repr__(self):
         return "Intersection(time={time}, del_time={del_time}, point_index={point_index}, line_index={line_index}, ent={ent}, oth={oth}, invalid={invalid})".format(**self.__dict__)
 
-    def __init__(self, point_index=None, line_index=None, ent=None, oth=None, del_time=None, **kwargs):
+    def __init__(self, point_index, line_index, ent, oth, del_time=None, **kwargs):
         super().__init__(**kwargs)
         self.del_time = del_time
         self.point_index, self.line_index = point_index, line_index

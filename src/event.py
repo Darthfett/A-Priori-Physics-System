@@ -197,7 +197,7 @@ class _KeyPress(RealEvent):
 
         if not self.provider.paused:
             # Run key-specific key press game events
-            zip_extend(game_events, real_events, KeyPressGameEvent[self.key]())
+            zip_extend(game_events, real_events, from_lists=KeyPressGameEvent[self.key]())
 
             # Run key-specific key toggle game events
             zip_extend(game_events, real_events, from_lists=KeyToggleGameEvent[self.key](True))
@@ -239,7 +239,7 @@ class _KeyRelease(RealEvent):
 
         if not self.provider.paused:
             # Run key-specific key release game events
-            zip_extend(game_events, real_events, KeyReleaseGameEvent[self.key]())
+            zip_extend(game_events, real_events, from_lists=KeyReleaseGameEvent[self.key]())
 
             # Run key-specific key toggle game events
             zip_extend(game_events, real_events, from_lists=KeyToggleGameEvent[self.key](False))
