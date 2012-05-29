@@ -106,18 +106,24 @@ def find_stop_resting(ent, oth, point_index, line_index, provider):
         line_dir = cur_line.direction.normalized()
         vel_mag = rel_vel * line_dir
         acc_mag = rel_acc * line_dir
-        times = util.find_roots(.5*acc_mag, vel_mag, -d1)
+        try:
+            times = util.find_roots(.5*acc_mag, vel_mag, -d1)
+        except util.InequalityError:
+            return None
         times = sorted(time for time in times if time > -EPSILON)
         assert times
         return StopResting(point_index, line_index, ent, oth, time=provider.game_time+times[0], provider=provider)
     else:
         distance_vec2 = cur_line.p - cur_pos
-        assert distance_vec2 * rel_vel > 0
+        assert distance_vec2 * rel_vel >= 0
         d2 = distance_vec2.length
         line_dir = -cur_line.direction.normalized()
         vel_mag = rel_vel * line_dir
         acc_mag = rel_acc * line_dir
-        times = util.find_roots(.5*acc_mag, vel_mag, -d2)
+        try:
+            times = util.find_roots(.5*acc_mag, vel_mag, -d2)
+        except util.InequalityError:
+            return None
         times = sorted(time for time in times if time > -EPSILON)
         assert times
         return StopResting(point_index, line_index, ent, oth, time=provider.game_time+times[0], provider=provider)
@@ -252,7 +258,9 @@ class Intersection(event.GameEvent):
             ent.resting.append(resting)
             oth.resting.append(resting)
 
-            game_events.append(find_stop_resting(self.ent, self.oth, self.point_index, self.line_index, self.provider))
+            maybe_end_resting = find_stop_resting(self.ent, self.oth, self.point_index, self.line_index, self.provider)
+            if maybe_end_resting is not None:
+                game_events.append(maybe_end_resting)
 
         else:
             # Valid Collision; handle it
