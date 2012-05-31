@@ -20,18 +20,58 @@ import heapq
 import pygame
 
 class GameProvider:
-    Provider = None
     def __getattribute__(self, name):
-        return getattr(GameProvider.Provider, name)
+        return getattr(self.state, name)
 
     def __setattr__(self, name, value):
         raise AttributeError('cannot set attribute {name}, {type} is immutable.'.format(name=name, type=type(self).__name__))
 
-    def __init__(self, provider=None):
-        if provider is not None:
-            GameProvider.Provider = provider
+    def __init__(self, state):
+        self.state = state
 
-class _Game:
+class InvalidSpeedError(ValueError):
+    """Raised when the game's speed is set to a negative or zero number."""
+
+class GameState:
+
+    def speed(self, speed):
+        if speed <= 0:
+            raise InvalidSpeedError("Invalid speed {speed}".format(speed=speed))
+        self._speed = speed
+
+    def speed(self):
+        return self._speed
+
+    def __init__(self, fps=None, speed=None, paused=None, game_events=None, real_events=None, level=None, screen=None, entities=None, _next_frame_time=0, _init_time=0, real_time=0, game_time=0):
+        if fps is None:
+            fps = 60
+        if speed is None:
+            speed = 1
+        if paused is None:
+            paused = False
+        if game_events is None:
+            game_events = []
+        if real_events is None:
+            real_events = []
+        if entities is None:
+            entities = []
+
+
+        self.fps = fps
+        self._speed = speed
+        self.paused = paused
+        self.game_events = game_events
+        self.real_events = real_events
+        self.level = level
+        self.screen = screen
+        self.entities = entities
+
+        self._next_frame_time = _next_frame_time
+        self._init_time = _init_time
+        self.real_time = real_time
+        self.game_time = game_time
+
+class GameController:
     """
     Represents the state of the game.
 
@@ -52,48 +92,6 @@ class _Game:
 
     """
 
-    @property
-    def speed(self):
-        """The current game speed (ignoring paused state)."""
-        if not self.paused:
-            return self._speed
-        else:
-            return self._real_speed
-
-    @speed.setter
-    def speed(self, speed):
-        """Set the current game speed."""
-        if not self.paused:
-            self._speed = speed
-        else:
-            self._real_speed = speed
-
-    @property
-    def paused(self):
-        """Whether the game is paused."""
-        return self._real_speed is not None
-
-    @paused.setter
-    def paused(self, pause):
-        """Set the paused/unpaused state of the game."""
-        pause = bool(pause)
-        if self.paused is pause:
-            # already in the right state
-            return
-        if pause:
-            self._real_speed = self._speed
-            self._speed = 0
-        else:
-            self._speed = self._real_speed
-            self._real_speed = None
-
-    def pause(self, paused=None):
-        """Pause, unpause, or flip the game paused state (default)."""
-        if paused is None:
-            self.paused = not self.paused
-        else:
-            self.paused = bool(paused)
-
     def _next_event(self):
         """
         Get the next game/real event that happens before _next_frame_time.
@@ -110,16 +108,16 @@ class _Game:
         """
         # Get the next game event:
         try:
-            game_event = self.game_events[0]
+            game_event = self.state.game_events[0]
         except IndexError:
             # No events in queue, create a dummy event that will never happen
-            game_event = GameEvent(provider=provider)
+            game_event = GameEvent(provider=self.state)
         # Get the next real event:
         try:
-            real_event = self.real_events[0]
+            real_event = self.state.real_events[0]
         except IndexError:
             # No events in queue, create a dummy event that will never happen
-            real_event = RealEvent(provider=provider)
+            real_event = RealEvent(provider=self.state)
 
         # events are guaranteed to have current or future time.
 
@@ -132,13 +130,13 @@ class _Game:
 
         assert not math.isnan(next_event.real_time)
 
-        if next_event.real_time > self._next_frame_time:
+        if next_event.real_time > self.state._next_frame_time:
             return None, None
 
         if next_event is game_event:
-            return next_event, self.game_events
+            return next_event, self.state.game_events
         else:
-            return next_event, self.real_events
+            return next_event, self.state.real_events
 
     def _next_frame(self):
         """
@@ -147,38 +145,38 @@ class _Game:
         _next_frame_time.
 
         """
-        while self.real_time <= self._next_frame_time:
+        while self.state.real_time <= self.state._next_frame_time:
             ev, ev_queue = self._next_event()
             if ev is None:
                 # No events to handle this frame.
-                self.game_time += (self._next_frame_time - self.real_time) * self._speed
-                self.real_time = self._next_frame_time
+                self.state.game_time += (self.state._next_frame_time - self.state.real_time) * self.state._speed
+                self.state.real_time = self.state._next_frame_time
                 break
 
             # Fast forward time to the event time
-            self.game_time = ev.game_time
-            self.real_time = ev.real_time
+            self.state.game_time = ev.game_time
+            self.state.real_time = ev.real_time
 
             # Handle and remove the event
             heapq.heappop(ev_queue)
             g_events, r_events = ev()
             if g_events or r_events:
-                zip_extend(self.game_events, self.real_events, from_lists=[g_events, r_events])
-                heapq.heapify(self.game_events)
-                heapq.heapify(self.real_events)
+                zip_extend(self.state.game_events, self.state.real_events, from_lists=[g_events, r_events])
+                heapq.heapify(self.state.game_events)
+                heapq.heapify(self.state.real_events)
 
         # Remove all invalid events from the event queues.
         # This avoids long-term events from wasting space in the queue.
-        self.game_events = [ev for ev in self.game_events if not ev.invalid]
-        self.real_events = [ev for ev in self.real_events if not ev.invalid]
-        heapq.heapify(self.game_events)
-        heapq.heapify(self.real_events)
+        self.state.game_events = [ev for ev in self.state.game_events if not ev.invalid]
+        self.state.real_events = [ev for ev in self.state.real_events if not ev.invalid]
+        heapq.heapify(self.state.game_events)
+        heapq.heapify(self.state.real_events)
 
         # Post-conditions
         ev, ev_queue = self._next_event()
         assert ev is None
         assert ev_queue is None
-        assert self.real_time == self._next_frame_time
+        assert self.state.real_time == self.state._next_frame_time
 
     def run(self):
         """
@@ -189,30 +187,30 @@ class _Game:
 
         """
 
-        delta_frame_time = 1000 / self.fps
+        delta_frame_time = 1000 / self.state.fps
 
         # avoid startup-flicker.
-        self.screen.clear()
+        self.state.screen.clear()
         pygame.display.flip()
 
-        self._init_time = pygame.time.get_ticks()
+        self.state._init_time = pygame.time.get_ticks()
         try:
             while True:
                 # Update the time and ignore initialization time.
-                self._next_frame_time = pygame.time.get_ticks() - self._init_time
+                self.state._next_frame_time = pygame.time.get_ticks() - self.state._init_time
 
-                key_events = event.check_for_new_events(self._next_frame_time, provider)
-                self.real_events.extend(key_events)
-                heapq.heapify(self.real_events)
+                key_events = event.check_for_new_events(self.state._next_frame_time, self.state)
+                self.state.real_events.extend(key_events)
+                heapq.heapify(self.state.real_events)
 
-                time_since_last_frame = (self._next_frame_time - self.real_time)
+                time_since_last_frame = (self.state._next_frame_time - self.state.real_time)
                 if time_since_last_frame >= delta_frame_time:
                     # Catch the simulation up to the current time by handling
                     # events in-order, and then draw the next frame.
                     self._next_frame()
-                    assert self.real_time == self._next_frame_time
+                    assert self.state.real_time == self.state._next_frame_time
 
-                    self.screen.draw_next_frame()
+                    self.state.screen.draw_next_frame()
                     pygame.display.flip()
 
                 pygame.time.delay(1)  # Sleep 1 ms
@@ -226,23 +224,7 @@ class _Game:
 
     def __init__(self):
         """Set the default state of the game."""
-        self.screen = None
-        self.fps = 60
-        self.current_level = None
-
-        self._next_frame_time = 0
-        self._init_time = 0
-        self.real_time = 0
-        self.game_time = 0
-
-        self.game_events = []
-        self.real_events = []
-
-        self._speed = 1
-        self._real_speed = None
-
-game = _Game()
-provider = GameProvider(game)
+        self.state = None
 
 # library-specific modules
 from util import INFINITY, EPSILON, zip_extend
@@ -254,18 +236,7 @@ import physics
 from window import Window
 from level import Level
 
-def init():
-    # Resources path
-    resources_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "../resources")
-
-    # Init Window
-    game.screen = Window(provider) # Accept default size and title
-
-    # Load First Level
-    game.current_level = Level(provider, "level_1.todo", resources_path)
-
-    # Init Controls
-    controls.init(provider)
+def init(game):
 
     intersections = []
 

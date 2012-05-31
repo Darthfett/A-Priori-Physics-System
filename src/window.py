@@ -15,124 +15,58 @@ classes:
 import pygame
 
 from util import Vector, Rect
-import entity
 
-class OutOfBoundsError(Exception):
-    """When something is out of bounds of pygame's drawing ability, this exception is raised."""
+DEFAULT_WIDTH = 640
+DEFAULT_HEIGHT = 480
+
+def to_pygame_coords(coords, window_size, center=Vector(), height=0):
+    coords = Vector(coords)
+
+    # offset coords by screen center
+    coords += .5 * window_size
+
+    # offset coords to center
+    coords -= center
+
+    # Convert from world to window/pygame coordinates
+    coords = Vector(coords.x, window_size.y - coords.y - height
+
+def blitable_pygame_position(blitable, window_size, center=Vector())
+    return to_pygame_coords(Rect(blitable.image.get_rect()).bottom_left + blitable.position, window_size, center, height=blitable.image.get_height())
 
 class Window:
-
-    """
-    A wrapper to the pygame display, with some additional functionality for
-    translating coordinates, clearing the screen, drawing the next frame, and
-    centering on the player.
-
-    members:
-      DEFAULT_WIDTH     The default width of the game window.
-      DEFAULT_HEIGHT    The default height of the game window.
-      FollowPlayer      Determines whether the window is always centered on the
-                        player during coordinate translation.
-
-    properties:
-      title             The title of the window.  Changing this value does not
-                        automatically update the window.
-      screen            The actual pygame screen onto which everything is
-                        drawn.
-      size              A Vector that determines the size of the window.
-
-    methods:
-      to_pygame_coords
-                        Given normal coordinates, translate them into the
-                        pygame equivalent.
-      to_pyame          Given a blitable object, get the coordinates at which
-                        the object should be drawn.
-      draw_line         Draw a line at the given normal coordinates.
-      draw_aaline       Draw an anti-aliased line at the given normal coords.
-      blit              A wrapper for the pygame screen's blit, which
-                        automatically translates the blitable's coordinates.
-      clear             Clear the screen with the default background color.
-      draw_next_frame   Clear the screen, and draw all objects at their current
-                        position.
-
-    """
-
-    DEFAULT_WIDTH = 640
-    DEFAULT_HEIGHT = 480
-    FollowPlayer = True
-
-    def to_pygame_coords(self, coords):
-        """
-        Converts coordinates into pygame coordinates
-
-
-            +x is right, +y is up, (0, 0) is bottom left of screen into:
-            +x is right, +y is down, (0, 0) is top left of screen"""
-        coords = Vector(coords)
-        if Window.FollowPlayer:
-            # offset coords by screen center
-            coords = coords + (self.size * .5)
-            # offset coords by centered_obj
-            center_point = self.provider.current_level.player.position + Vector(self.provider.current_level.player.image.get_size()) * .5
-            coords = coords - center_point
-
-        coords = Vector(0, self.size.y) + Vector(coords.x, -coords.y)
-
-        return Vector(round(coords.x), round(coords.y))
-
-    def to_pygame(self, blitable):
-        """Converts object coordinates into pygame coordinates, given lower left coordinates of an
-        object and the object's height."""
-        # Get top left corner, and convert to pygame coordinates
-        rect = Rect(blitable.image.get_rect())
-        rect.offset(blitable.position)
-        new_position = self.to_pygame_coords(rect.bottom_left)
-        new_position = new_position + Vector(0, -blitable.image.get_height())
-        return new_position
-
-    def draw_line(self, color, start_pos, end_pos, width=1):
-        start = self.to_pygame_coords(start_pos)
-        end = self.to_pygame_coords(end_pos)
-        pygame.draw.line(self.screen, color, start, end, width)
-
-    def draw_aaline(self, color, start_pos, end_pos, blend=1):
-        start = self.to_pygame_coords(start_pos)
-        end = self.to_pygame_coords(end_pos)
-        try:
-            pygame.draw.line(self.screen, color, start, end, blend)
-        except TypeError as ex:
-            raise OutOfBoundsError("{0} is out of the level bounds.".format(start))
-
-    def blit(self, blitable):
-        """Draws an object to the screen."""
-        # blit blitable to screen
-        self.screen.blit(pygame.transform.flip(blitable.image, blitable.flipped, False), self.to_pygame(blitable))
 
     def clear(self):
         """Clear the screen."""
         self.screen.fill((255, 255, 255))
 
+    def blit(self, surface, coords):
+        coords = to_pygame_coords(coords, self.size, height=surface.get_height())
 
-    def draw_next_frame(self):
-        """Draws all objects."""
-        self.clear()
-        ents = set(entity.Blitables)
-        ents = ents.union(entity.LineRenderables)
-        for ent in ents:
-            ent.draw(self)
+        self.screen.blit(surface, coords)
 
-    def __init__(self, provider, title="Jetpack Man", size=(DEFAULT_WIDTH, DEFAULT_HEIGHT)):
-        """Initialize the screen, window size, and title."""
-        self.provider = provider
-        self.title = title
-        self.screen = pygame.display.set_mode(size) # Accept default flags:
+    def draw_blitable(self, blitable, center=Vector()):
+        image = blitable.image
+        flip = blitable.flipped
+        coords = blitable_pygame_position(blitable, self.size, center)
 
-        # Flags (second argument, multiple separated by | ):
-            # pygame.FULLSCREEN    create a fullscreen display
-            # pygame.DOUBLEBUF     recommended for HWSURFACE or OPENGL
-            # pygame.HWSURFACE     hardware accelerated, only in FULLSCREEN
-            # pygame.OPENGL        create an opengl renderable display
-            # pygame.RESIZABLE     display window should be sizeable
-            # pygame.NOFRAME       display window will have no border or controls
+        self.screen.blit(pygame.transform.flip(image, flip, False), coords)
 
+    def draw_line(self, color, start_pos, end_pos, width=1):
+        start = to_pygame_coords(start_pos, self.size)
+        end = to_pygame_coords(end_pos, self.size)
+
+        pygame.draw.line(self.screen, color, start, end, width)
+
+    def draw_aaline(self, color, start_pos, end_pos, blend=1):
+        start = to_pygame_coords(start_pos, self.size)
+        end = to_pygame_coords(end_pos, self.size)
+
+        pygame.draw.line(self.screen, color, start, end, blend)
+
+    def __getattr__(self, name):
+        return getattr(self.screen, name)
+
+    def __init__(self, screen):
+        self.screen = screen
         self.size = Vector(self.screen.get_size())
-        pygame.display.set_caption(self.title)

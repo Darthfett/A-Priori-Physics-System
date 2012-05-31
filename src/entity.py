@@ -44,14 +44,6 @@ from debug import debug
 # Gravity acceleration is the default acceleration used for an entity.
 Gravity = Vector(0, -2e-4)
 
-# Lists containing all objects of each type (use these to iterate)
-Entities = []
-Collidables = []
-Movables = []
-Projectiles = []
-Blitables = []
-LineRenderables = []
-
 class Entity:
     """Entity objects are things that have a position in the world."""
 
@@ -66,8 +58,6 @@ class Entity:
             self.position = Vector(0, 0)
         else:
             self.position = position
-
-        Entities.append(self)
         super().__init__(**kwargs)
 
 class Shaped(Entity):
@@ -125,7 +115,6 @@ class Collidable(Shaped, Entity):
         self.restitution = restitution
         if mass is None:
             self.mass = util.INFINITY
-        Collidables.append(self)
         super().__init__(**kwargs)
 
 class Movable(Entity):
@@ -177,14 +166,12 @@ class Movable(Entity):
             # Copy of Gravity vector, so as not to modify it.
             self._acceleration = Vector(Gravity)
 
-        Movables.append(self)
         super().__init__(**kwargs)
 
 class Projectile(Movable, Collidable, Shaped):
     """Projectile objects occupy space, can collide with objects, and move around."""
 
     def __init__(self, **kwargs):
-        Projectiles.append(self)
         super().__init__(**kwargs)
 
 class Blitable(Entity):
@@ -205,7 +192,6 @@ class Blitable(Entity):
         else:
             self.image = pygame.image.load(image)
         self.flipped = False
-        Blitables.append(self)
         super().__init__(**kwargs)
 
 class LineRenderable(Entity):
@@ -221,16 +207,13 @@ class LineRenderable(Entity):
 
     def __init__(self, render_shape=None, color=None, **kwargs):
         """Instanciate a line renderable with a list of lines."""
-        assert render_shape is not None or kwargs.get('shape', False)
 
         if render_shape is None:
-            render_shape = kwargs.get('shape')
+            render_shape = kwargs['shape']
 
-
-        self.render_shape, self.color = Shape(render_shape, kwargs.get("enclosed", None)), color
+        self.render_shape, self.color = Shape(render_shape, kwargs.get("enclosed")), color
 
         if color is None:
             self.color = (0, 0, 0)
 
-        LineRenderables.append(self)
         super().__init__(**kwargs)
