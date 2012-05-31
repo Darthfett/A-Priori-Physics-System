@@ -37,7 +37,7 @@ Classes:
 import pygame
 
 import util
-from util import Vector, Shape, Position
+from util import Vector, Shape, Position, Rect
 import physics
 from debug import debug
 
@@ -192,6 +192,10 @@ class Blitable(Entity):
         else:
             self.image = pygame.image.load(image)
         self.flipped = False
+
+        if 'shape' not in kwargs and isinstance(self, Shaped):
+            kwargs['shape'] = Rect(self.image.get_rect()).shape
+
         super().__init__(**kwargs)
 
 class LineRenderable(Entity):

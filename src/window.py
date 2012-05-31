@@ -29,9 +29,9 @@ def to_pygame_coords(coords, window_size, center=Vector(), height=0):
     coords -= center
 
     # Convert from world to window/pygame coordinates
-    coords = Vector(coords.x, window_size.y - coords.y - height
+    coords = Vector(coords.x, window_size.y - coords.y - height)
 
-def blitable_pygame_position(blitable, window_size, center=Vector())
+def blitable_pygame_position(blitable, window_size, center=Vector()):
     return to_pygame_coords(Rect(blitable.image.get_rect()).bottom_left + blitable.position, window_size, center, height=blitable.image.get_height())
 
 class Window:

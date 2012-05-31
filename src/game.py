@@ -20,14 +20,14 @@ import heapq
 import pygame
 
 class GameProvider:
-    def __getattribute__(self, name):
+    def __getattr__(self, name):
         return getattr(self.state, name)
 
     def __setattr__(self, name, value):
         raise AttributeError('cannot set attribute {name}, {type} is immutable.'.format(name=name, type=type(self).__name__))
 
     def __init__(self, state):
-        self.state = state
+        object.__setattr__(self, 'state', state)
 
 class InvalidSpeedError(ValueError):
     """Raised when the game's speed is set to a negative or zero number."""
@@ -59,7 +59,6 @@ class GameState:
 
         self.game_events = game_events
         self.real_events = real_events
-        self.entities = entities
 
         self.debug_mode = debug_mode
         self.draw_outlines = draw_outlines
@@ -108,13 +107,13 @@ class GameController:
             game_event = self.state.game_events[0]
         except IndexError:
             # No events in queue, create a dummy event that will never happen
-            game_event = GameEvent(provider=self.state)
+            game_event = GameEvent(provider=self.provider)
         # Get the next real event:
         try:
             real_event = self.state.real_events[0]
         except IndexError:
             # No events in queue, create a dummy event that will never happen
-            real_event = RealEvent(provider=self.state)
+            real_event = RealEvent(provider=self.provider)
 
         # events are guaranteed to have current or future time.
 
@@ -155,7 +154,7 @@ class GameController:
 
             # Handle and remove the event
             heapq.heappop(ev_queue)
-            g_events, r_events = ev(self.state)
+            g_events, r_events = ev(self.provider)
             if g_events or r_events:
                 zip_extend(self.state.game_events, self.state.real_events, from_lists=[g_events, r_events])
                 heapq.heapify(self.state.game_events)
@@ -193,7 +192,7 @@ class GameController:
                 # Update the time and ignore initialization time.
                 current_time = pygame.time.get_ticks() - init_time
 
-                key_events = event.check_for_new_events(self.state, current_time)
+                key_events = event.check_for_new_events(self.provider, current_time)
                 self.state.real_events.extend(key_events)
                 heapq.heapify(self.state.real_events)
 
@@ -219,9 +218,10 @@ class GameController:
             # Game is exiting.  Clean up anything we need to before exiting.
             pygame.quit()
 
-    def __init__(self, provider):
+    def __init__(self, state, provider):
         """Set the default state of the game."""
-        self.state = provider
+        self.state = state
+        self.provider = provider
 
 # library-specific modules
 from util import INFINITY, EPSILON, zip_extend
@@ -237,8 +237,8 @@ def init(game):
 
     intersections = []
 
-    for ent in entity.Collidables:
-        for oth in entity.Collidables:
+    for ent in game.level.entities:
+        for oth in game.level.entities:
             if ent is oth: continue
             pair_ints = physics.find_pair_intersections(provider, ent, oth)
             ent.intersections.extend(pair_ints)

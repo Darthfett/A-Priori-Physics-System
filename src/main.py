@@ -20,8 +20,9 @@ import pygame
 import debug
 import game
 from game import GameState, GameController, GameProvider
-from level import Level
-from window import Window
+import level
+import window
+import controls
 
 # Initialize and run the game!
 def main(speed=1, fps=60, level_=None, controls_=None, debug_mode=False, draw_outlines=False):
@@ -59,42 +60,42 @@ def main(speed=1, fps=60, level_=None, controls_=None, debug_mode=False, draw_ou
     # Load window
     screen = pygame.display.set_mode((window.DEFAULT_WIDTH, window.DEFAULT_HEIGHT))
     pygame.display.set_caption("Jetpack Man")
-    screen = Window(screen)
-
-    # Load level
-    level_ = level.load(level_)
+    screen = window.Window(screen)
 
     # Initialize controls
     controls.init(controls_)
 
-    state = GameState(speed=speed, fps=fps, level=level_, screen=screen, debug_mode=debug_mode, draw_outlines=draw_outlines)
+    state = GameState(speed=speed, fps=fps, level_=level_, screen=screen, debug_mode=debug_mode, draw_outlines=draw_outlines)
     provider = GameProvider(state)
-    controller = GameController(provider)
+    controller = GameController(state, provider)
+
+    # Load level
+    level_ = level.load(level_, provider)
 
     #debug._DebugMode = debug_mode
     #debug.debug.DrawOutlines = draw_outlines
     #Game.fps = min(max(fps, 10), 120)
     #Game._speed = min(max(speed, .01), 10)
 
-    game.init()
-    Game.run()
+    game.init(state)
+    controller.run()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Runs the game Jetpack-Man', usage='python src/%(prog)s [options]')
 
     parser.add_argument('-d', '--debug', help='turn debug mode on',
-                        dest='debug', default=None, action='store_true')
+                        dest='debug', default=False, action='store_true')
     parser.add_argument('-g', '--draw_outlines', help='draw outlines of images instead of the actual images',
-                        dest='draw_outlines', default=None, action='store_true')
+                        dest='draw_outlines', default=False, action='store_true')
 
     parser.add_argument('--fps', help='Change max drawing FPS',
-                        dest='FPS', default=None, type=float)
+                        dest='FPS', default=60, type=float)
 
     parser.add_argument('--speed', help='Change the speed multiplier',
-                        dest='speed', default=None, type=float)
+                        dest='speed', default=1, type=float)
 
     # Parse arguments to the script
     args = parser.parse_args()
 
     # Initialize and run the game
-    main(args.speed, args.FPS, args.debug, args.draw_outlines)
+    main(speed=args.speed, fps=args.FPS, debug_mode=args.debug, draw_outlines=args.draw_outlines)
