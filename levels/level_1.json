@@ -2,7 +2,7 @@
     "entities": [
         {
             "type": "Player",
-            "image": "guy2.PNG",
+            "image": "../resources/guy2.PNG",
             "position": [10, 20],
             "velocity": [0, 0]
         },
