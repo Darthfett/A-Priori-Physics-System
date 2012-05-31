@@ -247,26 +247,56 @@ def init(provider_):
     with open(os.path.join(config_path, "keyboard.json")) as config:
         control_to_keys = json.load(config)
 
+    control_mapper = {
+        "game": {
+            "mappings": {
+                "reset": reset_player,
+                "jetpack_up": provider.current_level.player._jetpack_up,
+                "jetpack_left": provider.current_level.player._jetpack_left,
+                "jetpack_right": provider.current_level.player._jetpack_right
+            },
+            "events": {
+                "KeyPress": event.KeyPressGameEvent,
+                "KeyRelease": event.KeyReleaseGameEvent,
+                "KeyToggle": event.KeyToggleGameEvent
+            }
+        },
+        "real": {
+            "mappings": {
+                "quit": quit,
+                "pause": flip_pause_state
+            },
+            "events": {
+                "KeyPress": event.KeyPressRealEvent,
+                "KeyRelease": event.KeyReleaseRealEvent,
+                "KeyToggle": event.KeyToggleRealEvent
+            }
+        }
+    }
 
-    # decode controls and associate keyboard keys with the controls
-    for control in control_to_keys:
-        if control in control_to_keypress_control:
-            for key in control_to_keys[control]:
-                if not key.startswith("K_"):
-                    # pygame keys all start with "K_"
-                    raise InvalidKeyError("Invalid key " + key + " mapped from control " + control + " in cfg/keyboard.json")
-                try:
-                    pygame_key = getattr(pygame, key)
-                except AttributeError:
-                    raise InvalidKeyError("Invalid key " + key + " mapped from control " + control + " in cfg/keyboard.json")
-                event.KeyPressRealEvent[pygame_key].register(control_to_keypress_control[control])
-        elif control in control_to_keytoggle_control:
-            for key in control_to_keys[control]:
-                if not key.startswith("K_"):
-                    # pygame keys all start with "K_"
-                    raise InvalidKeyError("Invalid key " + key + " mapped from control " + control + " in cfg/keyboard.json")
-                try:
-                    pygame_key = getattr(pygame, key)
-                except AttributeError:
-                    raise InvalidKeyError("Invalid key " + key + " mapped from control " + control + " in cfg/keyboard.json")
-                event.KeyToggleRealEvent[pygame_key].register(control_to_keytoggle_control[control])
+    for ev_type, mappings in control_to_keys.items():
+        if ev_type not in control_mapper:
+            print("Invalid event type {type}".format(type=ev_type))
+            continue
+        ev_map_config = control_mapper[ev_type]
+        for key_ev_type, key_mappings in mappings.items():
+            if key_ev_type not in ev_map_config['events']:
+                print("Invalid key event type {type}".format(type=key_ev_type))
+                continue
+            event_registerable = ev_map_config['events'][key_ev_type]
+
+            for control, keys in key_mappings.items():
+                if control not in ev_map_config['mappings']:
+                    print("Invalid control {control}".format(control=control))
+                    continue
+                for key in keys:
+                    if not key.startswith("K_"):
+                        # pygame keys all start with "K_"
+                        print("Invalid key {key} mapped to control {control}".format(key=key, control=control))
+                        continue
+                    try:
+                        pygame_key = getattr(pygame, key)
+                    except AttributeError:
+                        print("Invalid key {key} mapped to control {control}".format(key=key, control=control))
+                        continue
+                    event_registerable[pygame_key].register(ev_map_config['mappings'][control])

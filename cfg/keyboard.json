@@ -1,8 +1,26 @@
 {
-    "quit": ["K_ESCAPE", "K_q"],
-    "pause": ["K_p"],
-    "reset": ["K_SPACE"],
-    "jetpack_up": ["K_w"],
-    "jetpack_left": ["K_a"],
-    "jetpack_right": ["K_d"]
+    "game": {
+        "KeyPress": {
+            "reset": ["K_SPACE"]
+        },
+        "KeyRelease": {
+
+        },
+        "KeyToggle": {
+            "jetpack_up": ["K_w"],
+            "jetpack_left": ["K_a"],
+            "jetpack_right": ["K_d"]
+        }
+    },
+    "real": {
+        "KeyPress": {
+            "quit": ["K_q"],
+            "pause": ["K_ESCAPE"]
+        },
+        "KeyRelease": {
+
+        },
+        "KeyToggle": {
+        }
+    }
 }
