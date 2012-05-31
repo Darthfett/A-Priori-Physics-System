@@ -199,17 +199,17 @@ class InvalidKeyError(Exception):
 
 # Control functions
 
-def quit():
+def quit(provider):
     """Quit the game."""
     raise Quit
     return [], []
 
-def flip_pause_state():
+def flip_pause_state(provider):
     """Pause/unpause the game."""
     provider.pause()
     return [], []
 
-def reset_player():
+def reset_player(provider):
     """
     Move the player back to starting position, and reset the player's velocity.
 
@@ -222,38 +222,30 @@ def reset_player():
 
     return ints, []
 
-    provider.current_level.reset_player()
+def jetpack_up(provider, *args, **kwargs):
+    return provider.current_level.player._jetpack_up(*args, **kwargs)
 
+def jetpack_left(provider, *args, **kwargs):
+    return provider.current_level.player._jetpack_left(*args, **kwargs)
 
-def init(provider_):
-    global provider
-    provider = provider_
-    # map control names to their functions
-    control_to_keypress_control = {
-        "quit": quit,
-        "pause": flip_pause_state,
-        "reset": reset_player
-    }
+def jetpack_right(provider, *args, **kwargs):
+    return provider.current_level.player._jetpack_right(*args, **kwargs)
 
-    control_to_keytoggle_control = {
-        "jetpack_up": provider.current_level.player._jetpack_up,
-        "jetpack_left": provider.current_level.player._jetpack_left,
-        "jetpack_right": provider.current_level.player._jetpack_right
-    }
+def init(keyboard_path):
 
     # open cfg/keyboards.json, and load in user's control mapping
     config_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "../cfg")
 
-    with open(os.path.join(config_path, "keyboard.json")) as config:
+    with open(os.path.join(config_path, keyboard_path)) as config:
         control_to_keys = json.load(config)
 
     control_mapper = {
         "game": {
             "mappings": {
                 "reset": reset_player,
-                "jetpack_up": provider.current_level.player._jetpack_up,
-                "jetpack_left": provider.current_level.player._jetpack_left,
-                "jetpack_right": provider.current_level.player._jetpack_right
+                "jetpack_up": jetpack_up,
+                "jetpack_left": jetpack_left,
+                "jetpack_right": jetpack_right
             },
             "events": {
                 "KeyPress": event.KeyPressGameEvent,

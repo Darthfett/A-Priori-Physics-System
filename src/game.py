@@ -42,32 +42,29 @@ class GameState:
     def speed(self):
         return self._speed
 
-    def __init__(self, fps=None, speed=None, paused=None, game_events=None, real_events=None, level=None, screen=None, entities=None, _next_frame_time=0, _init_time=0, real_time=0, game_time=0):
-        if fps is None:
-            fps = 60
-        if speed is None:
-            speed = 1
-        if paused is None:
-            paused = False
+    def __init__(self, screen, level_, fps=60, speed=1, paused=False, game_events=None, real_events=None, debug_mode=False, draw_outlines=False, _next_frame_time=None, real_time=0, game_time=0):
         if game_events is None:
             game_events = []
         if real_events is None:
             real_events = []
-        if entities is None:
-            entities = []
+        if _next_frame_time is None:
+            _next_frame_time = 1000 / fps
 
+        self.screen = screen
+        self.level = level_
 
         self.fps = fps
         self._speed = speed
         self.paused = paused
+
         self.game_events = game_events
         self.real_events = real_events
-        self.level = level
-        self.screen = screen
         self.entities = entities
 
+        self.debug_mode = debug_mode
+        self.draw_outlines = draw_outlines
+
         self._next_frame_time = _next_frame_time
-        self._init_time = _init_time
         self.real_time = real_time
         self.game_time = game_time
 
@@ -121,14 +118,13 @@ class GameController:
 
         # events are guaranteed to have current or future time.
 
-        assert game_event.delta_time > -EPSILON
         assert real_event.delta_time > -EPSILON
 
-        # Find next event.
-        # because of pausing, game_event MUST be the second in this list (NAN is not sorted, and not handled for real_events).
-        next_event = min((real_event, game_event))
-
-        assert not math.isnan(next_event.real_time)
+        if not self.state.paused:
+            assert game_event.delta_time > -EPSILON
+            next_event = min((real_event, game_event))
+        else:
+            next_event = real_event
 
         if next_event.real_time > self.state._next_frame_time:
             return None, None
@@ -159,7 +155,7 @@ class GameController:
 
             # Handle and remove the event
             heapq.heappop(ev_queue)
-            g_events, r_events = ev()
+            g_events, r_events = ev(self.state)
             if g_events or r_events:
                 zip_extend(self.state.game_events, self.state.real_events, from_lists=[g_events, r_events])
                 heapq.heapify(self.state.game_events)
@@ -186,31 +182,32 @@ class GameController:
         game state, and draw the game to the screen.
 
         """
-
-        delta_frame_time = 1000 / self.state.fps
-
         # avoid startup-flicker.
         self.state.screen.clear()
         pygame.display.flip()
 
-        self.state._init_time = pygame.time.get_ticks()
+        init_time = pygame.time.get_ticks()
+        self.state._next_frame_time += init_time
         try:
             while True:
                 # Update the time and ignore initialization time.
-                self.state._next_frame_time = pygame.time.get_ticks() - self.state._init_time
+                current_time = pygame.time.get_ticks() - init_time
 
-                key_events = event.check_for_new_events(self.state._next_frame_time, self.state)
+                key_events = event.check_for_new_events(self.state, current_time)
                 self.state.real_events.extend(key_events)
                 heapq.heapify(self.state.real_events)
 
-                time_since_last_frame = (self.state._next_frame_time - self.state.real_time)
-                if time_since_last_frame >= delta_frame_time:
+                if current_time >= self.state._next_frame_time:
                     # Catch the simulation up to the current time by handling
                     # events in-order, and then draw the next frame.
                     self._next_frame()
                     assert self.state.real_time == self.state._next_frame_time
 
                     self.state.screen.draw_next_frame()
+
+                    delta_frame_time = 1000 / self.state.fps
+                    self.state._next_frame_time += delta_frame_time
+
                     pygame.display.flip()
 
                 pygame.time.delay(1)  # Sleep 1 ms
@@ -222,9 +219,9 @@ class GameController:
             # Game is exiting.  Clean up anything we need to before exiting.
             pygame.quit()
 
-    def __init__(self):
+    def __init__(self, provider):
         """Set the default state of the game."""
-        self.state = None
+        self.state = provider
 
 # library-specific modules
 from util import INFINITY, EPSILON, zip_extend

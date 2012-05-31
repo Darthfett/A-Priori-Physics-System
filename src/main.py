@@ -24,21 +24,33 @@ from level import Level
 from window import Window
 
 # Initialize and run the game!
-def main(speed=None, fps=None, level=None, debug_mode=None, draw_outlines=None):
+def main(speed=1, fps=60, level_=None, controls_=None, debug_mode=False, draw_outlines=False):
     """
     Initialize and run the game.
 
-    keyword arguments:
+    keyword arguments (all have defaults):
       speed             Speed multiplier for the game (e.g. speed=2 is twice as
-                        fast)
-      fps               Max FPS limiter (does not affect game speed)
-      debug_mode        Flag to indicate 'debug mode' state
-      draw_outlines     If in debug_mode, draw collision outlines of objects
-                        instead of blitting an image
+                        fast), defaults to 1.
+      fps               Max FPS limiter (does not affect game speed), defaults
+                        to 60.
+      level_            Path to the level to begin at, defaults to:
+                        /levels/level_1.json.
+      controls_         Path to the keybindings config file, defaults to:
+                        /cfg/keyboard.json
+      debug_mode        Flag to indicate 'debug mode' state, defaults to False.
+      draw_outlines     Draw collision outlines of blitable objects instead of
+                        blitting their image, defaults to False.
 
     """
-    if level is None:
-        level = 'level_1'
+
+    resources_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "../resources")
+    cfg_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "../cfg")
+    level_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "../levels")
+
+    if level_ is None:
+        level_ = os.path.join(level_path, 'level_1.json')
+    if controls_ is None:
+        controls_ = os.path.join(cfg_path, 'keyboard.json')
 
     # Initialize pygame
     os.environ['SDL_VIDEO_CENTERED'] = '1'
@@ -50,15 +62,14 @@ def main(speed=None, fps=None, level=None, debug_mode=None, draw_outlines=None):
     screen = Window(screen)
 
     # Load level
-    resources_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "../resources")
-    level = Level(os.path.join(resources_path, level))
-
-    state = GameState(speed=speed, fps=fps, level=level, screen=window)
-    controller = GameController(state)
-    provider = GameProvider(state)
+    level_ = level.load(level_)
 
     # Initialize controls
-    controls.init(provider)
+    controls.init(controls_)
+
+    state = GameState(speed=speed, fps=fps, level=level_, screen=screen, debug_mode=debug_mode, draw_outlines=draw_outlines)
+    provider = GameProvider(state)
+    controller = GameController(provider)
 
     #debug._DebugMode = debug_mode
     #debug.debug.DrawOutlines = draw_outlines

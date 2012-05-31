@@ -177,13 +177,13 @@ class Projectile(Movable, Collidable, Shaped):
 class Blitable(Entity):
     """Blitables are objects with an image."""
 
-    def draw(self, surface):
+    def draw(self, surface, center=Vector()):
         """Blits the blitable to the specified surface."""
         if debug.DrawOutlines and hasattr(self, "shape"):
             for line in self.pos_shape.lines:
-                surface.draw_aaline((0, 0, 0), line.p, line.q)
+                surface.draw_aaline((0, 0, 0), line.p, line.q, center=center)
         else:
-            surface.blit(self)
+            surface.draw_blitable(self, center=center)
 
     def __init__(self, image, **kwargs):
         """Instanciate a blitable with an image (required, can be str or pygame Surface)."""
@@ -197,13 +197,13 @@ class Blitable(Entity):
 class LineRenderable(Entity):
     """LineRenderables are objects that are drawn as a simple collection of lines."""
 
-    def draw(self, surface):
+    def draw(self, surface, center=Vector()):
         """Draws the individual lines of the line renderable to the specified surface."""
         for line in self.render_shape.lines:
             if hasattr(line, "color"):
-                surface.draw_line(line.color, line.p + self.position, line.q + self.position)
+                surface.draw_line(line.color, line.p + self.position, line.q + self.position, center=center)
             else:
-                surface.draw_line(self.color, line.p + self.position, line.q + self.position)
+                surface.draw_line(self.color, line.p + self.position, line.q + self.position, center=center)
 
     def __init__(self, render_shape=None, color=None, **kwargs):
         """Instanciate a line renderable with a list of lines."""

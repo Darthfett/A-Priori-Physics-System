@@ -130,9 +130,7 @@ class EventProducerEvent(Event):
     def __call__(self, *args, **kwargs):
         game_events, real_events = [], []
         for handler in self._handlers:
-            g_events, r_events = handler(*args, **kwargs)
-            game_events.extend(g_events)
-            real_events.extend(r_events)
+            zip_extend(game_events, real_events, from_lists=handler(*args, **kwargs))
         return game_events, real_events
 
     fire = __call__
@@ -180,33 +178,33 @@ class _KeyPress(RealEvent):
 
     """
 
-    def __call__(self):
+    def __call__(self, provider, *args, **kwargs):
         """Run all relevant events."""
 
         # Run key-specific key press real events
-        game_events, real_events = KeyPressRealEvent[self.key]()
+        game_events, real_events = KeyPressRealEvent[self.key](*args, **kwargs)
 
         # Run key-specific key toggle real events
-        zip_extend(game_events, real_events, from_lists=KeyToggleRealEvent[self.key](True))
+        zip_extend(game_events, real_events, from_lists=KeyToggleRealEvent[self.key](provider, True, *args, **kwargs))
 
         # Run generic key press real events
-        zip_extend(game_events, real_events, from_lists=KeyPressRealEvent(self.key))
+        zip_extend(game_events, real_events, from_lists=KeyPressRealEvent(provider, self.key, *args, **kwargs))
 
         # Run generic key toggle real events
-        zip_extend(game_events, real_events, from_lists=KeyToggleRealEvent(self.key, True))
+        zip_extend(game_events, real_events, from_lists=KeyToggleRealEvent(provider, self.key, True, *args, **kwargs))
 
         if not self.provider.paused:
             # Run key-specific key press game events
-            zip_extend(game_events, real_events, from_lists=KeyPressGameEvent[self.key]())
+            zip_extend(game_events, real_events, from_lists=KeyPressGameEvent[self.key](provider, *args, **kwargs))
 
             # Run key-specific key toggle game events
-            zip_extend(game_events, real_events, from_lists=KeyToggleGameEvent[self.key](True))
+            zip_extend(game_events, real_events, from_lists=KeyToggleGameEvent[self.key](provider, True, *args, **kwargs))
 
             # Run generic key press game events
-            zip_extend(game_events, real_events, from_lists=KeyPressGameEvent(self.key))
+            zip_extend(game_events, real_events, from_lists=KeyPressGameEvent(provider, self.key, *args, **kwargs))
 
             # Run generic key toggle game events
-            zip_extend(game_events, real_events, from_lists=KeyToggleGameEvent(self.key, True))
+            zip_extend(game_events, real_events, from_lists=KeyToggleGameEvent(provider, self.key, True, *args, **kwargs))
 
         return game_events, real_events
 
@@ -222,33 +220,33 @@ class _KeyRelease(RealEvent):
 
     """
 
-    def __call__(self):
+    def __call__(self, provider, *args, **kwargs):
         """Run all relevant events."""
 
         # Run key-specific key release real events
-        game_events, real_events = KeyReleaseRealEvent[self.key]()
+        game_events, real_events = KeyReleaseRealEvent[self.key](provider, *args, **kwargs)
 
         # Run key-specific key toggle real events
-        zip_extend(game_events, real_events, from_lists=KeyToggleRealEvent[self.key](False))
+        zip_extend(game_events, real_events, from_lists=KeyToggleRealEvent[self.key](provider, False, *args, **kwargs))
 
         # Run generic key release real events
-        zip_extend(game_events, real_events, from_lists=KeyReleaseRealEvent(self.key))
+        zip_extend(game_events, real_events, from_lists=KeyReleaseRealEvent(provider, self.key, *args, **kwargs))
 
         # Run generic key toggle real events
-        zip_extend(game_events, real_events, from_lists=KeyToggleRealEvent(self.key, False))
+        zip_extend(game_events, real_events, from_lists=KeyToggleRealEvent(provider, self.key, False, *args, **kwargs))
 
         if not self.provider.paused:
             # Run key-specific key release game events
-            zip_extend(game_events, real_events, from_lists=KeyReleaseGameEvent[self.key]())
+            zip_extend(game_events, real_events, from_lists=KeyReleaseGameEvent[self.key](provider, *args, **kwargs))
 
             # Run key-specific key toggle game events
-            zip_extend(game_events, real_events, from_lists=KeyToggleGameEvent[self.key](False))
+            zip_extend(game_events, real_events, from_lists=KeyToggleGameEvent[self.key](provider, False, *args, **kwargs))
 
             # Run generic key release game events
-            zip_extend(game_events, real_events, from_lists=KeyReleaseGameEvent(self.key))
+            zip_extend(game_events, real_events, from_lists=KeyReleaseGameEvent(provider, self.key, *args, **kwargs))
 
             # Run generic key toggle game events
-            zip_extend(game_events, real_events, from_lists=KeyToggleGameEvent(self.key, False))
+            zip_extend(game_events, real_events, from_lists=KeyToggleGameEvent(provider, self.key, False, *args, **kwargs))
 
         return game_events, real_events
 
@@ -262,7 +260,7 @@ class _KeyRelease(RealEvent):
 # register a function with KeyPressEvent and KeyReleaseEvent.
 _CurrentState = []
 
-def check_for_new_events(current_time, provider):
+def check_for_new_events(provider, current_time):
     """
     Run through all events currently in the pygame event queue and put them
     into the real event queue.

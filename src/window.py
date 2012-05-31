@@ -52,15 +52,15 @@ class Window:
 
         self.screen.blit(pygame.transform.flip(image, flip, False), coords)
 
-    def draw_line(self, color, start_pos, end_pos, width=1):
-        start = to_pygame_coords(start_pos, self.size)
-        end = to_pygame_coords(end_pos, self.size)
+    def draw_line(self, color, start_pos, end_pos, width=1, center=Vector()):
+        start = to_pygame_coords(start_pos, self.size, center=center)
+        end = to_pygame_coords(end_pos, self.size, center=center)
 
         pygame.draw.line(self.screen, color, start, end, width)
 
-    def draw_aaline(self, color, start_pos, end_pos, blend=1):
-        start = to_pygame_coords(start_pos, self.size)
-        end = to_pygame_coords(end_pos, self.size)
+    def draw_aaline(self, color, start_pos, end_pos, blend=1, center=Vector()):
+        start = to_pygame_coords(start_pos, self.size, center=center)
+        end = to_pygame_coords(end_pos, self.size, center=center)
 
         pygame.draw.line(self.screen, color, start, end, blend)
 

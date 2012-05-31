@@ -52,6 +52,7 @@ class Level:
     def __init__(self, provider, path, resources_path):
         """Take a file at path, and extract level details."""
         # TODO: Load this in as a file
+        self.entities = []
         self.provider = provider
         width, height = 640, 480
         self.boundary = Rect(size=(width, height))
