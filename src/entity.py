@@ -59,6 +59,9 @@ class Entity:
         """Override to be notified of a position update."""
         pass
 
+    def __repr__(self):
+        return '{type}({params})'.format(type=type(self).__name__, params=', '.join('{name}={value}'.format(name=name, value=value) for name, value in self.__dict__.items()))
+
     def __init__(self, provider, position=None, **kwargs):
         """Instanciate an entity with position (defaults to (0, 0))."""
         self.provider = provider
