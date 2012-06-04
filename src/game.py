@@ -12,14 +12,14 @@ functions:
 """
 
 # standard modules
-import os
-import math
 import heapq
+from itertools import product
 
 # 3rd party modules
 import pygame
 
 class GameProvider:
+    """Provides read-only access to the current game state."""
     def __getattr__(self, name):
         return getattr(self.state, name)
 
@@ -33,7 +33,7 @@ class InvalidSpeedError(ValueError):
     """Raised when the game's speed is set to a negative or zero number."""
 
 class GameState:
-
+    """Represents all the state information of the game."""
     def speed(self, speed):
         if speed <= 0:
             raise InvalidSpeedError("Invalid speed {speed}".format(speed=speed))
@@ -42,13 +42,13 @@ class GameState:
     def speed(self):
         return self._speed
 
-    def __init__(self, screen, level_, fps=60, speed=1, paused=False, game_events=None, real_events=None, debug_mode=False, draw_outlines=False, _next_frame_time=None, real_time=0, game_time=0):
+    def __init__(self, screen, level_, fps=60, speed=1, paused=False, game_events=None, real_events=None, debug_mode=False, draw_outlines=False, next_frame_time=None, real_time=0, game_time=0):
         if game_events is None:
             game_events = []
         if real_events is None:
             real_events = []
-        if _next_frame_time is None:
-            _next_frame_time = 1000 / fps
+        if next_frame_time is None:
+            next_frame_time = 1000 / fps
 
         self.screen = screen
         self.level = level_
@@ -63,7 +63,7 @@ class GameState:
         self.debug_mode = debug_mode
         self.draw_outlines = draw_outlines
 
-        self._next_frame_time = _next_frame_time
+        self.next_frame_time = next_frame_time
         self.real_time = real_time
         self.game_time = game_time
 
@@ -90,7 +90,7 @@ class GameController:
 
     def _next_event(self):
         """
-        Get the next game/real event that happens before _next_frame_time.
+        Get the next game/real event that happens before next_frame_time.
 
         The caller is responsible for removing events from the proper queue, if
         they are handled.  The returned event is guaranteed to be one of these:
@@ -125,7 +125,7 @@ class GameController:
         else:
             next_event = real_event
 
-        if next_event.real_time > self.state._next_frame_time:
+        if next_event.real_time > self.state.next_frame_time:
             return None, None
 
         if next_event is game_event:
@@ -137,15 +137,15 @@ class GameController:
         """
         Update the game state by repeatedly handling game/real events,
         fast-forwarding to the time at which they occur until caught up with
-        _next_frame_time.
+        next_frame_time.
 
         """
-        while self.state.real_time <= self.state._next_frame_time:
+        while self.state.real_time <= self.state.next_frame_time:
             ev, ev_queue = self._next_event()
             if ev is None:
                 # No events to handle this frame.
-                self.state.game_time += (self.state._next_frame_time - self.state.real_time) * self.state._speed
-                self.state.real_time = self.state._next_frame_time
+                self.state.game_time += (self.state.next_frame_time - self.state.real_time) * self.state._speed
+                self.state.real_time = self.state.next_frame_time
                 break
 
             # Fast forward time to the event time
@@ -171,7 +171,7 @@ class GameController:
         ev, ev_queue = self._next_event()
         assert ev is None
         assert ev_queue is None
-        assert self.state.real_time == self.state._next_frame_time
+        assert self.state.real_time == self.state.next_frame_time
 
     def run(self):
         """
@@ -186,7 +186,7 @@ class GameController:
         pygame.display.flip()
 
         init_time = pygame.time.get_ticks()
-        self.state._next_frame_time += init_time
+        self.state.next_frame_time += init_time
         try:
             while True:
                 # Update the time and ignore initialization time.
@@ -196,16 +196,16 @@ class GameController:
                 self.state.real_events.extend(key_events)
                 heapq.heapify(self.state.real_events)
 
-                if current_time >= self.state._next_frame_time:
+                if current_time >= self.state.next_frame_time:
                     # Catch the simulation up to the current time by handling
                     # events in-order, and then draw the next frame.
                     self._next_frame()
-                    assert self.state.real_time == self.state._next_frame_time
+                    assert self.state.real_time == self.state.next_frame_time
 
                     self.state.screen.draw_next_frame()
 
                     delta_frame_time = 1000 / self.state.fps
-                    self.state._next_frame_time += delta_frame_time
+                    self.state.next_frame_time += delta_frame_time
 
                     pygame.display.flip()
 
@@ -224,26 +224,21 @@ class GameController:
         self.provider = provider
 
 # library-specific modules
-from util import INFINITY, EPSILON, zip_extend
+from util import EPSILON, zip_extend
 import event
-import entity
 from event import GameEvent, RealEvent
 import controls
 import physics
-from window import Window
-from level import Level
 
 def init(game):
-
+    """Initialize the game."""
     intersections = []
 
-    for ent in game.level.entities:
-        for oth in game.level.entities:
-            if ent is oth: continue
-            pair_ints = physics.find_pair_intersections(provider, ent, oth)
-            ent.intersections.extend(pair_ints)
-            oth.intersections.extend(pair_ints)
-            intersections.extend(pair_ints)
+    for ent, oth in product(game.level.entities, repeat=2):
+        pair_ints = physics.find_pair_intersections(game, ent, oth)
+        ent.intersections.extend(pair_ints)
+        oth.intersections.extend(pair_ints)
+        intersections.extend(pair_ints)
     intersections.sort()
     game.game_events.extend(intersections)
     heapq.heapify(game.game_events)

@@ -11,13 +11,11 @@ optional arguments:
   --speed SPEED         Change the speed multiplier
 
 """
-import sys
 import os
 import argparse
 
 import pygame
 
-import debug
 import game
 from game import GameState, GameController, GameProvider
 import level
@@ -44,9 +42,10 @@ def main(speed=1, fps=60, level_=None, controls_=None, debug_mode=False, draw_ou
 
     """
 
-    resources_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "../resources")
-    cfg_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "../cfg")
-    level_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "../levels")
+    this_file_path = os.path.abspath(os.path.dirname(__file__))
+    resources_path = os.path.join(this_file_path, "../resources")
+    cfg_path = os.path.join(this_file_path, "../cfg")
+    level_path = os.path.join(this_file_path, "../levels")
 
     if level_ is None:
         level_ = os.path.join(level_path, 'level_1.json')

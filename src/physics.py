@@ -33,22 +33,17 @@ functions:
 
 """
 
-import math
-from itertools import chain, product
-from collections import deque
-from heapq import merge
+from itertools import product
 
 import util
 from util import Vector, Position, FloatEqual, EPSILON
 #from event import GameEvent
 import event
 import entity
-from debug import debug
 
-Intersections = []
 RESTING_THRESHOLD = 200 # ms between next collision (?)
 
-def check_resting_state(ent, oth, line_index, normal, bounciness):
+def check_resting_state(ent, oth, normal, bounciness):
 
     # Resting state should be entered if relative acceleration is toward the line (opposite the normal)
 
@@ -236,7 +231,7 @@ class Intersection(event.GameEvent):
         real_events = []
 
         # Check for resting state
-        if check_resting_state(self.ent, self.oth, self.line_index, self.normal, self.ent.restitution * self.oth.restitution):
+        if check_resting_state(self.ent, self.oth, self.normal, self.ent.restitution * self.oth.restitution):
             # Enter the resting state
             if self.ent not in entity.Movables:
                 ent = self.oth
