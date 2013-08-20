@@ -8,7 +8,7 @@ optional arguments:
   -d, --debug           turn debug mode on
   -g, --draw_outlines   draw outlines of images instead of the actual images
   --fps FPS             Change max drawing FPS
-  --speed SPEED         Change the speed multiplier
+  --level path/to/level Path to level to play
 
 """
 import os

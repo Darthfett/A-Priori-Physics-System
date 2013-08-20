@@ -39,7 +39,23 @@ NAN = float("nan")
 INFINITY = float("inf")
 EPSILON = 1e-8
 
+def immutable(cls):
+    def setattr_(self, name, value):
+        try:
+            self.immutable
+            raise TypeError("'{name}' object does not support attribute assignment".format(name=self.__class__.__name__))
+        except AttributeError:
+            self.__dict__[name] = value
+    cls.__setattr__ = setattr_
+    return cls
 
+def _immutable_constructor(fn):
+    def immutabler(self, *args, **kwargs):
+        fn(self, *args, **kwargs)
+        self.immutable = True
+    return immutabler
+
+immutable.constructor = _immutable_constructor
 
 def zip_extend(*into_lists, from_lists):
     for into_list, from_list in zip(into_lists, from_lists):

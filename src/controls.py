@@ -189,50 +189,18 @@ import physics
 
 provider = None
 
-class Quit(Exception):
+class PlayerQuit(Exception):
     """An Exception that is raised when the player quits."""
     pass
 
-class InvalidKeyError(Exception):
+class InvalidKeyMappingError(Exception):
     """Raised when there is an invalid key mapping in the keyboard.json config."""
     pass
 
-# Control functions
-
-def quit(provider):
-    """Quit the game."""
-    raise Quit
-    return [], []
-
-def flip_pause_state(provider):
-    """Pause/unpause the game."""
-    provider.pause()
-    return [], []
-
-def reset_player(provider):
-    """
-    Move the player back to starting position, and reset the player's velocity.
-
-    """
-    provider.current_level.player.position = provider.current_level._PlayerPosition
-    provider.current_level.player.velocity = provider.current_level._PlayerVelocity
-    provider.current_level.player.invalidate_intersections()
-    ints = physics.find_intersections(provider, provider.current_level.player)
-    provider.current_level.player.intersections.extend(ints)
-
-    return ints, []
-
-def jetpack_up(provider, *args, **kwargs):
-    return provider.current_level.player._jetpack_up(*args, **kwargs)
-
-def jetpack_left(provider, *args, **kwargs):
-    return provider.current_level.player._jetpack_left(*args, **kwargs)
-
-def jetpack_right(provider, *args, **kwargs):
-    return provider.current_level.player._jetpack_right(*args, **kwargs)
-
 def init(keyboard_path):
-
+    ### TODO: implement this function.  Previous code hackery left for reuse and understanding
+    raise NotImplementedError("Not yet implemented control init")
+    
     # open cfg/keyboards.json, and load in user's control mapping
     config_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "../cfg")
 

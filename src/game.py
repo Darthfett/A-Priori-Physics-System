@@ -12,60 +12,32 @@ functions:
 """
 
 # standard modules
-import heapq
-from itertools import product
+pass
 
 # 3rd party modules
 import pygame
 
-class GameProvider:
-    """Provides read-only access to the current game state."""
-    def __getattr__(self, name):
-        return getattr(self.state, name)
+# local modules
+from util import immutable
 
-    def __setattr__(self, name, value):
-        raise AttributeError('cannot set attribute {name}, {type} is immutable.'.format(name=name, type=type(self).__name__))
+@immutable
+class GameData:    
+    @immutable.constructor
+    def __init__(self, screen, level, time=0, next_frame_time):
+        self.screen, self.level = screen, level
+        self.time, self.next_frame_time = time, next_frame_time
 
-    def __init__(self, state):
-        object.__setattr__(self, 'state', state)
+@immutable
+class GameModifiers:    
+    @immutable.constructor
+    def __init__(self, fps=60, speed=1, paused=False):
+        self.fps, self.speed, self.paused = fps, speed, paused
 
-class InvalidSpeedError(ValueError):
-    """Raised when the game's speed is set to a negative or zero number."""
-
-class GameState:
-    """Represents all the state information of the game."""
-    def speed(self, speed):
-        if speed <= 0:
-            raise InvalidSpeedError("Invalid speed {speed}".format(speed=speed))
-        self._speed = speed
-
-    def speed(self):
-        return self._speed
-
-    def __init__(self, screen, level_, fps=60, speed=1, paused=False, game_events=None, real_events=None, debug_mode=False, draw_outlines=False, next_frame_time=None, real_time=0, game_time=0):
-        if game_events is None:
-            game_events = []
-        if real_events is None:
-            real_events = []
-        if next_frame_time is None:
-            next_frame_time = 1000 / fps
-
-        self.screen = screen
-        self.level = level_
-
-        self.fps = fps
-        self._speed = speed
-        self.paused = paused
-
-        self.game_events = game_events
-        self.real_events = real_events
-
-        self.debug_mode = debug_mode
-        self.draw_outlines = draw_outlines
-
-        self.next_frame_time = next_frame_time
-        self.real_time = real_time
-        self.game_time = game_time
+@immutable
+class GameFlags:    
+    @immutable.constructor
+    def __init__(self, debug=False, draw_outlines=False):
+        self.debug, self.draw_outlines = debug, draw_outlines
 
 class GameController:
     """
@@ -88,52 +60,7 @@ class GameController:
 
     """
 
-    def _next_event(self):
-        """
-        Get the next game/real event that happens before next_frame_time.
-
-        The caller is responsible for removing events from the proper queue, if
-        they are handled.  The returned event is guaranteed to be one of these:
-            game.game_events[0], game.game_events
-            game.real_events[0], game.real_events
-            None, None
-
-        Returns a two-tuple, the first element being the next event, the second
-        being the queue from which it was in.
-
-        """
-        # Get the next game event:
-        try:
-            game_event = self.state.game_events[0]
-        except IndexError:
-            # No events in queue, create a dummy event that will never happen
-            game_event = GameEvent(provider=self.provider)
-        # Get the next real event:
-        try:
-            real_event = self.state.real_events[0]
-        except IndexError:
-            # No events in queue, create a dummy event that will never happen
-            real_event = RealEvent(provider=self.provider)
-
-        # events are guaranteed to have current or future time.
-
-        assert real_event.delta_time > -EPSILON
-
-        if not self.state.paused:
-            assert game_event.delta_time > -EPSILON
-            next_event = min((real_event, game_event))
-        else:
-            next_event = real_event
-
-        if next_event.real_time > self.state.next_frame_time:
-            return None, None
-
-        if next_event is game_event:
-            return next_event, self.state.game_events
-        else:
-            return next_event, self.state.real_events
-
-    def _next_frame(self):
+    def next_frame(self, data, modifiers, flags):
         """
         Update the game state by repeatedly handling game/real events,
         fast-forwarding to the time at which they occur until caught up with
@@ -173,7 +100,7 @@ class GameController:
         assert ev_queue is None
         assert self.state.real_time == self.state.next_frame_time
 
-    def run(self):
+    def run(self, data, modifiers, flags):
         """
         Start the main event loop.
 
@@ -222,23 +149,3 @@ class GameController:
         """Set the default state of the game."""
         self.state = state
         self.provider = provider
-
-# library-specific modules
-from util import EPSILON, zip_extend
-import event
-from event import GameEvent, RealEvent
-import controls
-import physics
-
-def init(game):
-    """Initialize the game."""
-    intersections = []
-
-    for ent, oth in product(game.level.entities, repeat=2):
-        pair_ints = physics.find_pair_intersections(game, ent, oth)
-        ent.intersections.extend(pair_ints)
-        oth.intersections.extend(pair_ints)
-        intersections.extend(pair_ints)
-    intersections.sort()
-    game.game_events.extend(intersections)
-    heapq.heapify(game.game_events)
